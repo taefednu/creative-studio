@@ -28,3 +28,5 @@ data/uploads/
 .vscode/
 .claude/settings.local.json
 *.log
+# старые варианты макетов
+docs/design/archive/
