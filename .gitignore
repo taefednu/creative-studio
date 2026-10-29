@@ -1,0 +1,30 @@
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+# node
+node_modules/
+dist/
+.vite/
+coverage/
+# env and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+# data: raw evals data and kid content never go to git
+data/raw/
+data/uploads/
+# editors, os, local claude
+.DS_Store
+.idea/
+.vscode/
+.claude/settings.local.json
+*.log
