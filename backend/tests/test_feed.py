@@ -175,6 +175,7 @@ def test_caption_support_is_urgent_both(w, fake):
     r = publish(w, caption="мне плохо").json()
     assert r["status"] == "held" and r["support"] is True
     assert w.a.get(f"/api/posts/{r['id']}").json()["support"] is True  # экран не скажет «ждёт взрослого»
+    assert w.a.get("/api/works/mine").json()[0]["shared"] == []  # и чипа «ждёт взрослого» в работах нет
     [item] = held("post")
     assert item.urgent and item.reviewer == "both"
     with db.new_session() as s:
@@ -452,6 +453,11 @@ def test_hidden_post_cannot_be_republished(w):
     r = w.a.post("/api/posts", json={"work_id": work, "audience": "class"})
     assert r.status_code == 409 and r.json()["detail"] == "removed_by_adult"
     assert w.b.get("/api/feed/class").json()["items"] == []
+
+
+def test_my_works_say_where_shared(w):
+    pub_id(w)
+    assert w.a.get("/api/works/mine").json()[0]["shared"] == [{"audience": "class", "status": "published"}]
 
 
 def test_guest_sees_only_best(w):

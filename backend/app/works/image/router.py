@@ -84,13 +84,43 @@ def create_work(
     return {"id": work.id, "status": work.status}
 
 
+def _shared(db: Session, work_ids: list[int]) -> dict[int, list[dict]]:
+    """Где работа показана: для чипов «В классе» и «Ждёт взрослого» в «Моих работах».
+
+    Пост со срочной записью сюда не попадает: ребёнку нельзя показывать, что его ждёт взрослый.
+    """
+    from app.feed.models import Post  # feed импортирует works: сверху будет цикл
+
+    posts = list(
+        db.scalars(select(Post).where(Post.work_id.in_(work_ids), Post.status.in_(("published", "pending", "held"))))
+    )
+    urgent = set(
+        db.scalars(
+            select(HeldItem.target_id).where(
+                HeldItem.item_type == "post",
+                HeldItem.urgent.is_(True),
+                HeldItem.target_id.in_([str(p.id) for p in posts]),
+            )
+        )
+    )
+    out: dict[int, list[dict]] = {}
+    for p in posts:
+        if str(p.id) not in urgent:
+            out.setdefault(p.work_id, []).append(
+                {"audience": p.audience, "status": "published" if p.status == "published" else "waiting"}
+            )
+    return out
+
+
 @router.get("/works/mine")
 def my_works(c: Annotated[Child, Depends(current_child)], db: Db):
     rows = db.scalars(
         select(Work).where(Work.child_id == c.id).order_by(Work.id.desc()).limit(100)
     )
     adult = has_adult(db, c)
-    return [_view(w, adult) for w in rows]
+    works = list(rows)
+    shared = _shared(db, [w.id for w in works])
+    return [{**_view(w, adult), "shared": shared.get(w.id, [])} for w in works]
 
 
 def _own(db: Session, c: Child, work_id: int) -> Work:
