@@ -199,11 +199,19 @@ def _coins_or_none(db: Session, c: Child) -> int | None:
 def list_children(p: Annotated[Parent, Depends(current_parent)], db: Db):
     now = clock.now()
     rows = db.scalars(select(Child).where(Child.parent_id == p.id).order_by(Child.id)).all()
+    rooms = dict(
+        db.execute(
+            select(ClassMembership.child_id, Classroom.name)
+            .join(Classroom, Classroom.id == ClassMembership.class_id)
+            .where(ClassMembership.child_id.in_([c.id for c in rows]))
+        ).all()
+    )
     return [
         {
             "id": c.id,
             "nick": c.nick,
             "age_group": c.age_group,
+            "class_name": rooms.get(c.id),
             "lang": c.lang,
             "coins": _coins_or_none(db, c),
             "locked": bool(c.locked_until and c.locked_until > now),

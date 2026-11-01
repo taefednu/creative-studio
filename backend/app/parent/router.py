@@ -78,6 +78,10 @@ def analytics(child_id: int, p: Annotated[Parent, Depends(current_parent)], db: 
         )
         or 0
     )
+    # Время каждой готовой работы, а не счётчики по дням: «день» считает браузер в поясе родителя.
+    ready_at = db.scalars(
+        select(Work.created_at).where(Work.child_id == child.id, Work.created_at >= since, Work.status == "ready")
+    ).all()
     has_data = bool(created or published or held or entries)
     # Нет данных — null, а не нули: пустое состояние с объяснением рисует экран.
     return {
@@ -85,6 +89,7 @@ def analytics(child_id: int, p: Annotated[Parent, Depends(current_parent)], db: 
         "days": DAYS,
         "has_data": has_data,
         "created": created if has_data else None,
+        "ready_at": [t.isoformat() for t in ready_at],
         "published": published if has_data else None,
         "held": held if has_data else None,  # только число: ни содержания, ни срочного текста
         "coins_received": gained if has_data else None,  # старт и дневные монеты студии

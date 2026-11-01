@@ -14,7 +14,7 @@ from fastapi.testclient import TestClient
 
 from app import clock, db
 from app.accounts import nickcheck
-from app.accounts.models import CoinLedger
+from app.accounts.models import ClassMembership, Classroom, CoinLedger
 from app.config import get_settings
 from app.feed.models import Post
 from app.main import app
@@ -279,6 +279,20 @@ def test_analytics_numbers_and_privacy():
     assert b["coins_received"] == 20 and b["coins_spent"] == 1
     assert b["coins_earned_lessons"] is None and "coins_earned" not in b
     assert "СРОЧНЫЙ" not in r.text and "self_harm" not in r.text
+    assert len(b["ready_at"]) == 2  # график «картинок в день» считает эти метки в поясе родителя
+
+
+def test_children_list_names_class():
+    p = login("parent")
+    cid, _ = child_of(p)
+    assert p.get("/api/parent/children").json()[0]["class_name"] is None
+    t = login("teacher")
+    code = t.post("/api/teacher/classes", json={"name": "4B"}).json()["code"]
+    with db.new_session() as s:
+        room = s.query(Classroom).filter_by(code=code).one()
+        s.add(ClassMembership(child_id=cid, class_id=room.id))
+        s.commit()
+    assert p.get("/api/parent/children").json()[0]["class_name"] == "4B"
 
 
 def test_analytics_empty_week_is_null_not_zero():
