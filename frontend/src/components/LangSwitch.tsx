@@ -12,7 +12,7 @@ export default function LangSwitch() {
           data-testid={`lang-${l}`}
           aria-pressed={i18n.language === l}
           onClick={() => setLang(l)}
-          className={`rounded-full px-3 py-1 text-xs font-extrabold uppercase ${
+          className={`rounded-full px-1.5 py-1 text-xs font-extrabold uppercase min-[380px]:px-2 lg:px-3 ${
             i18n.language === l ? 'bg-primary-soft text-primary' : 'text-muted'
           }`}
         >

@@ -49,3 +49,16 @@ export function feedUrl(kind: FeedKind, classId?: number, before?: number | null
   const s = q.toString()
   return `/api/feed/${kind}${s ? `?${s}` : ''}`
 }
+
+// как на feed.jpg: больше лежачих, вертикальных мало
+const RATIOS = ['16 / 10', '4 / 3', '3 / 2', '16 / 10', '1 / 1', '4 / 3', '5 / 6'] as const
+
+/** Форма карточки по id поста: картинки квадратные, ряды «кирпичной» сетки разной высоты. */
+export function cardRatio(id: number): (typeof RATIOS)[number] {
+  return RATIOS[(Math.imul(id, 2654435761) >>> 0) % RATIOS.length]
+}
+
+/** Фильтр по стилю на клиенте: '' — все. */
+export function byStyle(items: Post[], style: string): Post[] {
+  return style ? items.filter((p) => p.template_id === style) : items
+}

@@ -1,17 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
-import { api } from '../api'
+import { ApiError, api } from '../api'
 import type { ShellContext } from '../components/AppShell'
-import Coin from '../components/Coin'
-import ErrorText, { errorKey } from '../components/ErrorText'
+import CreatePanel from '../components/CreatePanel'
 import PublishBox from '../components/PublishBox'
 import TeacherTask from '../components/TeacherTask'
-import { POLLING, hintKey } from '../features/works/works'
+import { POLLING, hintKey, loadTemplates } from '../features/works/works'
 import type { TemplateInfo, Work } from '../features/works/works'
 import { useLoad } from '../useLoad'
-
-const loadTemplates = () => api<{ price: number; templates: TemplateInfo[] }>('/api/templates')
 
 const FAN_IDS = ['castle', 'superhero', 'watercolor', 'space_pet']
 const FAN_STYLE = [
@@ -36,7 +33,7 @@ function Fan({ templates }: { templates: TemplateInfo[] }) {
   return (
     <div
       data-testid="fan"
-      className="relative mx-auto flex h-[150px] items-center justify-center sm:h-[200px] md:h-[245px]"
+      className="relative mx-auto flex h-[140px] max-w-[835px] items-center justify-center sm:h-[200px] lg:h-[245px]"
     >
       <Spark className="left-[8%] top-[20%] h-6 w-6 text-star md:left-[22%] md:h-8 md:w-8" />
       <Spark className="right-[8%] top-[28%] h-5 w-5 text-primary md:right-[22%] md:h-7 md:w-7" />
@@ -46,14 +43,12 @@ function Fan({ templates }: { templates: TemplateInfo[] }) {
           key={it.id}
           src={it.image_url}
           alt=""
-          className={`-ml-5 h-[90px] w-[90px] sm:h-[120px] sm:w-[120px] rounded-2xl border-4 border-surface bg-surface object-cover shadow-card first:ml-0 md:-ml-3 md:h-[205px] md:w-[205px] md:rounded-3xl ${FAN_STYLE[i]}`}
+          className={`-ml-5 h-[90px] w-[90px] sm:h-[120px] sm:w-[120px] rounded-2xl border-4 border-surface bg-surface object-cover shadow-card first:ml-0 md:-ml-3 md:h-[160px] md:w-[160px] md:rounded-3xl lg:h-[205px] lg:w-[205px] ${FAN_STYLE[i]}`}
         />
       ))}
     </div>
   )
 }
-
-type Phase = { kind: 'idle' } | { kind: 'work'; work: Work }
 
 export default function Create() {
   const { t } = useTranslation()
@@ -64,95 +59,96 @@ export default function Create() {
   const price = tplData?.price
   const [params] = useSearchParams()
   const [selected, setSelected] = useState<string | null>(params.get('template'))
-  const [text, setText] = useState('')
-  const [phase, setPhase] = useState<Phase>({ kind: 'idle' })
-  const [sending, setSending] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
-  const requestId = useRef<string | null>(null)
+  const workParam = Number(params.get('work')) || null
+  const assignmentId = Number(params.get('assignment')) || null
+  const [loaded, setLoaded] = useState<Work | null>(null)
+  const [retry, setRetry] = useState(0)
 
   const known = templates?.some((x) => x.id === selected)
   const tpl = (known ? selected : null) ?? templates?.[0]?.id ?? null
-  const workId = phase.kind === 'work' ? phase.work.id : null
-  const workStatus = phase.kind === 'work' ? phase.work.status : null
+  const work = loaded?.id === workParam ? loaded : null
+  const workId = work?.id ?? null
+  const workStatus = work?.status ?? null
+
+  // работа по ссылке /create?work=<id>: чужая или несуществующая (404) — на «Создать»; сбой сети — повтор
+  useEffect(() => {
+    if (workParam === null) return
+    let alive = true
+    let timer: ReturnType<typeof setTimeout> | undefined
+    api<Work>(`/api/works/${workParam}`)
+      .then((w) => {
+        if (!alive) return
+        setLoaded(w)
+        if (!POLLING.includes(w.status)) reloadMe()
+      })
+      .catch((x) => {
+        if (!alive) return
+        if (x instanceof ApiError && x.status === 404) navigate('/create', { replace: true })
+        else timer = setTimeout(() => setRetry((n) => n + 1), 1500)
+      })
+    return () => {
+      alive = false
+      clearTimeout(timer)
+    }
+  }, [workParam, navigate, reloadMe, retry])
 
   // опрос, пока работа не дошла до конечного статуса
   useEffect(() => {
     if (workId === null || !workStatus || !POLLING.includes(workStatus)) return
+    let alive = true
     const timer = setInterval(() => {
       api<Work>(`/api/works/${workId}`)
         .then((w) => {
-          setPhase({ kind: 'work', work: w })
+          if (!alive) return
+          setLoaded(w)
           if (!POLLING.includes(w.status)) reloadMe()
         })
         .catch(() => {})
     }, 1500)
-    return () => clearInterval(timer)
+    return () => {
+      alive = false
+      clearInterval(timer)
+    }
   }, [workId, workStatus, reloadMe])
 
-  const draw = useCallback(async () => {
-    if (!tpl || sending) return
-    setSending(true)
-    setErr(null)
-    requestId.current ??= crypto.randomUUID()
-    try {
-      const r = await api<{ id: number }>('/api/works', 'POST', {
-        template_id: tpl,
-        text: text.trim() || null,
-        request_id: requestId.current,
-      })
-      const w = await api<Work>(`/api/works/${r.id}`)
-      setPhase({ kind: 'work', work: w })
-      reloadMe()
-    } catch (x) {
-      setErr(errorKey(x))
-      requestId.current = null
-    } finally {
-      setSending(false)
-    }
-  }, [tpl, sending, text, reloadMe])
-
-  function again() {
-    requestId.current = null
-    setPhase({ kind: 'idle' })
-    setErr(null)
-  }
-
-  if (phase.kind === 'work') {
-    const w = phase.work
+  if (workParam !== null) {
+    if (!work) return null
     return (
       <WorkView
-        work={w}
-        onAgain={again}
+        work={work}
+        onAgain={() => navigate('/create')}
         onMine={() => navigate('/my-works')}
-        onChoose={(w2) => setPhase({ kind: 'work', work: w2 })}
-        coinLine={t(w.status === 'refused' && w.reason_codes.includes('content_policy') ? 'create.coinBack' : 'create.coinKept')}
+        onChoose={setLoaded}
+        coinLine={t(work.status === 'refused' && work.reason_codes.includes('content_policy') ? 'create.coinBack' : 'create.coinKept')}
       />
     )
   }
 
   return (
-    <div className="mx-auto max-w-[1672px]">
+    <div className="mx-auto max-w-[1672px] md:mt-[6px]">
       {templates && <Fan templates={templates} />}
-      <h1
-        data-testid="create-title"
-        className="mt-1 text-center text-3xl font-extrabold text-heading md:mt-0 md:h-[50px] md:text-[44px] md:leading-[50px]"
-      >
-        {t('create.title')}
-      </h1>
-      <p className="mt-2 text-center md:mt-[5px]">
-        <span className="inline-block rounded-full bg-primary-soft px-5 py-1 text-sm font-bold text-muted md:text-lg">
+      <div className="mt-1 text-center md:mt-0">
+        <h1
+          data-testid="create-title"
+          className="inline-block text-2xl font-extrabold leading-[34px] text-heading md:h-[48px] md:text-[44px] md:leading-[48px]"
+        >
+          {t('create.title')}
+        </h1>
+      </div>
+      <p className="mt-1 text-center md:mt-[5px]">
+        <span data-testid="create-sub" className="inline-block rounded-full bg-primary-soft px-5 py-1 text-sm font-bold text-muted md:py-0.5 md:text-lg">
           {t('create.sub')}
         </span>
       </p>
-      <div data-testid="teacher-task-slot" className="mt-4 md:mt-[15px] md:min-h-[55px]">
-        <TeacherTask />
+      <div data-testid="teacher-task-slot" className="mt-3 md:mt-[15px] md:min-h-[55px]">
+        <TeacherTask assignmentId={assignmentId} />
       </div>
-      <h2 className="mt-3 text-sm font-extrabold uppercase text-primary md:mt-[18px] md:text-lg">
+      <h2 data-testid="style-heading" className="mt-3 w-fit text-sm font-extrabold uppercase leading-5 text-primary md:mt-[18px] md:text-lg md:leading-5">
         {t('create.chooseStyle')}
       </h2>
       <div
         data-testid="templates"
-        className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4 md:mt-[6px] md:grid-cols-8 md:gap-[11px]"
+        className="mt-2 grid grid-cols-4 gap-2 md:mt-[6px] md:grid-cols-8 md:gap-[11px]"
       >
         {templates?.map((x) => (
           <button
@@ -161,60 +157,18 @@ export default function Create() {
             data-testid={`tpl-${x.id}`}
             aria-pressed={tpl === x.id}
             onClick={() => setSelected(x.id)}
-            className={`flex flex-col items-center gap-1 rounded-2xl border-4 bg-surface p-1.5 text-center shadow-card md:min-h-[225px] ${
+            className={`flex flex-col items-center gap-1 rounded-2xl border-4 bg-surface p-1.5 text-center shadow-card h-[137px] md:h-[225px] ${
               tpl === x.id ? 'border-primary' : 'border-transparent'
             }`}
           >
-            <img src={x.image_url} alt="" className="aspect-square w-full rounded-xl object-cover" />
-            <span className="px-1 text-sm font-extrabold leading-tight text-heading md:text-base">
+            <img src={x.image_url} alt="" className="min-h-0 w-full flex-1 rounded-xl object-cover" />
+            <span className="line-clamp-2 px-0.5 text-[11px] font-extrabold leading-tight text-heading md:px-1 md:text-base">
               {t(`templates.${x.id}`)}
             </span>
           </button>
         ))}
       </div>
-      <div className="mx-auto mt-4 w-full max-w-[833px] sticky bottom-[84px] z-[5] rounded-3xl border border-border bg-surface p-3 shadow-card md:static md:mt-[18px] md:h-[122px]">
-        <div className="grid grid-cols-[1fr_auto] gap-3">
-          <div className="flex flex-col gap-2">
-            <input
-              data-testid="prompt-input"
-              value={text}
-              maxLength={200}
-              onChange={(e) => setText(e.target.value)}
-              placeholder={t('create.placeholder')}
-              aria-label={t('create.placeholder')}
-              className="w-full rounded-full border border-border bg-bg px-4 py-3 text-heading outline-none focus:border-primary"
-            />
-            <button
-              type="button"
-              disabled
-              title={t('create.voiceSoon')}
-              aria-label={t('create.voiceSoon')}
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-surface text-primary opacity-50"
-            >
-              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <rect x="9" y="3" width="6" height="12" rx="3" />
-                <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
-              </svg>
-            </button>
-          </div>
-          <button
-            type="button"
-            data-testid="draw"
-            disabled={!tpl || sending}
-            onClick={() => void draw()}
-            className="flex min-w-[130px] flex-col items-center justify-center gap-1 rounded-2xl bg-primary px-4 text-lg font-extrabold uppercase text-primary-fg shadow-card disabled:opacity-60 md:min-w-[168px] md:text-xl"
-          >
-            {t('create.draw')}
-            <span className="flex items-center gap-1">
-              <Coin className="h-6 w-6" />
-              <span data-testid="price">{price ?? ''}</span>
-            </span>
-          </button>
-        </div>
-      </div>
-      <div className="mx-auto mt-3 max-w-[833px]">
-        <ErrorText code={err} />
-      </div>
+      {templates && <CreatePanel templates={templates} price={price} tpl={tpl} onTpl={setSelected} />}
     </div>
   )
 }

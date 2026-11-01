@@ -12,7 +12,7 @@ import ReviewQueue from '../components/ReviewQueue'
 import { PASSWORD_LENGTH } from '../features/auth/pictures'
 import { useLoad } from '../useLoad'
 
-type Kid = { id: number; nick: string; age_group: string; lang: string; coins: number; locked: boolean }
+type Kid = { id: number; nick: string; age_group: string; lang: string; coins: number | null; locked: boolean }
 type Note = { id: number; kind: string; nick: string; created_at: string; read: boolean }
 
 const loadAll = async () => {
@@ -84,7 +84,7 @@ export default function ParentCabinet() {
                 <span className="text-sm text-muted">{k.age_group}</span>
                 <span className="ml-auto flex items-center gap-1 font-extrabold text-heading" data-testid="kid-coins">
                   <Coin />
-                  {k.coins}
+                  {k.coins ?? '—'}
                 </span>
               </div>
               {k.locked && <p className="mt-2 text-sm font-bold text-danger">{t('parent.locked')}</p>}

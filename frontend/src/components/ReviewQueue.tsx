@@ -168,7 +168,7 @@ function UrgentModal({
       .catch(() => {})
   }, [item.id])
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-heading/40 p-4" role="dialog" aria-modal="true" data-testid="review-modal">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim backdrop-blur-sm p-4" role="dialog" aria-modal="true" data-testid="review-modal">
       <div className="flex w-full max-w-md flex-col gap-3 rounded-card border border-urgent-border bg-surface p-5 shadow-card">
         <p className="font-extrabold text-urgent">{t('review.urgentNote')}</p>
         <p className="text-sm font-extrabold text-heading">

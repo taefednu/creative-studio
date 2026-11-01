@@ -11,6 +11,7 @@
   --color-muted: #7a80a6;
   --color-gold: #f5b82e;
   --color-star: #ffc83d;
+  --color-heart: #ff5c7a;
   --color-danger: #c0392b;
   --color-danger-soft: #fdecea;
   --color-success: #2e8b57;
@@ -18,6 +19,7 @@
   --color-urgent: #9a4a00;
   --color-urgent-soft: #fff1e0;
   --color-urgent-border: #f0a04b;
+  --color-scrim: rgba(31, 42, 92, 0.55);
   --radius-card: 20px;
   --shadow-card: 0 4px 16px rgba(124, 77, 255, 0.1);
 }

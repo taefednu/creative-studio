@@ -53,7 +53,9 @@ async function childLogin(p, nick) {
 async function joinClass(p, code) {
   await T(p, 'class-code-input').fill(code)
   await T(p, 'class-code-input').press('Enter')
+  await T(p, 'avatar-me').click()
   await T(p, 'my-class').waitFor({ timeout: 15000 })
+  await p.keyboard.press('Escape')
 }
 
 async function noScroll(p, name) {
@@ -151,6 +153,42 @@ async function main() {
     throw e
   }
   ok('после одобрения одноклассник видит пост', true)
+
+  // Новые контролы первой партии: настоящие клики и видимое следствие
+  const total = await T(b, 'post-card').count()
+  await T(b, 'style-filter').selectOption('clay')
+  await b.waitForTimeout(300)
+  ok('style-filter меняет число карточек', (await T(b, 'post-card').count()) !== total, `${total} -> ${await T(b, 'post-card').count()}`)
+  await T(b, 'style-filter').selectOption('')
+  ok('style-filter «Все стили» возвращает карточки', (await T(b, 'post-card').count()) === total)
+  await T(b, 'panel-style').selectOption('paper')
+  ok('panel-style на ленте меняет выбор', (await T(b, 'panel-style').inputValue()) === 'paper')
+  await T(b, 'tab-create').click()
+  await T(b, 'tpl-clay').click()
+  ok('panel-style следует за плиткой на «Создать»', (await T(b, 'panel-style').inputValue()) === 'clay')
+  await T(b, 'panel-style').selectOption('paper')
+  ok('panel-style меняет выбранную плитку', (await T(b, 'tpl-paper').getAttribute('aria-pressed')) === 'true')
+  const classes = await teacher.evaluate(() => fetch('/api/teacher/classes').then((r) => r.json()))
+  const mk = await teacher.evaluate((id) => fetch(`/api/teacher/classes/${id}/assignments`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Нарисуй героя сказки', description: '', lang: 'ru' }) }).then((r) => r.status), classes[0].id)
+  ok('учитель создал задание', mk === 201, mk)
+  await b.goto(BASE + '/')
+  await T(b, 'task-start').click()
+  await b.waitForURL('**/create?assignment=*', { timeout: 10000 })
+  ok('task-start ведёт на /create?assignment', /assignment=\d+/.test(b.url()), b.url())
+  await T(b, 'task-strip').waitFor({ timeout: 10000 })
+  ok('на «Создать» строка задания без кнопки', (await T(b, 'task-start').count()) === 0)
+  await b.goto(BASE + '/')
+  await T(b, 'avatar-me').click()
+  ok('меню аватара: ник, класс и выход', (await T(b, 'my-nick').isVisible()) && (await T(b, 'my-class').isVisible()) && (await T(b, 'logout').isVisible()))
+  await b.keyboard.press('Escape')
+  ok('Esc закрывает меню аватара', (await T(b, 'my-nick').count()) === 0)
+  const c3 = await ctx(browser)
+  await childLogin(c3, B)
+  await T(c3, 'avatar-me').click()
+  await T(c3, 'logout').click()
+  await c3.waitForURL('**/login', { timeout: 10000 })
+  ok('«Выйти» из меню аватара ведёт на вход', true)
+  await c3.context().close()
   await b.screenshot({ path: `${OUT}/b-feed-390.png` })
   await noScroll(b, 'лента 390')
 

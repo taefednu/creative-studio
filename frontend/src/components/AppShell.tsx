@@ -1,14 +1,15 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useSession } from '../features/auth/session'
 import { useLoad } from '../useLoad'
-import Coin from './Coin'
 import ErrorText, { errorKey } from './ErrorText'
 import LangSwitch from './LangSwitch'
-import NavIcon from './NavIcon'
+import Logo from './Logo'
+import Avatar from './Avatar'
+import TabPill from './TabPill'
 
 const TABS = [
   { to: '/', key: 'feed' },
@@ -19,7 +20,7 @@ const TABS = [
 
 type Me = {
   nick: string
-  coins: number
+  coins: number | null
   class: { id: number; name: string } | null
   has_parent: boolean
 }
@@ -41,6 +42,22 @@ export default function AppShell() {
   const [me, load] = useLoad(loadMe)
   const [code, setCode] = useState('')
   const [err, setErr] = useState<string | null>(null)
+  const [menu, setMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menu) return
+    const away = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenu(false)
+    }
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setMenu(false)
+    document.addEventListener('mousedown', away)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('mousedown', away)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [menu])
 
   async function join(e: FormEvent) {
     e.preventDefault()
@@ -69,74 +86,90 @@ export default function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-bg pb-24 md:pb-6">
-      <header className="flex items-center gap-2 border-b border-border bg-surface px-3 py-2 md:grid md:h-[85px] md:grid-cols-[1fr_auto_1fr] md:gap-3 md:px-8 md:py-0">
-        <div className="flex items-center gap-2">
-          <img src="/mentorium-logo.png" alt="Mentorium" className="h-9 w-auto" />
-          <span className="hidden text-lg font-extrabold text-heading md:inline">{t('app.name')}</span>
-        </div>
+    <div className="min-h-screen bg-bg pb-24 lg:pb-4">
+      <header
+        data-testid="shell-header"
+        className="flex h-[60px] items-center gap-1.5 border-b border-border bg-surface px-2 min-[380px]:gap-2 min-[380px]:px-3 lg:grid lg:h-[87px] lg:grid-cols-[1fr_auto_1fr] lg:gap-3 lg:px-8"
+      >
+        <Logo />
         <nav
           aria-label="main"
-          className="fixed inset-x-0 bottom-0 z-10 flex justify-around gap-1 border-t border-border bg-surface px-2 py-2 md:static md:z-auto md:justify-center md:gap-3 md:border-0 md:bg-transparent md:p-0"
+          className="fixed inset-x-0 bottom-0 z-30 flex h-[72px] items-stretch gap-1 border-t border-border bg-surface px-1 py-1 lg:static lg:z-auto lg:h-auto lg:justify-center lg:gap-3 lg:border-0 lg:bg-transparent lg:p-0 2xl:gap-4"
         >
           {TABS.map((tab) => (
-            <NavLink
+            <TabPill
               key={tab.key}
               to={tab.to}
               end={tab.to === '/'}
-              data-testid={`tab-${tab.key}`}
-              className={({ isActive }) =>
-                `flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-xs font-extrabold md:flex-none md:flex-row md:gap-2 md:rounded-full md:px-5 md:py-3 md:text-base ${
-                  isActive
-                    ? 'bg-primary text-primary-fg shadow-card'
-                    : 'text-heading md:border md:border-border md:bg-surface'
-                }`
-              }
-            >
-              <NavIcon name={tab.key} className="h-6 w-6 shrink-0" />
-              <span className="max-w-full truncate">{t(`nav.${tab.key}`)}</span>
-            </NavLink>
+              icon={tab.key}
+              testid={`tab-${tab.key}`}
+              label={t(`nav.${tab.key}`)}
+            />
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-2 md:gap-3">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 min-[380px]:gap-2 lg:justify-self-end 2xl:gap-4">
           <LangSwitch />
           {me && (
             <>
               <span
                 data-testid="coins"
-                className="flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1 text-lg font-extrabold text-heading"
-                title={t('child.coins')}
+                title={me.coins === null ? t('shell.coinsUnknown') : t('child.coins')}
+                className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-full border border-border bg-surface px-2 text-sm font-extrabold text-heading shadow-card min-[380px]:px-3 min-[380px]:text-base lg:h-[55px] lg:gap-2 lg:text-2xl"
               >
-                <Coin className="h-6 w-6" />
-                {me.coins}
+                <img src="/art/coin.webp" alt="" className="h-6 w-6 lg:h-9 lg:w-9" />
+                {me.coins ?? '—'}
               </span>
-              <span data-testid="my-nick" className="hidden text-sm font-bold text-heading md:inline">
-                {me.nick}
-              </span>
-              <button
-                type="button"
-                data-testid="logout"
-                onClick={() => void logout()}
-                className="hidden rounded-full border border-border bg-surface px-3 py-1 text-sm font-bold text-heading md:inline"
-              >
-                {t('auth.logout')}
-              </button>
+              <div ref={menuRef} className="relative shrink-0">
+                <button
+                  type="button"
+                  data-testid="avatar-me"
+                  aria-haspopup="dialog"
+                  aria-expanded={menu}
+                  aria-label={t('shell.account')}
+                  onClick={() => setMenu((v) => !v)}
+                  className="block rounded-full lg:h-[58px]"
+                >
+                  <Avatar nick={me.nick} className="h-9 w-9 min-[380px]:h-10 min-[380px]:w-10 lg:h-[54px] lg:w-[54px]" />
+                </button>
+                {menu && (
+                  <div
+                    role="dialog"
+                    aria-label={t('shell.account')}
+                    className="absolute right-0 top-full z-40 mt-2 w-72 rounded-card border border-border bg-surface p-4 shadow-card"
+                  >
+                    <p data-testid="my-nick" className="text-lg font-extrabold text-heading">
+                      {me.nick}
+                    </p>
+                    {me.class && (
+                      <p data-testid="my-class" className="mt-1 text-sm font-bold text-muted">
+                        {t('child.myClass', { name: me.class.name })}
+                      </p>
+                    )}
+                    <p className="mt-3 flex items-start gap-2 text-sm text-muted">
+                      <img src="/art/coin.webp" alt="" className="h-5 w-5 shrink-0" />
+                      {t('child.moreCoins')}
+                    </p>
+                    <button
+                      type="button"
+                      data-testid="logout"
+                      onClick={() => void logout()}
+                      className="mt-4 w-full rounded-full border border-border bg-surface px-4 py-2 text-sm font-extrabold text-heading"
+                    >
+                      {t('auth.logout')}
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
       </header>
-      <main className="px-4 py-5 md:px-[35px]">
-        <Outlet context={ctx} />
-        {me?.class && (
-          <p data-testid="my-class" className="mt-6 text-sm font-bold text-muted">
-            {t('child.myClass', { name: me.class.name })}
-          </p>
-        )}
+      <main className="px-4 py-5 md:px-[35px] md:pb-0 pt-1.5 lg:pt-[17px]">
         {me && !me.class && (
           <form
             onSubmit={(e) => void join(e)}
             data-testid="join-class"
-            className="mt-6 flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface p-4 shadow-card"
+            className="mb-4 flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface p-4 shadow-card"
           >
             <label htmlFor="class-code" className="text-sm font-extrabold text-heading">
               {t('child.classCode')}
@@ -162,17 +195,7 @@ export default function AppShell() {
             </div>
           </form>
         )}
-        <p className="mt-4 flex items-center gap-2 text-sm text-muted">
-          <Coin className="h-5 w-5 shrink-0" />
-          {t('child.moreCoins')}
-        </p>
-        <button
-          type="button"
-          onClick={() => void logout()}
-          className="mt-4 rounded-full border border-border bg-surface px-4 py-1 text-sm font-bold text-heading md:hidden"
-        >
-          {t('auth.logout')}
-        </button>
+        <Outlet context={ctx} />
       </main>
     </div>
   )

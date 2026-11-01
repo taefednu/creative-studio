@@ -117,7 +117,7 @@ export default function PostModal({ postId, onClose, onChanged }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-start justify-center overflow-y-auto bg-heading/40 p-3 md:items-center md:p-8"
+      className="fixed inset-0 z-30 flex items-start justify-center overflow-y-auto bg-scrim backdrop-blur-sm p-3 md:items-center md:p-8"
       onClick={onClose}
       data-testid="post-modal-bg"
     >

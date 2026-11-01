@@ -1,3 +1,5 @@
+import { api } from '../../api'
+
 export type WorkStatus =
   | 'proposed'
   | 'checking'
@@ -19,6 +21,8 @@ export type Work = {
 }
 
 export type TemplateInfo = { id: string; image_url: string }
+
+export const loadTemplates = () => api<{ price: number; templates: TemplateInfo[] }>('/api/templates')
 
 export const POLLING: WorkStatus[] = ['checking', 'generating']
 
