@@ -29,6 +29,14 @@ class ContentPolicyViolation(ModelError):
     code = "content_policy_violation"
 
 
+def _sniff_mime(b: bytes) -> str:
+    if b.startswith(b"\xff\xd8"):
+        return "image/jpeg"
+    if b[:4] == b"RIFF" and b[8:12] == b"WEBP":
+        return "image/webp"
+    return "image/png"
+
+
 class _HttpStatus(Exception):
     """Ошибка HTTP из прямого httpx-вызова (SAM), по форме как у SDK."""
 
@@ -126,7 +134,7 @@ class MetaClient:
         return base64.b64decode(b64)
 
     def sam(self, image_bytes: bytes, phrase: str, timeout: float) -> str:
-        data_url = "data:image/png;base64," + base64.b64encode(image_bytes).decode()
+        data_url = f"data:{_sniff_mime(image_bytes)};base64," + base64.b64encode(image_bytes).decode()
         body = {
             "model": self.sam_model,
             "input": [
@@ -140,10 +148,13 @@ class MetaClient:
                 }
             ],
             "stream": True,
+            "metadata": {"include_confidence": "true"},  # c=... в боксах (бриф §4)
         }
 
         def run() -> str:
             out: list[str] = []
+            done_text = ""
+            completed = False
             with httpx.stream(
                 "POST",
                 f"{self._base_url}/responses",
@@ -164,9 +175,18 @@ class MetaClient:
                         ev = json.loads(payload)
                     except ValueError:
                         continue
-                    if ev.get("type") == "response.output_text.delta":
+                    kind = ev.get("type")
+                    if kind == "response.output_text.delta":
                         out.append(ev.get("delta", ""))
-            return "".join(out)
+                    elif kind == "response.output_text.done":
+                        done_text = ev.get("text") or ""
+                    elif kind == "response.completed":
+                        completed = True
+                    elif kind in ("response.failed", "error"):
+                        raise ModelError("sam stream failed")
+            if not completed:  # оборванный поток нельзя читать как «ничего не найдено»
+                raise ModelError("sam stream incomplete")
+            return "".join(out) or done_text
 
         return self._call(run)
 

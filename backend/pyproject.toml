@@ -10,6 +10,8 @@ dependencies = [
   "pydantic-settings",
   "httpx",
   "pillow>=13.0.0",
+  "meta-sam-parser>=0.1.0",
+  "python-multipart>=0.0.33",
 ]
 
 [dependency-groups]

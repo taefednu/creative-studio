@@ -32,6 +32,7 @@ class NewWork(BaseModel):
 def _view(w: Work) -> dict:
     return {
         "id": w.id,
+        "kind": w.kind,
         "template_id": w.template_id,
         "status": w.status,
         "reason_codes": w.reason_codes or [],

@@ -26,7 +26,7 @@ from app.works.image.models import Work
 router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
 
-IMAGE_TYPES = ("image", "post", "submission")  # у остальных видов своей картинки нет (upload — #15)
+IMAGE_TYPES = ("image", "post", "submission", "upload")  # у остальных видов своей картинки нет
 
 
 def adult(
@@ -86,7 +86,7 @@ def _where(item: HeldItem) -> str:
 
 
 def _work_of(db: Session, item: HeldItem) -> Work | None:
-    if item.item_type == "image":
+    if item.item_type in ("image", "upload"):
         return db.get(Work, int(item.target_id))
     if item.item_type == "post":
         p = db.get(Post, int(item.target_id))
@@ -99,7 +99,17 @@ def _work_of(db: Session, item: HeldItem) -> Work | None:
 
 def _has_image(db: Session, item: HeldItem) -> bool:
     w = _work_of(db, item)
+    if item.item_type == "upload":
+        return w is not None and (_upload_file(w, "original") or _upload_file(w, "blurred")) is not None
     return w is not None and bool(w.file_path) and Path(w.file_path).is_file()
+
+
+def _upload_file(w: Work, version: str) -> Path | None:
+    """Загрузка: оригинал читает только проверяющий (эта ручка); file_path — размытая версия."""
+    from app.works.upload.pipeline import original_path
+
+    p = original_path(w.id) if version == "original" else Path(w.file_path or "")
+    return p if p.is_file() else None
 
 
 def _view(db: Session, item: HeldItem, nick: str, class_name: str | None, full: bool) -> dict:
@@ -119,6 +129,19 @@ def _view(db: Session, item: HeldItem, nick: str, class_name: str | None, full: 
         "image_url": f"/api/review/items/{item.id}/image"
         if show and item.item_type in IMAGE_TYPES and _has_image(db, item)
         else None,
+        **_upload_urls(db, item, show),
+    }
+
+
+def _upload_urls(db: Session, item: HeldItem, show: bool) -> dict:
+    """Загрузка: оригинал и размытая рядом (blurred_url пуст, если до SAM дело не дошло)."""
+    if item.item_type != "upload":
+        return {}
+    w = _work_of(db, item) if show else None
+    base = f"/api/review/items/{item.id}/image?version="
+    return {
+        "original_url": base + "original" if w and _upload_file(w, "original") else None,
+        "blurred_url": base + "blurred" if w and _upload_file(w, "blurred") else None,
     }
 
 
@@ -156,9 +179,18 @@ def item_detail(item_id: int, db: Db, who: Adult):
 
 
 @router.get("/review/items/{item_id}/image")
-def item_image(item_id: int, db: Db, who: Adult):
+def item_image(item_id: int, db: Db, who: Adult, version: str | None = None):
     item = _mine(db, who, item_id)
     w = _work_of(db, item) if item.item_type in IMAGE_TYPES else None
+    if w is not None and item.item_type == "upload":
+        if version not in (None, "original", "blurred"):
+            raise HTTPException(422, "bad_version")
+        p = _upload_file(w, version) if version else (
+            _upload_file(w, "blurred") or _upload_file(w, "original")
+        )
+        if p is None:
+            raise HTTPException(404, "not_found")
+        return FileResponse(p, media_type="image/webp", headers={"Cache-Control": "private"})
     if w is None or not w.file_path or not Path(w.file_path).is_file():
         raise HTTPException(404, "not_found")
     return FileResponse(w.file_path, media_type="image/webp", headers={"Cache-Control": "private"})

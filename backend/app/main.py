@@ -12,6 +12,7 @@ from app.feed.router import router as feed_router
 from app.moderation.router import router as moderation_router
 from app.works.image import pipeline
 from app.works.image.router import router as image_router
+from app.works.upload.router import router as upload_router
 
 
 @asynccontextmanager
@@ -25,6 +26,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Mentorium Creative Studio", lifespan=lifespan)
 app.include_router(accounts_router)
 app.include_router(image_router)
+app.include_router(upload_router)
 app.include_router(feed_router)
 app.include_router(moderation_router)
 app.include_router(assignments_router)

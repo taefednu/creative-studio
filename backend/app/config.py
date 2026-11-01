@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     IMAGE_PRICE: int = 1
     IMAGE_TIMEOUT: float = 60.0
     UPLOAD_DIR: str = "data/uploads"
+    # Загрузки (#15): лимиты и SAM. Перекодирование режет метаданные (EXIF с геолокацией).
+    UPLOAD_MAX_BYTES: int = 5_000_000
+    UPLOAD_MAX_PIXELS: int = 25_000_000  # проверяется до полной распаковки: защита от «бомб»
+    UPLOAD_MAX_SIDE: int = 1600  # длинная сторона после перекодирования
+    SAM_TIMEOUT: float = 60.0
+    BLUR_PAD: float = 0.15  # запас вокруг бокса, доля большей стороны
     # Аккаунты (#4). Секрет подписи сессий — только из env.
     SESSION_SECRET: str = Field(min_length=32)  # пустой ключ = любой подделает cookie
     SESSION_DAYS: int = 30
