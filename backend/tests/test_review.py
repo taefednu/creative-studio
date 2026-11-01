@@ -1,6 +1,7 @@
 """Тикет #9: экран «Задержано». Ловушки из traps.md и тикета."""
 
 # ruff: noqa: F401, F811, I001
+import pytest
 from datetime import timedelta
 
 from fastapi.testclient import TestClient
@@ -113,12 +114,18 @@ def test_urgent_comment_both_no_text_in_list_no_approve(w, fake):
         assert who.post(f"/api/review/items/{it['id']}/approve").status_code == 409
     assert w.teacher2.get(f"/api/review/items/{it['id']}").status_code == 404
     assert w.b.get("/api/held/mine").json() == []  # ребёнку «блока» нет
+    assert w.teacher.post(f"/api/review/items/{it['id']}/reject").status_code == 409
+    # учитель посмотрел днём — родитель вечером всё ещё видит сигнал
     r = w.teacher.post(f"/api/review/items/{it['id']}/seen")
+    assert r.json()["status"] == "pending"
+    assert queue(w.teacher) == [] and [i["id"] for i in queue(w.parent)] == [it["id"]]
+    assert count(w.teacher) == 0 and count(w.parent) == 1
+    r = w.parent.post(f"/api/review/items/{it['id']}/seen")
     assert r.json()["status"] == "rejected"
-    assert queue(w.teacher) == [] and queue(w.parent) == []
+    assert queue(w.parent) == []
     with db.new_session() as s:
         i = s.get(HeldItem, it["id"])
-        assert i.decided_by.startswith("teacher:")
+        assert i.decided_by.startswith("parent:")
     assert w.a.get(f"/api/posts/{pid}/comments").json() == []  # ничего не опубликовано
     assert w.teacher.post(f"/api/review/items/{it['id']}/approve").status_code == 409
 
@@ -177,3 +184,20 @@ def test_unauthenticated_and_child_rejected(w):
     assert TestClient(app).get("/api/review/queue").status_code == 401
     assert w.a.get("/api/review/queue").status_code == 401
     assert w.a.get("/api/review/count").status_code == 401
+
+
+def test_handler_failure_keeps_item_pending(w, fake, monkeypatch):
+    from app.moderation import service
+
+    w.fake = fake
+    held_post(w)
+    iid = queue(w.teacher)[0]["id"]
+
+    def boom(db, item):
+        raise RuntimeError("database is locked")
+
+    monkeypatch.setitem(service._registry, "post", service.Handlers(boom, boom))
+    with pytest.raises(RuntimeError):
+        w.teacher.post(f"/api/review/items/{iid}/approve")
+    with db.new_session() as s:
+        assert s.get(HeldItem, iid).status == "pending"

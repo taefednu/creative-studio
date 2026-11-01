@@ -20,7 +20,7 @@ from app.assignments.models import Submission
 from app.db import get_session
 from app.feed.models import Comment, Post
 from app.moderation.models import HeldItem
-from app.moderation.service import decide
+from app.moderation.service import close_urgent, decide
 from app.works.image.models import Work
 
 router = APIRouter(prefix="/api")
@@ -61,8 +61,15 @@ def _scope(role: str, uid: int):
     )
 
 
+def _seen_col(role: str):
+    return HeldItem.seen_teacher_at if role == "teacher" else HeldItem.seen_parent_at
+
+
 def _pending(role: str, uid: int):
-    return select(HeldItem).where(HeldItem.status == "pending", *_scope(role, uid))
+    # Просмотренное срочное уходит только из очереди этого взрослого: второй ещё должен его увидеть.
+    return select(HeldItem).where(
+        HeldItem.status == "pending", _seen_col(role).is_(None), *_scope(role, uid)
+    )
 
 
 def _mine(db: Session, who: tuple[str, int], item_id: int) -> HeldItem:
@@ -163,7 +170,7 @@ def _by(who: tuple[str, int]) -> str:
 
 def _settle(db: Session, item: HeldItem, approve: bool, who: tuple[str, int]) -> dict:
     target = "approved" if approve else "rejected"
-    if approve and item.urgent:
+    if item.urgent:
         raise HTTPException(409, "urgent_not_approvable")
     if item.status == target:
         return {"id": item.id, "status": item.status}  # повтор: ничего не меняем
@@ -188,17 +195,24 @@ def reject(item_id: int, db: Db, who: Adult):
 
 @router.post("/review/items/{item_id}/seen")
 def seen(item_id: int, db: Db, who: Adult):
-    """Срочное закрывает взрослый, ничего не публикуя; обработчик вида работы не зовётся."""
+    """Отметка своя у каждого взрослого; запись закрывается, когда посмотрели все, кто её получает."""
     item = _mine(db, who, item_id)
     if not item.urgent:
         raise HTTPException(409, "not_urgent")
     db.execute(
-        update(HeldItem)
-        .where(HeldItem.id == item.id, HeldItem.status == "pending")
-        .values(status="rejected", decided_at=clock.now(), decided_by=_by(who))
+        update(HeldItem).where(HeldItem.id == item.id).values({_seen_col(who[0]): clock.now()})
     )
     db.commit()
     db.refresh(item)
+    child = db.get(Child, item.child_id)
+    has_teacher = db.scalar(
+        select(ClassMembership.id).where(ClassMembership.child_id == item.child_id)
+    )
+    waiting_parent = child is not None and child.parent_id and item.seen_parent_at is None
+    waiting_teacher = has_teacher is not None and item.seen_teacher_at is None
+    if not waiting_parent and not waiting_teacher:
+        close_urgent(db, item, _by(who))
+        db.refresh(item)
     return {"id": item.id, "status": item.status}
 
 
@@ -211,7 +225,7 @@ def held_mine(c: Annotated[Child, Depends(current_child)], db: Db):
             HeldItem.child_id == c.id,
             HeldItem.status == "rejected",
             HeldItem.urgent.is_(False),
-            HeldItem.item_type.in_(("post", "comment")),
+            HeldItem.item_type.in_(("post", "comment", "prompt", "image")),
         )
         .order_by(HeldItem.id.desc())
         .limit(20)
@@ -221,6 +235,9 @@ def held_mine(c: Annotated[Child, Depends(current_child)], db: Db):
         if i.item_type == "post":
             p = db.get(Post, int(i.target_id))
             text = p.caption if p is not None else None
+        elif i.item_type in ("prompt", "image"):
+            w = db.get(Work, int(i.target_id))
+            text = w.child_text if w is not None else None
         else:
             cm = db.get(Comment, int(i.target_id))
             text = cm.text if cm is not None else None

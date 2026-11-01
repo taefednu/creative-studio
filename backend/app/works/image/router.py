@@ -167,7 +167,8 @@ def _approve(db: Session, item: HeldItem) -> None:
 
 def _reject(db: Session, item: HeldItem) -> None:
     w = db.get(Work, int(item.target_id))
-    if w is not None:
+    # Ребёнок с самоповреждением остаётся на тёплом ответе, не на отказе.
+    if w is not None and w.status != "support":
         w.status = "refused"
         db.commit()
 

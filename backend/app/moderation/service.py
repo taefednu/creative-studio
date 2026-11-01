@@ -60,26 +60,39 @@ def hold(
 
 
 def decide(db: Session, item: HeldItem, approve: bool, by: str) -> bool:
-    """False — ничего не изменено: уже решено, нет обработчика или срочное (его не одобряют).
+    """False — ничего не изменено: уже решено, нет обработчика или срочное (его не решают, а смотрят).
 
     Запись забирается атомарным UPDATE ... WHERE status='pending': повторное и параллельное
     решение не проходит, обработчик зовётся ровно один раз.
     """
+    if item.urgent:
+        return False
+    return _settle(db, item, "approved" if approve else "rejected", by)
+
+
+def close_urgent(db: Session, item: HeldItem, by: str) -> bool:
+    """Срочное закрыто: все взрослые посмотрели. Ничего не публикуется, зовём только on_reject."""
+    return _settle(db, item, "rejected", by)
+
+
+def _settle(db: Session, item: HeldItem, status: str, by: str) -> bool:
     h = _registry.get(item.item_type)
-    if h is None or (approve and item.urgent):
+    if h is None:
         return False
     res = db.execute(
         update(HeldItem)
         .where(HeldItem.id == item.id, HeldItem.status == "pending")
-        .values(
-            status="approved" if approve else "rejected",
-            decided_at=clock.now(),
-            decided_by=by,
-        )
+        .values(status=status, decided_at=clock.now(), decided_by=by)
     )
-    db.commit()
     if res.rowcount != 1:
+        db.rollback()
         return False
-    db.refresh(item)
-    (h.on_approve if approve else h.on_reject)(db, item)
+    # Статус и обработчик — одна транзакция: упал обработчик, запись осталась pending.
+    try:
+        db.refresh(item)
+        (h.on_approve if status == "approved" else h.on_reject)(db, item)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return True

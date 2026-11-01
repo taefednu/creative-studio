@@ -27,3 +27,6 @@ class HeldItem(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=clock.now)
     decided_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     decided_by: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    # Срочное получают оба взрослых, поэтому «просмотрено» у каждого своё.
+    seen_parent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    seen_teacher_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
