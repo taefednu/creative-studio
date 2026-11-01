@@ -5,6 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
@@ -14,11 +16,13 @@ from evals.metrics import calculate_metrics, render_markdown
 
 
 def predict(text: str, type: str, lang: str) -> dict[str, Any]:
-    """Единая точка будущего подключения живого классификатора."""
-    raise NotImplementedError(
-        "Живая модель ещё не подключена. Передайте готовый JSONL через --predictions; "
-        "другой агент должен заменить только evals.run.predict()."
-    )
+    """Живой классификатор продукта: backend/app/safety (тот же код, что видит ребёнок)."""
+    backend_dir = str(Path(__file__).resolve().parent.parent / "backend")
+    if backend_dir not in sys.path:
+        sys.path.insert(0, backend_dir)
+    from app.safety.evals_adapter import predict as live_predict
+
+    return live_predict(text, type, lang)
 
 
 def get_dev_few_shot(
@@ -84,21 +88,22 @@ def _fake_predict(text: str, record_type: str, lang: str) -> dict[str, Any]:
 
 
 def predict_records(
-    records: Iterable[Mapping[str, Any]], *, fake: bool = False
+    records: Iterable[Mapping[str, Any]], *, fake: bool = False, workers: int = 8
 ) -> list[dict[str, Any]]:
     """Запускает предсказатель; исключение модели помечает запись как model error."""
-    predictions: list[dict[str, Any]] = []
     predictor = _fake_predict if fake else predict
-    for record in records:
+
+    def one(record: Mapping[str, Any]) -> dict[str, Any]:
         try:
             response = predictor(record["text"], record["type"], record["lang"])
             if not isinstance(response, Mapping):
-                predictions.append({"id": record["id"], "action": "error"})
-            else:
-                predictions.append({**response, "id": record["id"]})
+                return {"id": record["id"], "action": "error"}
+            return {**response, "id": record["id"]}
         except Exception:
-            predictions.append({"id": record["id"], "action": "error"})
-    return predictions
+            return {"id": record["id"], "action": "error"}
+
+    with ThreadPoolExecutor(max_workers=1 if fake else workers) as pool:
+        return list(pool.map(one, records))
 
 
 def load_predictions(path: Path, wanted_ids: set[str]) -> list[dict[str, Any]]:
