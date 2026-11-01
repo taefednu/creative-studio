@@ -1,0 +1,16 @@
+/* Токены светлой темы (docs/design/create.jpg). Цвета в компонентах только отсюда. */
+:root {
+  --color-bg: #f6f3ff;
+  --color-surface: #ffffff;
+  --color-border: #e0d9fb;
+  --color-primary: #7c4dff;
+  --color-primary-fg: #ffffff;
+  --color-primary-soft: #ece6ff;
+  --color-heading: #1f2a5c;
+  --color-text: #2f3866;
+  --color-muted: #7a80a6;
+  --color-gold: #f5b82e;
+  --color-star: #ffc83d;
+  --radius-card: 20px;
+  --shadow-card: 0 4px 16px rgba(124, 77, 255, 0.1);
+}

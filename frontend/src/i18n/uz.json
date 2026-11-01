@@ -1,0 +1,11 @@
+{
+  "app": { "name": "Creative Studio" },
+  "nav": { "feed": "Lenta", "create": "Yaratish", "tasks": "Topshiriqlar", "mine": "Mening ishlarim" },
+  "lang": { "label": "Til" },
+  "pages": {
+    "feed": "Bu yerda sinf lentasi bo‘ladi",
+    "create": "Bu yerda sen rasmlar yaratasan",
+    "tasks": "Bu yerda o‘qituvchining topshiriqlari bo‘ladi",
+    "mine": "Bu yerda sening ishlaring bo‘ladi"
+  }
+}

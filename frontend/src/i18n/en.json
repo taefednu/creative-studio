@@ -1,0 +1,11 @@
+{
+  "app": { "name": "Creative Studio" },
+  "nav": { "feed": "Feed", "create": "Create", "tasks": "Tasks", "mine": "My works" },
+  "lang": { "label": "Language" },
+  "pages": {
+    "feed": "Your class feed will appear here",
+    "create": "This is where you will create pictures",
+    "tasks": "Tasks from your teacher will appear here",
+    "mine": "Your works will appear here"
+  }
+}
