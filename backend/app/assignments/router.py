@@ -82,8 +82,8 @@ def _due(a: Assignment) -> str | None:
 
 
 def _teacher_view(db: Session, a: Assignment) -> dict:
-    n = db.scalar(
-        select(func.count()).select_from(Submission).where(
+    n = db.scalar(  # детей, а не работ: «сдали 4 из 12»
+        select(func.count(func.distinct(Submission.child_id))).where(
             Submission.assignment_id == a.id, Submission.status == "accepted"
         )
     )
@@ -222,13 +222,28 @@ def child_assignments(c: ChildDep, db: Db):
             .order_by(Assignment.due_at.is_(None), Assignment.due_at, Assignment.id)
         )
     )
-    mine: dict[int, list[dict]] = {}
-    for s in db.scalars(
-        select(Submission).where(
-            Submission.child_id == c.id, Submission.assignment_id.in_([a.id for a in rows])
+    subs = list(
+        db.scalars(
+            select(Submission).where(
+                Submission.child_id == c.id, Submission.assignment_id.in_([a.id for a in rows])
+            )
         )
-    ):
-        mine.setdefault(s.assignment_id, []).append({"work_id": s.work_id, "status": s.status})
+    )
+    # Срочная сдача: ребёнок не видит «на проверке», только тёплый ответ в момент сдачи.
+    urgent = set(
+        db.scalars(
+            select(HeldItem.target_id).where(
+                HeldItem.item_type == "submission",
+                HeldItem.urgent.is_(True),
+                HeldItem.target_id.in_([str(s.id) for s in subs]),
+            )
+        )
+    )
+    mine: dict[int, list[dict]] = {}
+    for s in subs:
+        mine.setdefault(s.assignment_id, []).append(
+            {"work_id": s.work_id, "status": s.status, "support": str(s.id) in urgent}
+        )
     return [
         {
             "id": a.id,
