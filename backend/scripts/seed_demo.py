@@ -36,7 +36,7 @@ PICTURES = [3, 7, 1]
 KINDS = ("star", "heart", "laugh", "wow")
 MATES = ["Lumi", "SkyFox", "PixelPanda", "MoonCat", "DinoDash", "LimeLion", "OllieTree", "SunnyBee", "TikTak", "Zuzu"]
 CAPTIONS = {0: "Лиса идёт домой", 2: "Мой первый робот", 5: "Тут живёт мой друг", 7: "Динозавр охраняет коврик",
-            9: "A rocket for my brother", 12: "Котёнок и его венок", 15: "Дракончик не страшный"}
+            12: "Котёнок и его венок", 15: "Дракончик не страшный"}
 LANGS = ["ru", "en", "uz"]
 
 
@@ -46,7 +46,8 @@ def load_images(d: Path) -> list[dict]:
     meta = {m["slug"]: m for m in json.loads(mf.read_text(encoding="utf-8"))} if mf.is_file() else {}
     slugs = [s for s in meta if (d / f"{s}.webp").is_file()] or sorted(p.stem for p in d.glob("*.webp"))
     return [
-        {"path": d / f"{s}.webp", "slug": s, "template_id": meta.get(s, {}).get("template_id")
+        {"path": d / f"{s}.webp", "slug": s, "idea": meta.get(s, {}).get("idea_ru"),
+         "template_id": meta.get(s, {}).get("template_id")
          or TEMPLATES[i % len(TEMPLATES)].id}
         for i, s in enumerate(slugs)
     ]
@@ -120,7 +121,8 @@ def seed(images_dir: Path) -> dict:
         extra = {"remix_of_post_id": posts[3].id} if i == 9 else {}
         when = ago(hours=i * 8 + 1)
         w = work(author, i, when, **extra)
-        p = Post(work_id=w.id, child_id=author.id, audience="class", class_id=room.id, caption=CAPTIONS.get(i),
+        p = Post(work_id=w.id, child_id=author.id, audience="class", class_id=room.id,
+                 caption=CAPTIONS.get(i) or imgs[i % n_img]["idea"],
                  status="published", best=i in (2, 5), remix_allowed=i != 8, created_at=when)
         s.add(p)
         s.flush()
