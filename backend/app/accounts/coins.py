@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import DateTime, bindparam, func, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -32,3 +32,28 @@ def grant_daily(db: Session, child_id: int) -> None:
     amount = max(0, min(s.COIN_DAILY, s.COIN_CAP - balance(db, child_id)))
     add_entry(db, child_id, amount, "daily", ref)
     db.commit()
+
+
+def has_entry(db: Session, ref_id: str) -> bool:
+    return db.scalar(select(CoinLedger.id).where(CoinLedger.ref_id == ref_id)) is not None
+
+
+_CHARGE = text(
+    "INSERT INTO coin_ledger (child_id, delta, reason, ref_id, created_at) "
+    "SELECT :c, :d, :r, :ref, :now "
+    "WHERE (SELECT COALESCE(SUM(delta), 0) FROM coin_ledger WHERE child_id = :c) >= :amt"
+).bindparams(bindparam("now", type_=DateTime))
+
+
+def charge(db: Session, child_id: int, amount: int, reason: str, ref_id: str) -> str:
+    """Списание без ухода в минус: проверка баланса и вставка — один оператор SQL.
+
+    'ok' | 'no_coins' | 'duplicate' (запись с таким ref_id уже есть).
+    """
+    params = {"c": child_id, "d": -amount, "r": reason, "ref": ref_id, "now": clock.now(), "amt": amount}
+    try:
+        with db.begin_nested():
+            res = db.execute(_CHARGE, params)
+    except IntegrityError:
+        return "duplicate"
+    return "ok" if res.rowcount == 1 else "no_coins"

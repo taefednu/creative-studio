@@ -9,6 +9,7 @@ dependencies = [
   "openai",
   "pydantic-settings",
   "httpx",
+  "pillow>=13.0.0",
 ]
 
 [dependency-groups]

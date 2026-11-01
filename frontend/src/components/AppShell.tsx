@@ -8,12 +8,13 @@ import { useLoad } from '../useLoad'
 import Coin from './Coin'
 import ErrorText, { errorKey } from './ErrorText'
 import LangSwitch from './LangSwitch'
+import NavIcon from './NavIcon'
 
 const TABS = [
   { to: '/', key: 'feed' },
   { to: '/create', key: 'create' },
   { to: '/tasks', key: 'tasks' },
-  { to: '/mine', key: 'mine' },
+  { to: '/my-works', key: 'mine' },
 ] as const
 
 type Me = {
@@ -22,6 +23,8 @@ type Me = {
   class: { id: number; name: string } | null
   has_parent: boolean
 }
+
+export type ShellContext = { reloadMe: () => void; coins: number | null }
 
 const loadMe = () => api<Me>('/api/child/me')
 
@@ -51,14 +54,19 @@ export default function AppShell() {
     navigate('/login')
   }
 
+  const ctx: ShellContext = { reloadMe: load, coins: me ? me.coins : null }
+
   return (
-    <div className="min-h-screen bg-bg">
-      <header className="flex flex-wrap items-center gap-3 px-4 py-3 md:px-8">
+    <div className="min-h-screen bg-bg pb-24 md:pb-6">
+      <header className="flex items-center gap-2 border-b border-border bg-surface px-3 py-2 md:grid md:h-[85px] md:grid-cols-[1fr_auto_1fr] md:gap-3 md:px-8 md:py-0">
         <div className="flex items-center gap-2">
           <img src="/mentorium-logo.png" alt="Mentorium" className="h-9 w-auto" />
-          <span className="text-lg font-extrabold text-heading">{t('app.name')}</span>
+          <span className="hidden text-lg font-extrabold text-heading md:inline">{t('app.name')}</span>
         </div>
-        <nav className="order-last flex w-full gap-2 overflow-x-auto md:order-none md:ml-6 md:w-auto">
+        <nav
+          aria-label="main"
+          className="fixed inset-x-0 bottom-0 z-10 flex justify-around gap-1 border-t border-border bg-surface px-2 py-2 md:static md:z-auto md:justify-center md:gap-3 md:border-0 md:bg-transparent md:p-0"
+        >
           {TABS.map((tab) => (
             <NavLink
               key={tab.key}
@@ -66,48 +74,57 @@ export default function AppShell() {
               end={tab.to === '/'}
               data-testid={`tab-${tab.key}`}
               className={({ isActive }) =>
-                `whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold ${
+                `flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-2xl px-1 py-1.5 text-xs font-extrabold md:flex-none md:flex-row md:gap-2 md:rounded-full md:px-5 md:py-3 md:text-base ${
                   isActive
-                    ? 'bg-primary text-primary-fg'
-                    : 'border border-border bg-surface text-heading'
+                    ? 'bg-primary text-primary-fg shadow-card'
+                    : 'text-heading md:border md:border-border md:bg-surface'
                 }`
               }
             >
-              {t(`nav.${tab.key}`)}
+              <NavIcon name={tab.key} className="h-6 w-6 shrink-0" />
+              <span className="max-w-full truncate">{t(`nav.${tab.key}`)}</span>
             </NavLink>
           ))}
         </nav>
-        <LangSwitch />
-        {me && (
-          <div className="flex items-center gap-3">
-            <span
-              data-testid="coins"
-              className="flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1 font-extrabold text-heading"
-              title={t('child.coins')}
-            >
-              <Coin />
-              {me.coins}
-            </span>
-            <span data-testid="my-nick" className="text-sm font-bold text-heading">
-              {me.nick}
-            </span>
-            <button
-              type="button"
-              data-testid="logout"
-              onClick={() => void logout()}
-              className="rounded-full border border-border bg-surface px-3 py-1 text-sm font-bold text-heading"
-            >
-              {t('auth.logout')}
-            </button>
-          </div>
-        )}
+        <div className="ml-auto flex items-center gap-2 md:gap-3">
+          <LangSwitch />
+          {me && (
+            <>
+              <span
+                data-testid="coins"
+                className="flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1 text-lg font-extrabold text-heading"
+                title={t('child.coins')}
+              >
+                <Coin className="h-6 w-6" />
+                {me.coins}
+              </span>
+              <span data-testid="my-nick" className="hidden text-sm font-bold text-heading md:inline">
+                {me.nick}
+              </span>
+              <button
+                type="button"
+                data-testid="logout"
+                onClick={() => void logout()}
+                className="hidden rounded-full border border-border bg-surface px-3 py-1 text-sm font-bold text-heading md:inline"
+              >
+                {t('auth.logout')}
+              </button>
+            </>
+          )}
+        </div>
       </header>
-      <main className="px-4 py-6 md:px-8">
+      <main className="px-4 py-5 md:px-[35px]">
+        <Outlet context={ctx} />
+        {me?.class && (
+          <p data-testid="my-class" className="mt-6 text-sm font-bold text-muted">
+            {t('child.myClass', { name: me.class.name })}
+          </p>
+        )}
         {me && !me.class && (
           <form
             onSubmit={(e) => void join(e)}
             data-testid="join-class"
-            className="mb-4 flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface p-4 shadow-card"
+            className="mt-6 flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface p-4 shadow-card"
           >
             <label htmlFor="class-code" className="text-sm font-extrabold text-heading">
               {t('child.classCode')}
@@ -133,16 +150,17 @@ export default function AppShell() {
             </div>
           </form>
         )}
-        {me?.class && (
-          <p data-testid="my-class" className="mb-4 text-sm font-bold text-muted">
-            {t('child.myClass', { name: me.class.name })}
-          </p>
-        )}
-        <Outlet />
-        <p className="mt-6 flex items-center gap-2 text-sm text-muted">
+        <p className="mt-4 flex items-center gap-2 text-sm text-muted">
           <Coin className="h-5 w-5 shrink-0" />
           {t('child.moreCoins')}
         </p>
+        <button
+          type="button"
+          onClick={() => void logout()}
+          className="mt-4 rounded-full border border-border bg-surface px-4 py-1 text-sm font-bold text-heading md:hidden"
+        >
+          {t('auth.logout')}
+        </button>
       </main>
     </div>
   )

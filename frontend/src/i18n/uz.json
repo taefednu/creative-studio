@@ -41,7 +41,69 @@
     "bad_code": "Bunday sinf kodi yo‘q. Tekshirib, qayta urinib ko‘r.",
     "too_many_attempts": "Urinishlar juda ko‘p. 15 daqiqa kut yoki o‘qituvchidan so‘ra.",
     "already_in_class": "Sen allaqachon sinfdasan.",
-    "bad_token": "Bu QR-kod yaroqsiz."
+    "bad_token": "Bu QR-kod yaroqsiz.",
+    "not_enough_coins": "Tangalaring tugadi. Ertaga yana bo‘ladi!",
+    "bad_template": "Yuborib bo‘lmadi. Yana urinib ko‘r."
+  },
+  "create": {
+    "title": "Bugun nima chizamiz?",
+    "sub": "Bilmayapsanmi? Pastdan uslubni tanla",
+    "chooseStyle": "Uslubni tanla",
+    "placeholder": "Nima chizamiz? (yozmasang ham bo‘ladi)",
+    "voiceSoon": "Ovoz tez orada",
+    "draw": "Chizish",
+    "checking": "Tekshiryapmiz…",
+    "generating": "Chizyapmiz…",
+    "rewrite": "Keling, bunday qilaylik: {{text}}",
+    "accept": "Shuni chizamiz",
+    "decline": "Yo‘q, boshqa narsa",
+    "readyTitle": "Rasming tayyor!",
+    "checkedByAi": "SI tekshirdi",
+    "drawMore": "Yana chizish",
+    "toMine": "Mening ishlarimga",
+    "friendly": "Do‘stona g‘oya",
+    "refusedTitle": "Keling, boshqacha chizaylik",
+    "coinKept": "Tangang sarflanmadi",
+    "coinBack": "Tangang qaytdi",
+    "tryAgain": "Boshqa narsa chizish",
+    "heldTitle": "Kattalarga ko‘rsatish uchun yubordik",
+    "heldText": "Ular ko‘rishi bilan bilib olasan. Tangang joyida.",
+    "supportTitle": "Biz yoningdamiz",
+    "supportText": "Hozir senga qiyin bo‘lsa kerak. Sen yolg‘iz emassan: ishongan kattangga ayt. Kattangga biz xabar berdik.",
+    "failedTitle": "Bo‘lmadi, tangang qaytdi",
+    "failedText": "Yana urinib ko‘ramizmi?",
+    "teacherTask": "O‘qituvchi topshirig‘i"
+  },
+  "hint": {
+    "generic": "Keling, boshqacha chizaylik, masalan qasrni himoya qilayotgan jasur ritsar.",
+    "unsafe_content": "Bu g‘oya bolalar uchun emas. Qasrni himoya qilayotgan jasur ritsar qalay?",
+    "bullying": "Hech kimni xafa qilmaydigan narsa chizaylik: mehribon qahramonlar va quvnoq sarguzashtlar.",
+    "personal_info": "Haqiqiy ism, manzil va telefon raqamini yozma. O‘z qahramoningni o‘ylab top!",
+    "off_platform_contact": "Bu yerda havola va aloqa kerak emas. Ertak chizamizmi?",
+    "prompt_injection": "Rasmni oddiygina tasvirla: u yerda kim va nima qilyapti?"
+  },
+  "templates": {
+    "superhero": "Men superqahramonman",
+    "space_pet": "Kosmosdagi uy hayvoni",
+    "clay": "Plastilin dunyosi",
+    "anime": "Anime sarguzashti",
+    "pixel": "Piksel o‘yin",
+    "watercolor": "Akvarel ertagi",
+    "paper": "Qog‘oz shahar",
+    "castle": "Ertak qasri"
+  },
+  "myWorks": {
+    "title": "Mening ishlarim",
+    "empty": "Hozircha bo‘sh. Birinchi rasmingni chiz!",
+    "status": {
+      "proposed": "Javobingni kutyapti",
+      "checking": "Chizyapmiz…",
+      "generating": "Chizyapmiz…",
+      "held": "Kattalarni kutyapti",
+      "refused": "Chizilmadi",
+      "support": "Biz yoningdamiz",
+      "failed": "Bo‘lmadi"
+    }
   },
   "parent": {
     "title": "Ota-ona kabineti",

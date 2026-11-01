@@ -3,7 +3,9 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AppShell from './components/AppShell'
 import { HOME, useSession } from './features/auth/session'
 import type { Role } from './features/auth/session'
+import Create from './pages/Create'
 import Login from './pages/Login'
+import MyWorks from './pages/MyWorks'
 import ParentCabinet from './pages/ParentCabinet'
 import QrLanding from './pages/QrLanding'
 import Stub from './pages/Stub'
@@ -27,9 +29,9 @@ export default function App() {
       <Route path="/teacher" element={<Guard role="teacher"><TeacherCabinet /></Guard>} />
       <Route element={<Guard role="child"><AppShell /></Guard>}>
         <Route index element={<Stub name="feed" />} />
-        <Route path="create" element={<Stub name="create" />} />
+        <Route path="create" element={<Create />} />
         <Route path="tasks" element={<Stub name="tasks" />} />
-        <Route path="mine" element={<Stub name="mine" />} />
+        <Route path="my-works" element={<MyWorks />} />
       </Route>
     </Routes>
   )

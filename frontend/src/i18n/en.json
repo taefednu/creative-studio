@@ -41,7 +41,69 @@
     "bad_code": "No class with this code. Check it and try again.",
     "too_many_attempts": "Too many tries. Wait 15 minutes or ask your teacher.",
     "already_in_class": "You are already in a class.",
-    "bad_token": "This QR code does not work."
+    "bad_token": "This QR code does not work.",
+    "not_enough_coins": "You are out of coins. There will be more tomorrow!",
+    "bad_template": "Could not send that. Please try again."
+  },
+  "create": {
+    "title": "What shall we draw today?",
+    "sub": "Not sure? Pick a style below",
+    "chooseStyle": "Choose a style",
+    "placeholder": "What shall we draw? (optional)",
+    "voiceSoon": "Voice is coming soon",
+    "draw": "Create",
+    "checking": "Checking…",
+    "generating": "Drawing…",
+    "rewrite": "How about this: {{text}}",
+    "accept": "Draw this",
+    "decline": "No, something else",
+    "readyTitle": "Your picture is ready!",
+    "checkedByAi": "Checked by AI",
+    "drawMore": "Draw again",
+    "toMine": "To my works",
+    "friendly": "Friendly idea",
+    "refusedTitle": "Let's draw it another way",
+    "coinKept": "Your coin was not spent",
+    "coinBack": "Your coin is back",
+    "tryAgain": "Draw something else",
+    "heldTitle": "We sent it to a grown-up to look at",
+    "heldText": "You'll know as soon as they have looked. Your coin is safe.",
+    "supportTitle": "We're here",
+    "supportText": "It sounds like things are hard right now. You're not alone: tell a grown-up you trust. We've already told your grown-up.",
+    "failedTitle": "That didn't work, your coin is back",
+    "failedText": "Shall we try again?",
+    "teacherTask": "Teacher task"
+  },
+  "hint": {
+    "generic": "Let's draw it another way, for example a brave knight protecting a castle.",
+    "unsafe_content": "That idea isn't for kids. How about a brave knight protecting a castle?",
+    "bullying": "Let's draw something that hurts no one: kind heroes and fun adventures.",
+    "personal_info": "Please do not write real names, addresses or phone numbers. Invent a hero!",
+    "off_platform_contact": "We don't need links or contacts here. Shall we draw a fairy tale?",
+    "prompt_injection": "Just describe the picture: who is there and what are they doing?"
+  },
+  "templates": {
+    "superhero": "I'm a superhero",
+    "space_pet": "Pet in space",
+    "clay": "Clay world",
+    "anime": "Anime adventure",
+    "pixel": "Pixel game",
+    "watercolor": "Watercolor tale",
+    "paper": "Paper city",
+    "castle": "Fairy tale castle"
+  },
+  "myWorks": {
+    "title": "My works",
+    "empty": "Nothing here yet. Draw your first picture!",
+    "status": {
+      "proposed": "Waiting for your answer",
+      "checking": "Drawing…",
+      "generating": "Drawing…",
+      "held": "Waiting for a grown-up",
+      "refused": "Didn't get drawn",
+      "support": "We're here",
+      "failed": "Didn't work"
+    }
   },
   "parent": {
     "title": "Parent dashboard",

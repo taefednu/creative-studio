@@ -21,6 +21,7 @@ export default {
         danger: v('color-danger'),
         'danger-soft': v('color-danger-soft'),
         success: v('color-success'),
+        'success-soft': v('color-success-soft'),
       },
       fontFamily: { sans: ['Nunito', 'system-ui', 'sans-serif'] },
       borderRadius: { card: 'var(--radius-card)' },

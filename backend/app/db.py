@@ -35,3 +35,10 @@ def get_session() -> Iterator[Session]:
     assert _session_factory is not None
     with _session_factory() as session:
         yield session
+
+
+def new_session() -> Session:
+    """Своя сессия для фоновых задач (вне запроса). Закрывает вызывающий."""
+    get_engine()
+    assert _session_factory is not None
+    return _session_factory()

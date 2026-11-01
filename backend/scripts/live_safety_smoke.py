@@ -7,7 +7,7 @@ import time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 os.environ.setdefault("SESSION_SECRET", "smoke")
 
-from app.safety import check_image, check_text  # noqa: E402
+from app.safety import check_image, check_text
 
 # (текст, kind, lang, допустимые action)
 CASES = [

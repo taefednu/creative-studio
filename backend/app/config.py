@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     ALLOW_THRESHOLD: float = 0.8  # «категории нет» принимаем, только если уверенность не ниже
     PRESENT_MIN: float = 0.5  # «категория есть» ниже этого — серая зона, hold
     SELF_HARM_MIN: float = 0.2  # self_harm выше этого — support (лучше лишний сигнал)
+    # Картинки (#6). Цена и таймаут — конфиг (spec §3).
+    IMAGE_PRICE: int = 1
+    IMAGE_TIMEOUT: float = 60.0
+    UPLOAD_DIR: str = "data/uploads"
     # Аккаунты (#4). Секрет подписи сессий — только из env.
     SESSION_SECRET: str = Field(min_length=32)  # пустой ключ = любой подделает cookie
     SESSION_DAYS: int = 30

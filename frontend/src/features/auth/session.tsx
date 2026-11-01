@@ -34,4 +34,4 @@ export function useSession() {
   return useContext(SessionCtx)
 }
 
-export const HOME: Record<Role, string> = { child: '/', parent: '/parent', teacher: '/teacher' }
+export const HOME: Record<Role, string> = { child: '/create', parent: '/parent', teacher: '/teacher' }
