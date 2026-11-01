@@ -35,6 +35,14 @@ def viewer(db: Db, studio_session: Cookie_ = None) -> Viewer:
 V = Annotated[Viewer, Depends(viewer)]
 
 
+def viewer_or_guest(db: Db, studio_session: Cookie_ = None) -> Viewer:
+    """Открытая витрина: без входа, в service.access гостю доступны только посты «Лучшее»."""
+    return service.load_viewer(db, studio_session) or Viewer("guest")
+
+
+Guest = Annotated[Viewer, Depends(viewer_or_guest)]
+
+
 class NewPost(BaseModel):
     work_id: int
     audience: str = Field(pattern="^(class|family)$")
@@ -162,6 +170,15 @@ def publish(body: NewPost, c: AdultChild, db: Db):
 # ---------------- ленты ----------------
 
 
+def _urgent_targets(db: Session, item_type: str, ids: list[int]) -> set[int]:
+    rows = db.scalars(
+        select(HeldItem.target_id).where(
+            HeldItem.item_type == item_type, HeldItem.urgent.is_(True), HeldItem.target_id.in_([str(i) for i in ids])
+        )
+    )
+    return {int(t) for t in rows}
+
+
 def _page(db: Session, v: Viewer, q, before: int | None, limit: int) -> dict:
     q = q.where(Post.status == "published")
     if before is not None:
@@ -223,6 +240,7 @@ def _views(db: Session, v: Viewer, posts: list[Post]) -> list[dict]:
         if service.access(db, v, op) is not None:
             origin_nick[op.id] = db.scalar(select(Child.nick).where(Child.id == op.child_id))
     my_class = service.class_of(db, v.id) if v.role == "child" else None
+    urgent = _urgent_targets(db, "post", ids)
     out = []
     for p in posts:
         is_author = v.role == "child" and v.id == p.child_id
@@ -247,6 +265,8 @@ def _views(db: Session, v: Viewer, posts: list[Post]) -> list[dict]:
                 and open_for_remix(p),
                 "audience": p.audience,
                 "status": p.status,
+                # самоповреждение: ребёнку нельзя показывать «ждёт взрослого», только тёплый ответ
+                "support": is_author and p.id in urgent,
                 "best": p.best,
                 "reactions": counts[p.id],
                 "mine": mine[p.id],
@@ -299,7 +319,7 @@ def feed_family(db: Db, v: V, before: Before = None, limit: Limit = 20):
 
 
 @router.get("/feed/best")
-def feed_best(db: Db, v: V, before: Before = None, limit: Limit = 20):
+def feed_best(db: Db, v: Guest, before: Before = None, limit: Limit = 20):
     return _page(db, v, select(Post).where(Post.best.is_(True)), before, limit)
 
 
@@ -307,13 +327,13 @@ def feed_best(db: Db, v: V, before: Before = None, limit: Limit = 20):
 
 
 @router.get("/posts/{post_id}")
-def get_post(post_id: int, db: Db, v: V):
+def get_post(post_id: int, db: Db, v: Guest):
     p, _ = _get_post(db, v, post_id)
     return _views(db, v, [p])[0]
 
 
 @router.get("/posts/{post_id}/image")
-def post_image(post_id: int, db: Db, v: V):
+def post_image(post_id: int, db: Db, v: Guest):
     p, _ = _get_post(db, v, post_id)
     w = db.get(Work, p.work_id)
     if w is None or not w.file_path or not Path(w.file_path).is_file():
@@ -406,6 +426,7 @@ def list_comments(post_id: int, db: Db, v: V):
     else:
         q = q.where(Comment.status == "published")
     rows = db.execute(q.order_by(Comment.id).limit(200)).all()
+    urgent = _urgent_targets(db, "comment", [cm.id for cm, _ in rows])
     return [
         {
             "id": cm.id,
@@ -413,6 +434,7 @@ def list_comments(post_id: int, db: Db, v: V):
             "text": cm.text,
             "status": cm.status,
             "mine": v.role == "child" and cm.child_id == v.id,
+            "support": v.role == "child" and cm.child_id == v.id and cm.id in urgent,
             "created_at": cm.created_at.isoformat(),
         }
         for cm, nick in rows

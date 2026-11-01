@@ -174,6 +174,7 @@ def test_caption_support_is_urgent_both(w, fake):
     fake.d = D("support", urgent=True)
     r = publish(w, caption="мне плохо").json()
     assert r["status"] == "held" and r["support"] is True
+    assert w.a.get(f"/api/posts/{r['id']}").json()["support"] is True  # экран не скажет «ждёт взрослого»
     [item] = held("post")
     assert item.urgent and item.reviewer == "both"
     with db.new_session() as s:
@@ -232,7 +233,7 @@ def test_other_class_child_sees_nothing(w):
     assert w.c.put(f"/api/posts/{pid}/reactions/star").status_code == 404
     assert w.b.get(f"/api/posts/{pid}/image").status_code == 200
     assert w.d.get(f"/api/posts/{pid}").status_code == 404
-    assert TestClient(app).get(f"/api/posts/{pid}").status_code == 401
+    assert TestClient(app).get(f"/api/posts/{pid}").status_code == 404  # гость: как будто поста нет
 
 
 def test_teacher_only_own_classes(w):
@@ -397,6 +398,7 @@ def test_comment_support_urgent(w, fake):
     pid = pub_id(w)
     fake.d = D("support", urgent=True)
     assert comment(w.b, pid, "мне плохо").json()["status"] == "support"
+    assert [c["support"] for c in w.b.get(f"/api/posts/{pid}/comments").json()] == [True]
     [item] = held("comment")
     assert item.urgent and item.reviewer == "both"
     assert w.a.get(f"/api/posts/{pid}/comments").json() == []
@@ -450,3 +452,27 @@ def test_hidden_post_cannot_be_republished(w):
     r = w.a.post("/api/posts", json={"work_id": work, "audience": "class"})
     assert r.status_code == 409 and r.json()["detail"] == "removed_by_adult"
     assert w.b.get("/api/feed/class").json()["items"] == []
+
+
+def test_guest_sees_only_best(w):
+    """Открытая витрина: гость видит только «Лучшее», и ничего не может делать."""
+    pid = pub_id(w)
+    guest = TestClient(app)
+    assert guest.get(f"/api/posts/{pid}").status_code == 404
+    assert guest.get(f"/api/posts/{pid}/image").status_code == 404
+    assert guest.get("/api/feed/best").json()["items"] == []
+    assert guest.get("/api/feed/class").status_code == 401
+    assert guest.get("/api/feed/family").status_code == 401
+    with db.new_session() as s:
+        s.get(Post, pid).best = True
+        s.commit()
+    view = guest.get(f"/api/posts/{pid}").json()
+    assert not (view["can_react"] or view["can_comment"] or view["can_delete"] or view["can_remix"] or view["is_author"])
+    assert [i["id"] for i in guest.get("/api/feed/best").json()["items"]] == [pid]
+    assert guest.get(f"/api/posts/{pid}/image").status_code == 200
+    assert guest.get(f"/api/posts/{pid}/comments").status_code == 401
+    assert guest.put(f"/api/posts/{pid}/reactions/heart").status_code == 401
+    with db.new_session() as s:
+        s.get(Post, pid).status = "hidden"
+        s.commit()
+    assert guest.get(f"/api/posts/{pid}").status_code == 404

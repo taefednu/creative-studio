@@ -28,12 +28,12 @@ def check_text(text: str, kind: str, lang: str):
 
 @dataclass
 class Viewer:
-    role: str  # child | parent | teacher
-    obj: Child | Parent | Teacher
+    role: str  # child | parent | teacher | guest
+    obj: Child | Parent | Teacher | None = None  # у гостя нет записи: id 0 не совпадёт ни с кем
 
     @property
     def id(self) -> int:
-        return self.obj.id
+        return self.obj.id if self.obj is not None else 0
 
 
 def load_viewer(db: Session, token: str | None) -> Viewer | None:
