@@ -233,3 +233,79 @@ def test_show_in_feed_reuses_existing_live_post(w, fake):
     assert w.teacher.post(f"/api/teacher/submissions/{sid}/show-in-feed").status_code == 200
     with db.new_session() as s:
         assert len(list(s.scalars(select(Post)))) == 1
+
+
+# ---------- правки ревью #13 ----------
+
+
+def _write_lock_free():
+    """Посторонняя запись во время проверки: падает, если кто-то держит блокировку SQLite."""
+    with db.new_session() as s:
+        s.connection().exec_driver_sql("PRAGMA busy_timeout = 200")
+        s.connection().exec_driver_sql("BEGIN IMMEDIATE")
+        s.rollback()
+
+
+def test_no_write_lock_during_model_call(w, fake, monkeypatch):
+    from app.feed import service
+
+    seen = []
+
+    def judge(text, kind, lang):
+        _write_lock_free()
+        seen.append(kind)
+        return D("allow")
+
+    aid = aid_of(w)
+    monkeypatch.setattr(service, "judge", judge)
+    work = _work(w.a_id, w.tmp)
+    r = w.a.post("/api/posts", json={"work_id": work, "audience": "class", "caption": "кот"})
+    assert r.status_code == 200, r.text
+    r = submit(w.a, aid, _work(w.a_id, w.tmp), "кот")
+    assert r.status_code == 200, r.text
+    assert seen == ["caption", "caption"]
+
+
+def test_live_post_unique_per_work_and_audience(w, fake):
+    from sqlalchemy.exc import IntegrityError
+
+    work = _work(w.a_id, w.tmp)
+    with db.new_session() as s:
+        for _ in range(2):
+            s.add(Post(work_id=work, work_kind="image", child_id=w.a_id, audience="class", status="published"))
+        with pytest.raises(IntegrityError):
+            s.commit()
+
+
+def test_show_in_feed_respects_author_delete(w, fake):
+    aid = aid_of(w)
+    sid = submit(w.a, aid, _work(w.a_id, w.tmp)).json()["id"]
+    assert w.teacher.post(f"/api/teacher/submissions/{sid}/show-in-feed").status_code == 200
+    pid = w.b.get("/api/feed/class").json()["items"][0]["id"]
+    assert w.a.delete(f"/api/posts/{pid}").json()["status"] == "deleted"
+    assert w.teacher.post(f"/api/teacher/submissions/{sid}/show-in-feed").status_code == 409
+    assert w.b.get("/api/feed/class").json()["items"] == []
+
+
+def test_show_in_feed_flag_false_while_post_held(w, fake):
+    aid = aid_of(w)
+    work = _work(w.a_id, w.tmp)
+    sid = submit(w.a, aid, work).json()["id"]
+    fake.d = D("hold")
+    r = w.a.post("/api/posts", json={"work_id": work, "audience": "class", "caption": "тг"})
+    assert r.json()["status"] == "held"
+    r = w.teacher.post(f"/api/teacher/submissions/{sid}/show-in-feed")
+    assert r.json()["shown_in_feed"] is False
+
+
+def test_urgent_submission_not_rejected_after_both_adults_saw(w, fake):
+    aid = aid_of(w)
+    fake.d = D("support", urgent=True, reason_codes=["self_harm"])
+    sid = submit(w.a, aid, _work(w.a_id, w.tmp), "я хочу себя поранить").json()["id"]
+    with db.new_session() as s:
+        iid = s.scalar(select(HeldItem.id).where(HeldItem.item_type == "submission"))
+    assert w.teacher.post(f"/api/review/items/{iid}/seen").json()["status"] == "pending"
+    assert w.parent.post(f"/api/review/items/{iid}/seen").json()["status"] == "rejected"
+    with db.new_session() as s:
+        assert s.get(Submission, sid).status == "held"
+    assert submit(w.a, aid, _work(w.a_id, w.tmp), "я хочу себя поранить").json()["support"] is True

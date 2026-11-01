@@ -184,18 +184,26 @@ def show_in_feed(submission_id: int, t: TeacherDep, db: Db):
             )
         )
     )
-    if any(p.status in ("hidden", "rejected") for p in posts):  # взрослый уже убрал эту работу
+    # Взрослый убрал работу или автор удалил свой пост: снова не выкладываем.
+    if any(p.status in ("hidden", "rejected", "deleted") for p in posts):
         raise HTTPException(409, "removed_by_adult")
-    if not any(p.status in ("pending", "published", "held") for p in posts):
+    live = [p for p in posts if p.status in service.LIVE_POST]
+    if not live:
         db.add(
             Post(
                 work_id=s.work_id, work_kind=w.kind, child_id=s.child_id, audience="class",
                 class_id=a.class_id, caption=s.comment, status="published",
             )
         )
-    s.shown_in_feed = True
-    db.commit()
-    return {"id": s.id, "shown_in_feed": True}
+    # Задержанный пост ещё не показан: флаг говорит правду.
+    shown = not live or any(p.status == "published" for p in live)
+    s.shown_in_feed = shown
+    try:
+        db.commit()
+    except IntegrityError:  # ребёнок опубликовал ту же работу в эту секунду: дубля нет
+        db.rollback()
+        raise HTTPException(409, "already_in_feed") from None
+    return {"id": s.id, "shown_in_feed": shown}
 
 
 # ---------------- ребёнок ----------------
@@ -263,8 +271,17 @@ def submit(assignment_id: int, body: NewSubmission, c: ChildDep, db: Db):
     if dup is not None:
         return _result(db, dup)
     comment = (body.comment or "").strip() or None
-    # Пока комментарий не проверен, сдача «held»: не видна ни учителю в галерее как принятая, ни детям.
-    s = Submission(assignment_id=a.id, work_id=w.id, child_id=c.id, comment=comment, status="held")
+    # Модель зовём до первой записи: SQLite держит блокировку до коммита, а проверка идёт секунды.
+    d = service.judge(comment, "caption", c.lang) if comment is not None else None
+    # без комментария — картинка уже прошла check_image в #6
+    clean = comment is None or (d is not None and d.action == "allow")
+    s = Submission(
+        assignment_id=a.id,
+        work_id=w.id,
+        child_id=c.id,
+        comment=comment,
+        status="accepted" if clean else "held",
+    )
     db.add(s)
     try:
         db.flush()
@@ -275,26 +292,20 @@ def submit(assignment_id: int, body: NewSubmission, c: ChildDep, db: Db):
             raise
         return _result(db, dup)
     support = False
-    if comment is None:
-        s.status = "accepted"  # картинка уже прошла check_image в #6
-    else:
-        d = service.judge(comment, "caption", c.lang)
-        if d is not None and d.action == "allow":
-            s.status = "accepted"
-        else:
-            support = d is not None and (d.action == "support" or bool(getattr(d, "urgent", False)))
-            hold(
-                db,
-                item_type="submission",
-                target_id=s.id,
-                child_id=c.id,
-                reviewer="teacher",
-                reason_codes=service._codes(d) if d is not None else ["check_failed"],
-                urgent=support,
-                class_id=a.class_id,
-                preview_text=comment,
-                commit=False,
-            )
+    if not clean:
+        support = d is not None and (d.action == "support" or bool(getattr(d, "urgent", False)))
+        hold(
+            db,
+            item_type="submission",
+            target_id=s.id,
+            child_id=c.id,
+            reviewer="teacher",
+            reason_codes=service._codes(d) if d is not None else ["check_failed"],
+            urgent=support,
+            class_id=a.class_id,
+            preview_text=comment,
+            commit=False,
+        )
     db.commit()
     return {"id": s.id, "status": s.status, "support": support}
 
@@ -311,7 +322,8 @@ def _approve(db: Session, item: HeldItem) -> None:
 
 def _reject(db: Session, item: HeldItem) -> None:
     s = db.get(Submission, int(item.target_id))
-    if s is not None and s.status == "held":
+    # Срочное закрыто просмотром: это не отказ, ребёнок остаётся на тёплом ответе.
+    if s is not None and s.status == "held" and not item.urgent:
         s.status = "rejected"
         db.commit()
 

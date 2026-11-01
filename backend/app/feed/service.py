@@ -15,6 +15,7 @@ from app.feed.models import Comment, Post
 from app.moderation import HeldItem, hold, register
 
 OPEN_STATUSES = ("pending", "held")  # не опубликовано: видят автор и проверяющий взрослый
+LIVE_POST = ("pending", "published", "held")
 
 
 # Тонкая обёртка: тесты подменяют её поддельной моделью.
@@ -133,7 +134,8 @@ def _approve_post(db: Session, item: HeldItem) -> None:
 
 def _reject_post(db: Session, item: HeldItem) -> None:
     p = db.get(Post, int(item.target_id))
-    if p is not None and p.status in OPEN_STATUSES:
+    # Срочное закрыто просмотром: это не отказ, ребёнок остаётся на тёплом ответе.
+    if p is not None and p.status in OPEN_STATUSES and not item.urgent:
         p.status = "rejected"
         db.commit()
 
@@ -147,7 +149,7 @@ def _approve_comment(db: Session, item: HeldItem) -> None:
 
 def _reject_comment(db: Session, item: HeldItem) -> None:
     c = db.get(Comment, int(item.target_id))
-    if c is not None and c.status in OPEN_STATUSES:
+    if c is not None and c.status in OPEN_STATUSES and not item.urgent:
         c.status = "rejected"
         db.commit()
 

@@ -92,6 +92,10 @@ def publish(body: NewPost, c: Annotated[Child, Depends(current_child)], db: Db):
         )
         return {"id": dup.id, "status": dup.status, "support": urgent is not None}
     caption = (body.caption or "").strip() or None
+    # Модель зовём до первой записи: SQLite держит блокировку до коммита, а проверка идёт секунды.
+    d = service.judge(caption, "caption", c.lang) if caption is not None else None
+    # без подписи — картинка уже прошла check_image в #6
+    clean = caption is None or (d is not None and d.action == "allow")
     post = Post(
         work_id=w.id,
         work_kind=w.kind,
@@ -99,23 +103,27 @@ def publish(body: NewPost, c: Annotated[Child, Depends(current_child)], db: Db):
         audience=body.audience,
         class_id=class_id if body.audience == "class" else None,
         caption=caption,
-        status="pending",
+        status="published" if clean else "held",
     )
     db.add(post)
-    db.flush()
     support = False
-    if caption is None:
-        post.status = "published"  # картинка уже прошла check_image в #6
-    else:
-        d = service.judge(caption, "caption", c.lang)
-        if d is not None and d.action == "allow":
-            post.status = "published"
-        else:
-            post.status = "held"
+    try:
+        db.flush()
+        if not clean:
             support = service.hold_for(
                 db, item_type="post", target_id=post.id, child_id=c.id, post=post, d=d, text=caption
             )
-    db.commit()
+        db.commit()
+    except IntegrityError:  # двойной клик за время проверки: живой пост уже есть
+        db.rollback()
+        dup = db.scalar(
+            select(Post).where(
+                Post.work_id == w.id, Post.audience == body.audience, Post.status.in_(service.LIVE_POST)
+            )
+        )
+        if dup is None:
+            raise
+        return {"id": dup.id, "status": dup.status, "support": False}
     return {"id": post.id, "status": post.status, "support": support}
 
 

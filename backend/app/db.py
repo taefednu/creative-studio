@@ -21,7 +21,7 @@ def get_engine():
         url = get_settings().DATABASE_URL
         if url.startswith("sqlite:///") and ":memory:" not in url:
             Path(url.removeprefix("sqlite:///")).parent.mkdir(parents=True, exist_ok=True)
-        _engine = create_engine(url, connect_args={"check_same_thread": False})
+        _engine = create_engine(url, connect_args={"check_same_thread": False, "timeout": 30})
         _session_factory = sessionmaker(_engine, expire_on_commit=False)
     return _engine
 

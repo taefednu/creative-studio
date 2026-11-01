@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Index, String, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app import clock
@@ -26,6 +26,16 @@ class Post(Base):
     status: Mapped[str] = mapped_column(String(10), default="pending", index=True)
     best: Mapped[bool] = mapped_column(default=False, index=True)  # ставит только скрипт команды
     created_at: Mapped[datetime] = mapped_column(DateTime, default=clock.now)
+    # Живой пост один на работу и аудиторию: гонка публикации и «показать в ленте» не даст дубль.
+    __table_args__ = (
+        Index(
+            "uq_live_post",
+            "work_id",
+            "audience",
+            unique=True,
+            sqlite_where=text("status IN ('pending', 'published', 'held')"),
+        ),
+    )
 
 
 class Reaction(Base):
