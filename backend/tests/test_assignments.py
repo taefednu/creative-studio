@@ -104,7 +104,7 @@ def test_submit_without_comment_accepted_no_model_call(w, fake):
     assert fake.calls == []
     assert submit(w.a, aid, w.work).json()["id"] == r.json()["id"]  # повтор идемпотентен
     assert len(subs()) == 1
-    assert w.a.get("/api/child/assignments").json()[0]["submissions"] == [{"work_id": w.work, "status": "accepted"}]
+    assert w.a.get("/api/child/assignments").json()[0]["submissions"] == [{"work_id": w.work, "status": "accepted", "support": False}]
 
 
 def test_submit_comment_allow_accepted(w, fake):
