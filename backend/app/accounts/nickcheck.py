@@ -12,8 +12,12 @@ def _check_text():
     return check_text
 
 
-def nick_allowed(nick: str, lang: str) -> bool:
+def text_allowed(text: str, kind: str, lang: str) -> bool:
     try:
-        return _check_text()(nick, "nickname", lang).action == "allow"
+        return _check_text()(text, kind, lang).action == "allow"
     except Exception:  # noqa: BLE001 — fail closed
         return False
+
+
+def nick_allowed(nick: str, lang: str) -> bool:
+    return text_allowed(nick, "nickname", lang)

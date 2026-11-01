@@ -18,7 +18,7 @@ export default function QrLanding() {
     // токен одноразовый: StrictMode запускает эффект дважды, второй запрос не отправляем
     if (!token || started.current) return
     started.current = true
-    api(`/api/child/qr-login?token=${encodeURIComponent(token)}`)
+    api('/api/child/qr-login', 'POST', { token })
       .then(refresh)
       .then(() => navigate('/', { replace: true }))
       .catch(() => setFailed(true))

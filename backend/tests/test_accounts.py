@@ -3,7 +3,7 @@
 import os
 from datetime import timedelta
 
-os.environ.setdefault("SESSION_SECRET", "test-session-secret")
+os.environ.setdefault("SESSION_SECRET", "test-session-secret-0123456789abcdef")
 
 import pytest
 from fastapi.testclient import TestClient
@@ -188,9 +188,9 @@ def test_qr_single_use(api):
     cid = add_child(api)
     tok = api.post(f"/api/parent/children/{cid}/qr").json()["token"]
     c1 = new_client()
-    assert c1.get("/api/child/qr-login", params={"token": tok}).status_code == 200
+    assert c1.post("/api/child/qr-login", json={"token": tok}).status_code == 200
     assert c1.get("/api/child/me").status_code == 200
-    assert new_client().get("/api/child/qr-login", params={"token": tok}).status_code == 401
+    assert new_client().post("/api/child/qr-login", json={"token": tok}).status_code == 401
 
 
 def test_qr_expires_after_5_minutes(api, now):
@@ -198,10 +198,10 @@ def test_qr_expires_after_5_minutes(api, now):
     cid = add_child(api)
     tok = api.post(f"/api/parent/children/{cid}/qr").json()["token"]
     now[0] += timedelta(minutes=5, seconds=1)
-    assert new_client().get("/api/child/qr-login", params={"token": tok}).status_code == 401
+    assert new_client().post("/api/child/qr-login", json={"token": tok}).status_code == 401
     tok2 = api.post(f"/api/parent/children/{cid}/qr").json()["token"]
     now[0] += timedelta(minutes=4, seconds=59)
-    assert new_client().get("/api/child/qr-login", params={"token": tok2}).status_code == 200
+    assert new_client().post("/api/child/qr-login", json={"token": tok2}).status_code == 200
 
 
 def test_qr_only_for_own_child_or_class_member(api):
@@ -422,3 +422,53 @@ def test_duplicate_email_and_bad_login(api):
     bad = new_client().post("/api/parent/login", json={"email": "mom@example.com", "password": "nope-nope-1"})
     nobody = new_client().post("/api/parent/login", json={"email": "x@example.com", "password": PW})
     assert bad.status_code == nobody.status_code == 401 and bad.json() == nobody.json()
+
+
+# ---------- гонки (ревью #4): параллельные запросы не обходят лимит и одноразовость ----------
+
+
+def _parallel(fn, n):
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(n) as pool:
+        return list(pool.map(lambda _: fn(), range(n)))
+
+
+def test_parallel_wrong_pictures_still_lock(api):
+    parent(api)
+    add_child(api)
+    _parallel(lambda: child_login(pics=WRONG)[1].status_code, 30)
+    assert child_login(pics=PICS)[1].status_code == 401
+    assert api.get("/api/parent/children").json()[0]["locked"] is True
+
+
+def test_parallel_qr_used_once(api):
+    parent(api)
+    cid = add_child(api)
+    tok = api.post(f"/api/parent/children/{cid}/qr").json()["token"]
+    codes = _parallel(lambda: new_client().post("/api/child/qr-login", json={"token": tok}).status_code, 10)
+    assert codes.count(200) == 1
+
+
+def test_qr_token_not_accepted_in_query(api):
+    parent(api)
+    cid = add_child(api)
+    tok = api.post(f"/api/parent/children/{cid}/qr").json()["token"]
+    assert new_client().get("/api/child/qr-login", params={"token": tok}).status_code == 405
+
+
+def test_class_name_goes_through_check(api, allow_nicks):
+    t = teacher(new_client())
+    allow_nicks.action = "hold"
+    assert t.post("/api/teacher/classes", json={"name": "Aziz +998000000000"}).status_code == 422
+    assert t.get("/api/teacher/classes").json() == []
+
+
+def test_short_session_secret_rejected(monkeypatch):
+    from pydantic import ValidationError
+
+    from app.config import Settings
+
+    monkeypatch.setenv("SESSION_SECRET", "")
+    with pytest.raises(ValidationError):
+        Settings()

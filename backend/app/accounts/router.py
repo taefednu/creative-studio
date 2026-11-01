@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, Field
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -22,7 +22,7 @@ from app.accounts.models import (
     QrToken,
     Teacher,
 )
-from app.accounts.nickcheck import NICK_RE, nick_allowed
+from app.accounts.nickcheck import NICK_RE, nick_allowed, text_allowed
 from app.accounts.security import (
     COOKIE,
     hash_secret,
@@ -258,14 +258,25 @@ def teacher_qr(class_id: int, child_id: int, t: Annotated[Teacher, Depends(curre
     return _new_qr(db, child)
 
 
-@router.get("/child/qr-login")
-def qr_login(resp: Response, db: Db, token: Annotated[str, Query(min_length=8, max_length=200)]):
-    row = db.scalar(select(QrToken).where(QrToken.token_hash == sha256(token)))
-    now = clock.now()
-    if row is None or row.used_at is not None or row.expires_at <= now:
+class QrLogin(BaseModel):
+    token: str = Field(min_length=8, max_length=200)
+
+
+@router.post("/child/qr-login")
+def qr_login(body: QrLogin, resp: Response, db: Db):
+    # POST: токен не попадает в access-лог. Одно использование — условным UPDATE,
+    # иначе параллельные запросы с одним токеном проходят все.
+    h, now = sha256(body.token), clock.now()
+    child_id = db.scalar(select(QrToken.child_id).where(QrToken.token_hash == h))
+    used = db.execute(
+        update(QrToken)
+        .where(QrToken.token_hash == h, QrToken.used_at.is_(None), QrToken.expires_at > now)
+        .values(used_at=now)
+    )
+    if child_id is None or used.rowcount != 1:
+        db.rollback()
         raise HTTPException(401, "bad_token")
-    row.used_at = now  # одно использование
-    child = db.get(Child, row.child_id)
+    child = db.get(Child, child_id)
     child.failed_attempts = 0
     child.locked_until = None  # QR — путь «забыл»: взрослый сам снял замок
     db.commit()
@@ -289,6 +300,9 @@ def _own_class(db: Session, t: Teacher, class_id: int) -> Classroom:
 
 @router.post("/teacher/classes", status_code=201)
 def create_class(body: NewClass, t: Annotated[Teacher, Depends(current_teacher)], db: Db):
+    # Название класса видит ребёнок — та же проверка, что у ника; сбой — не сохраняем.
+    if not text_allowed(body.name.strip(), "caption", "ru"):  # у учителя нет языка профиля
+        raise HTTPException(422, "name_rejected")
     for _ in range(20):
         code = "".join(secrets.choice(CODE_ALPHABET) for _ in range(6))
         room = Classroom(teacher_id=t.id, name=body.name.strip(), code=code)
@@ -334,23 +348,37 @@ def child_login(body: ChildLogin, resp: Response, db: Db):
     child = db.scalar(select(Child).where(Child.nick_norm == body.nick.strip().lower()))
     stored = child.picture_password_hash if child else None
     ok = verify_secret(picture_secret(body.pictures), stored)
-    locked = bool(child and child.locked_until and child.locked_until > now)
     # Один и тот же ответ на «нет ника», «неверно» и «закрыто»: ник не выдаём.
-    if child is None or locked:
+    if child is None:
         raise HTTPException(401, "bad_credentials")
+    # Счётчик и замок меняются только условным UPDATE по незапертой строке: параллельная
+    # пачка попыток не обходит лимит (SQLite сериализует запись), запертый ник не входит.
+    unlocked = or_(Child.locked_until.is_(None), Child.locked_until <= now)
     if not ok:
-        child.failed_attempts += 1
-        if child.failed_attempts >= s.LOGIN_FAILS_MAX:
-            child.locked_until = now + timedelta(minutes=s.LOGIN_LOCK_MINUTES)
-            child.failed_attempts = 0
+        n = db.scalar(
+            update(Child)
+            .where(Child.id == child.id, unlocked)
+            .values(failed_attempts=Child.failed_attempts + 1)
+            .returning(Child.failed_attempts)
+        )
+        if n is not None and n >= s.LOGIN_FAILS_MAX:
+            db.execute(
+                update(Child)
+                .where(Child.id == child.id)
+                .values(locked_until=now + timedelta(minutes=s.LOGIN_LOCK_MINUTES), failed_attempts=0)
+            )
             if child.parent_id:
                 db.add(
                     ParentNotification(parent_id=child.parent_id, child_id=child.id, kind="login_locked")
                 )
         db.commit()
         raise HTTPException(401, "bad_credentials")
-    child.failed_attempts = 0
-    child.locked_until = None
+    passed = db.execute(
+        update(Child).where(Child.id == child.id, unlocked).values(failed_attempts=0, locked_until=None)
+    )
+    if passed.rowcount != 1:
+        db.rollback()
+        raise HTTPException(401, "bad_credentials")
     db.commit()
     _set_cookie(resp, "child", child.id)
     return {"ok": True}

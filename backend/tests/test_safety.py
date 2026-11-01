@@ -6,7 +6,7 @@ import httpx
 import pytest
 from conftest import MODES, _chat
 
-os.environ.setdefault("SESSION_SECRET", "test-secret")  # config общий с #4
+os.environ.setdefault("SESSION_SECRET", "test-secret-0123456789abcdef-0123456789")  # config общий с #4
 
 from app.meta.client import MetaClient
 from app.safety import CATEGORIES, check_image, check_text

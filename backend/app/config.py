@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import ValidationError
+from pydantic import Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     PRESENT_MIN: float = 0.5  # «категория есть» ниже этого — серая зона, hold
     SELF_HARM_MIN: float = 0.2  # self_harm выше этого — support (лучше лишний сигнал)
     # Аккаунты (#4). Секрет подписи сессий — только из env.
-    SESSION_SECRET: str
+    SESSION_SECRET: str = Field(min_length=32)  # пустой ключ = любой подделает cookie
     SESSION_DAYS: int = 30
     COOKIE_SECURE: bool = False  # True на https-проде
     COIN_START: int = 20
