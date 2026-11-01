@@ -1,0 +1,224 @@
+"""Экран «Задержано» (#9): один список для двух взрослых.
+
+Учитель видит выложенное в его классы, родитель — личное своих детей; срочное (самоповреждение)
+видят оба, но одобрить его нельзя: взрослый его «просмотрел». Чужая запись — 404, не 403.
+"""
+
+from pathlib import Path
+from typing import Annotated
+
+from fastapi import APIRouter, Cookie, Depends, HTTPException
+from fastapi.responses import FileResponse
+from sqlalchemy import select, update
+from sqlalchemy.orm import Session
+
+from app import clock
+from app.accounts.deps import current_child
+from app.accounts.models import Child, ClassMembership, Classroom
+from app.accounts.security import COOKIE, read_session
+from app.db import get_session
+from app.feed.models import Comment, Post
+from app.moderation.models import HeldItem
+from app.moderation.service import decide
+from app.works.image.models import Work
+
+router = APIRouter(prefix="/api")
+Db = Annotated[Session, Depends(get_session)]
+
+IMAGE_TYPES = ("image", "post")  # у остальных видов своей картинки нет (upload — #15)
+
+
+def adult(
+    db: Db, studio_session: Annotated[str | None, Cookie(alias=COOKIE)] = None
+) -> tuple[str, int]:
+    s = read_session(studio_session)
+    if not s or s[0] not in ("parent", "teacher"):
+        raise HTTPException(401, "unauthorized")
+    return s[0], s[1]
+
+
+Adult = Annotated[tuple[str, int], Depends(adult)]
+
+
+def _scope(role: str, uid: int):
+    """Условие «это проверка этого взрослого». Один фильтр на список, счётчик и ручки по id."""
+    if role == "teacher":
+        rooms = select(Classroom.id).where(Classroom.teacher_id == uid)
+        # Срочное личное (промпт, семейный пост: class_id пуст) учитель тоже получает, если ребёнок
+        # в его классе: сигнал о самоповреждении идёт обоим взрослым. Несрочное личное — нет.
+        in_class = HeldItem.child_id.in_(
+            select(ClassMembership.child_id).where(ClassMembership.class_id.in_(rooms))
+        )
+        return (
+            HeldItem.reviewer.in_(("teacher", "both")),
+            HeldItem.class_id.in_(rooms)
+            | (HeldItem.urgent.is_(True) & (HeldItem.reviewer == "both") & in_class),
+        )
+    return (
+        HeldItem.reviewer.in_(("parent", "both")),
+        HeldItem.child_id.in_(select(Child.id).where(Child.parent_id == uid)),
+    )
+
+
+def _pending(role: str, uid: int):
+    return select(HeldItem).where(HeldItem.status == "pending", *_scope(role, uid))
+
+
+def _mine(db: Session, who: tuple[str, int], item_id: int) -> HeldItem:
+    item = db.scalar(select(HeldItem).where(HeldItem.id == item_id, *_scope(*who)))
+    if item is None:
+        raise HTTPException(404, "not_found")
+    return item
+
+
+def _where(item: HeldItem) -> str:
+    if item.class_id is not None:
+        return "class"
+    return "family" if item.item_type in ("post", "comment") else "personal"
+
+
+def _work_of(db: Session, item: HeldItem) -> Work | None:
+    if item.item_type == "image":
+        return db.get(Work, int(item.target_id))
+    if item.item_type == "post":
+        p = db.get(Post, int(item.target_id))
+        return db.get(Work, p.work_id) if p is not None else None
+    return None
+
+
+def _has_image(db: Session, item: HeldItem) -> bool:
+    w = _work_of(db, item)
+    return w is not None and bool(w.file_path) and Path(w.file_path).is_file()
+
+
+def _view(db: Session, item: HeldItem, nick: str, class_name: str | None, full: bool) -> dict:
+    # В списке текст срочного не отдаём; в «Открыть» (full) отдаём.
+    show = full or not item.urgent
+    return {
+        "id": item.id,
+        "item_type": item.item_type,
+        "nick": nick,
+        "where": _where(item),
+        "class_name": class_name,
+        "reason_codes": item.reason_codes or [],
+        "urgent": item.urgent,
+        "status": item.status,
+        "created_at": item.created_at.isoformat(),
+        "preview_text": item.preview_text if show else None,
+        "image_url": f"/api/review/items/{item.id}/image"
+        if show and item.item_type in IMAGE_TYPES and _has_image(db, item)
+        else None,
+    }
+
+
+def _views(db: Session, items: list[HeldItem], full: bool = False) -> list[dict]:
+    if not items:
+        return []
+    nicks = dict(
+        db.execute(select(Child.id, Child.nick).where(Child.id.in_({i.child_id for i in items}))).all()
+    )
+    rooms = dict(
+        db.execute(
+            select(Classroom.id, Classroom.name).where(
+                Classroom.id.in_({i.class_id for i in items if i.class_id is not None})
+            )
+        ).all()
+    )
+    return [_view(db, i, nicks.get(i.child_id, ""), rooms.get(i.class_id), full) for i in items]
+
+
+@router.get("/review/queue")
+def queue(db: Db, who: Adult):
+    q = _pending(*who).order_by(HeldItem.urgent.desc(), HeldItem.created_at.desc(), HeldItem.id.desc())
+    return _views(db, list(db.scalars(q)))
+
+
+@router.get("/review/count")
+def count(db: Db, who: Adult):
+    rows = list(db.scalars(_pending(*who)))
+    return {"count": len(rows), "urgent": sum(1 for i in rows if i.urgent)}
+
+
+@router.get("/review/items/{item_id}")
+def item_detail(item_id: int, db: Db, who: Adult):
+    return _views(db, [_mine(db, who, item_id)], full=True)[0]
+
+
+@router.get("/review/items/{item_id}/image")
+def item_image(item_id: int, db: Db, who: Adult):
+    item = _mine(db, who, item_id)
+    w = _work_of(db, item) if item.item_type in IMAGE_TYPES else None
+    if w is None or not w.file_path or not Path(w.file_path).is_file():
+        raise HTTPException(404, "not_found")
+    return FileResponse(w.file_path, media_type="image/webp", headers={"Cache-Control": "private"})
+
+
+def _by(who: tuple[str, int]) -> str:
+    return f"{who[0]}:{who[1]}"
+
+
+def _settle(db: Session, item: HeldItem, approve: bool, who: tuple[str, int]) -> dict:
+    target = "approved" if approve else "rejected"
+    if approve and item.urgent:
+        raise HTTPException(409, "urgent_not_approvable")
+    if item.status == target:
+        return {"id": item.id, "status": item.status}  # повтор: ничего не меняем
+    if item.status != "pending":
+        raise HTTPException(409, "already_decided")
+    ok = decide(db, item, approve, _by(who))
+    db.refresh(item)
+    if not ok and item.status != target:
+        raise HTTPException(409, "already_decided")
+    return {"id": item.id, "status": item.status}
+
+
+@router.post("/review/items/{item_id}/approve")
+def approve(item_id: int, db: Db, who: Adult):
+    return _settle(db, _mine(db, who, item_id), True, who)
+
+
+@router.post("/review/items/{item_id}/reject")
+def reject(item_id: int, db: Db, who: Adult):
+    return _settle(db, _mine(db, who, item_id), False, who)
+
+
+@router.post("/review/items/{item_id}/seen")
+def seen(item_id: int, db: Db, who: Adult):
+    """Срочное закрывает взрослый, ничего не публикуя; обработчик вида работы не зовётся."""
+    item = _mine(db, who, item_id)
+    if not item.urgent:
+        raise HTTPException(409, "not_urgent")
+    db.execute(
+        update(HeldItem)
+        .where(HeldItem.id == item.id, HeldItem.status == "pending")
+        .values(status="rejected", decided_at=clock.now(), decided_by=_by(who))
+    )
+    db.commit()
+    db.refresh(item)
+    return {"id": item.id, "status": item.status}
+
+
+@router.get("/held/mine")
+def held_mine(c: Annotated[Child, Depends(current_child)], db: Db):
+    """Ребёнку: что взрослый решил не публиковать. Срочное сюда не попадает: ребёнку «блока» нет."""
+    rows = db.scalars(
+        select(HeldItem)
+        .where(
+            HeldItem.child_id == c.id,
+            HeldItem.status == "rejected",
+            HeldItem.urgent.is_(False),
+            HeldItem.item_type.in_(("post", "comment")),
+        )
+        .order_by(HeldItem.id.desc())
+        .limit(20)
+    )
+    out = []
+    for i in rows:
+        if i.item_type == "post":
+            p = db.get(Post, int(i.target_id))
+            text = p.caption if p is not None else None
+        else:
+            cm = db.get(Comment, int(i.target_id))
+            text = cm.text if cm is not None else None
+        out.append({"id": i.id, "item_type": i.item_type, "text": text})
+    return out

@@ -8,6 +8,7 @@ import Coin from '../components/Coin'
 import ErrorText, { errorKey } from '../components/ErrorText'
 import PictureGrid from '../components/PictureGrid'
 import QrBox from '../components/QrBox'
+import ReviewQueue from '../components/ReviewQueue'
 import { PASSWORD_LENGTH } from '../features/auth/pictures'
 import { useLoad } from '../useLoad'
 
@@ -70,6 +71,9 @@ export default function ParentCabinet() {
     <div className="min-h-screen bg-bg">
       <CabinetHeader title={t('parent.title')} />
       <main className="mx-auto grid max-w-5xl gap-6 px-4 py-6 md:grid-cols-2 md:px-8">
+        <div className="md:col-span-2">
+          <ReviewQueue title={t('review.okTitle')} />
+        </div>
         <section className="flex flex-col gap-3" data-testid="kids">
           <h2 className="text-xl font-extrabold text-heading">{t('parent.children')}</h2>
           {kids && kids.length === 0 && <p className="text-muted">{t('parent.noChildren')}</p>}

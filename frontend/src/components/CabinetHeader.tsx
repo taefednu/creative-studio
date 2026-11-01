@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useSession } from '../features/auth/session'
 import LangSwitch from './LangSwitch'
+import ReviewBadge from './ReviewBadge'
 
 export default function CabinetHeader({ title }: { title: string }) {
   const { t } = useTranslation()
@@ -17,6 +18,7 @@ export default function CabinetHeader({ title }: { title: string }) {
     <header className="flex flex-wrap items-center gap-3 px-4 py-3 md:px-8">
       <img src="/mentorium-logo.png" alt="Mentorium" className="h-9 w-auto" />
       <span className="text-lg font-extrabold text-heading">{title}</span>
+      <ReviewBadge />
       <LangSwitch />
       <button
         type="button"

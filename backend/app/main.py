@@ -7,6 +7,7 @@ from app.config import get_settings
 from app.db import init_db
 from app.feed import models as _feed_models  # noqa: F401  (таблицы)
 from app.feed.router import router as feed_router
+from app.moderation.router import router as moderation_router
 from app.works.image import pipeline
 from app.works.image.router import router as image_router
 
@@ -23,6 +24,7 @@ app = FastAPI(title="Mentorium Creative Studio", lifespan=lifespan)
 app.include_router(accounts_router)
 app.include_router(image_router)
 app.include_router(feed_router)
+app.include_router(moderation_router)
 
 
 @app.get("/api/health")

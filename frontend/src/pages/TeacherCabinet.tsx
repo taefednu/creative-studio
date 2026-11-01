@@ -6,6 +6,7 @@ import { api } from '../api'
 import CabinetHeader from '../components/CabinetHeader'
 import ErrorText, { errorKey } from '../components/ErrorText'
 import QrBox from '../components/QrBox'
+import ReviewQueue from '../components/ReviewQueue'
 import { useLoad } from '../useLoad'
 
 type Room = { id: number; name: string; code: string }
@@ -52,6 +53,9 @@ export default function TeacherCabinet() {
     <div className="min-h-screen bg-bg">
       <CabinetHeader title={t('teacher.title')} />
       <main className="mx-auto grid max-w-5xl gap-6 px-4 py-6 md:grid-cols-2 md:px-8">
+        <div className="md:col-span-2">
+          <ReviewQueue title={t('review.title')} />
+        </div>
         <section className="flex flex-col gap-3" data-testid="rooms">
           <h2 className="text-xl font-extrabold text-heading">{t('teacher.classes')}</h2>
           {rooms && rooms.length === 0 && <p className="text-muted">{t('teacher.noClasses')}</p>}
