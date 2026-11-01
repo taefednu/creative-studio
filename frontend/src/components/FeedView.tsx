@@ -143,7 +143,7 @@ export default function FeedView({ kinds, classId, title, child }: Props) {
             className="relative mb-3 block w-full break-inside-avoid overflow-hidden rounded-[22px] bg-surface text-left shadow-card"
           >
             <img src={p.image_url} alt={p.caption ?? ''} className="h-full w-full object-cover" loading="lazy" />
-            {p.status === 'held' && (
+            {p.status === 'held' && !p.support && (
               <span className="absolute inset-x-2 top-2 rounded-xl bg-scrim px-3 py-1.5 text-xs font-bold text-primary-fg">
                 {t('feed.heldMark')}
               </span>
@@ -173,7 +173,7 @@ export default function FeedView({ kinds, classId, title, child }: Props) {
           {t('feed.more')}
         </button>
       )}
-      {open !== null && <PostModal postId={open} onClose={close} onChanged={() => setTick((n) => n + 1)} />}
+      {open !== null && <PostModal postId={open} isChild={!!child} onClose={close} onChanged={() => setTick((n) => n + 1)} />}
     </div>
   )
 }

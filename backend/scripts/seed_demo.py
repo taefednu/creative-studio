@@ -34,6 +34,7 @@ from app.works.upload.sam import blur
 ADULT_PW = "demo-pass-1234"
 PICTURES = [3, 7, 1]
 KINDS = ("star", "heart", "laugh", "wow")
+SHOWCASE = ["NovaBear", "MiloOwl", "TinyStar", "PipFox", "LunaCub", "RoboKid"]
 MATES = ["Lumi", "SkyFox", "PixelPanda", "MoonCat", "DinoDash", "LimeLion", "OllieTree", "SunnyBee", "TikTak", "Zuzu"]
 CAPTIONS = {0: "Лиса идёт домой", 2: "Мой первый робот", 5: "Тут живёт мой друг", 7: "Динозавр охраняет коврик",
             12: "Котёнок и его венок", 15: "Дракончик не страшный"}
@@ -73,7 +74,8 @@ def seed(images_dir: Path) -> dict:
     s.add_all([teacher, parent])
     s.flush()
     room = Classroom(teacher_id=teacher.id, name="4B Stars", code="STARS4")
-    s.add(room)
+    comets = Classroom(teacher_id=teacher.id, name="3A Comets", code="COMET3")  # второй класс: фильтр очереди и витрина
+    s.add_all([room, comets])
     s.flush()
     ph = hash_secret(picture_secret(PICTURES))
 
@@ -131,6 +133,20 @@ def seed(images_dir: Path) -> dict:
         pool = [k for k in kids if k.id != p.child_id]
         for k in range(1 + (i * 5) % 9):
             s.add(Reaction(post_id=p.id, child_id=pool[(i + k) % len(pool)].id, kind=KINDS[(i + k) % 4]))
+    # Открытая витрина: «Лучшее» другого класса, её видит гость без входа
+    show = [child(n, "9-12", "ru", in_class=False) for n in SHOWCASE]
+    for c in show:
+        s.add(ClassMembership(child_id=c.id, class_id=comets.id))
+    for i in range(16):
+        author = show[i % len(show)]
+        when = ago(hours=i * 11 + 2)
+        w = work(author, 20 + i, when)
+        p = Post(work_id=w.id, child_id=author.id, audience="class", class_id=comets.id,
+                 caption=imgs[(20 + i) % n_img]["idea"], status="published", best=True, created_at=when)
+        s.add(p)
+        s.flush()
+        for k in range(1 + (i * 3) % len(show)):
+            s.add(Reaction(post_id=p.id, child_id=show[(i + k + 1) % len(show)].id, kind="heart"))
     whale = posts[6]
     for who, text, h in ((mates[1], "Какой добрый кит!", 2), (mates[3], "Очень красиво, люблю облака", 3),
                          (mates[7], "Хочу такого кита", 5)):
@@ -153,6 +169,9 @@ def seed(images_dir: Path) -> dict:
         s.add(p)
         s.flush()
         fam.append(p)
+    for i, d in enumerate((0, 2, 4)):  # блок «последние работы» в кабинете родителя
+        when = ago(days=d, hours=3)
+        s.add(Post(work_id=work(fox, 6 + i, when).id, child_id=fox.id, audience="family", status="published", created_at=when))
     work(bunny, 8, ago(days=5, hours=4))
     daily(bunny, 4)
     # незавершённые у StarFox: refused (возврат монеты) и held

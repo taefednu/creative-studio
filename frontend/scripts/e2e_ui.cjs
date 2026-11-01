@@ -34,7 +34,7 @@ async function register(p, role, email) {
 }
 
 async function addKid(p, nick) {
-  if (await T(p, 'kid-nick').count() === 0) await T(p, 'add-kid').click()
+  if (await T(p, 'kid-nick').count() === 0) await T(p, 'add-child-tile').click()
   await T(p, 'kid-nick').fill(nick)
   for (const i of [3, 7, 1]) await T(p, `pic-${i}`).click()
   await T(p, 'kid-submit').click()
@@ -73,6 +73,7 @@ async function main() {
   const B = `MoonCat${tag}`
 
   await register(teacher, 'teacher', `t${tag}@example.com`)
+  await teacher.goto(BASE + '/teacher/classes') // создание класса переехало на вкладку «Классы»
   await T(teacher, 'class-name').fill('5B')
   await T(teacher, 'class-create').click()
   await T(teacher, 'class-code').first().waitFor({ timeout: 30000 })
@@ -118,7 +119,7 @@ async function main() {
   ok('баланс 19 после картинки', (await T(a, 'coins').innerText()).includes('19'), await T(a, 'coins').innerText())
 
   // Публикация с контактом → задержано → учитель одобряет
-  await T(a, 'publish-open').click()
+  await T(a, 'publish-class').click()
   await T(a, 'audience-class').click().catch(() => {})
   await T(a, 'caption-input').fill('пиши мне в тг @fake_cat_00')
   await T(a, 'publish-send').click()
@@ -132,7 +133,7 @@ async function main() {
   await T(b, 'feed-empty').waitFor({ timeout: 15000 })
   ok('неверный адрес ведёт на главную, а не на пустой экран', true, b.url())
 
-  await teacher.reload()
+  await teacher.goto(BASE + '/teacher') // очередь на вкладке «Проверка»
   await T(teacher, 'review-approve').first().waitFor({ timeout: 15000 })
   ok('у учителя карточка «Задержано»', true, await T(teacher, 'review-reason').first().innerText())
   await teacher.screenshot({ path: `${OUT}/teacher-1672.png` })
@@ -220,7 +221,7 @@ async function main() {
   const warm = await T(b, 'work-support').innerText()
   ok('ребёнку тёплый ответ без «заблокировано»', !/заблок|ошибк|нельзя|дружеская|иначе/i.test(warm), warm)
   await b.screenshot({ path: `${OUT}/b-support-390.png` })
-  await teacher.reload()
+  await teacher.goto(BASE + '/teacher') // очередь на вкладке «Проверка»
   await T(teacher, 'review-urgent-note').first().waitFor({ timeout: 15000 })
   ok('у учителя срочная карточка', true)
   ok('в срочной карточке нет «Одобрить»', (await T(teacher, 'review-approve').count()) === 0, await T(teacher, 'review-approve').count())

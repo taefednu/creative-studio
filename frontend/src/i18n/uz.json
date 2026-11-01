@@ -15,6 +15,7 @@
     "picture": "Rasm",
     "clear": "Tozalash",
     "login": "Kirish",
+    "childLogin": "Ijod qilamiz!",
     "register": "Ro‘yxatdan o‘tish",
     "toRegister": "Akkaunting yo‘qmi? Ro‘yxatdan o‘t",
     "toLogin": "Akkaunting bormi? Kirish",
@@ -29,6 +30,11 @@
     "classHint": "Sinf kodi bormi? Kirgandan keyin kiritasan"
   },
   "errors": {
+    "own_post": "Bu o‘zingning ishing: do‘stlaring ishidan remiks qil.",
+    "remix_not_allowed": "Muallif bu ishning remiksiga ruxsat bermagan.",
+    "remix_class_only": "Remiks faqat sinf ichida.",
+    "remix_source_gone": "Asl ish endi yo‘q.",
+    "needs_adult": "Buning uchun profilingda kattalar bo‘lishi kerak.",
     "generic": "Nimadir xato ketdi. Yana bir bor urinib ko‘r.",
     "validation": "Hammasi to‘g‘ri to‘ldirilganini tekshir. Parol kamida 8 belgi bo‘lsin.",
     "unauthorized": "Qaytadan kirish kerak.",
@@ -37,6 +43,7 @@
     "bad_email": "Pochtada xato bor shekilli.",
     "nick_format": "Nik: 2 tadan 20 tagacha harf va raqam, probelsiz.",
     "nick_taken": "Bunday nik bor. Boshqasini o‘yla.",
+    "name_rejected": "Bu nom mos emas. Unda ism, maktab yoki aloqa ma'lumotlari bo‘lmasligi kerak.",
     "nick_rejected": "Bu nik to‘g‘ri kelmaydi. Unda ism, familiya, maktab yoki aloqa ma‘lumotlari bo‘lmasin. O‘ylab topilgan ism tanla.",
     "bad_code": "Bunday sinf kodi yo‘q. Tekshirib, qayta urinib ko‘r.",
     "too_many_attempts": "Urinishlar juda ko‘p. 15 daqiqa kut yoki o‘qituvchidan so‘ra.",
@@ -86,7 +93,12 @@
     "supportBack": "Qaytish",
     "failedTitle": "Bo‘lmadi, tangang qaytdi",
     "failedText": "Yana urinib ko‘ramizmi?",
-    "teacherTask": "O‘qituvchi topshirig‘i"
+    "teacherTask": "O‘qituvchi topshirig‘i",
+    "retry": "Qayta urinish",
+    "proposedTitle": "Bir g‘oyamiz bor!",
+    "sideReadyTitle": "Zo‘r chiqdi!",
+    "sideReadyText": "Ishingni sinfga ko‘rsat yoki yana bittasini chiz.",
+    "styleLabel": "Uslub"
   },
   "hint": {
     "generic": "Keling, boshqacha chizaylik, masalan qasrni himoya qilayotgan jasur ritsar.",
@@ -140,7 +152,16 @@
     "kinderCancel": "Bekor qilish",
     "classFeed": "Sinf lentasi",
     "familyFeed": "Oila lentasi",
-    "back": "Kabinetga qaytish"
+    "back": "Kabinetga qaytish",
+    "model": "Model",
+    "made": "Yaratilgan",
+    "today": "bugun",
+    "yesterday": "kecha",
+    "remixOf": "@{{nick}} ishining remiksi",
+    "remixText": "Nimani o‘zgartiramiz? (shart emas)",
+    "remixNoStyle": "Uslubsiz",
+    "remixGo": "Remiksni chizish",
+    "remixAllow": "Remiksga ruxsat berish"
   },
   "publish": {
     "button": "Ulashish",
@@ -151,10 +172,11 @@
     "done": "Ulashildi!",
     "held": "Kattalarga ko'rsatish uchun yuborildi. U ko'rishi bilan sen bilib olasan.",
     "support": "Biz yoningdamiz. Sen yolg'iz emassan: ishongan kattangga ayt. Kattalaringga allaqachon xabar berdik.",
-    "noAudience": "Ulashish uchun sinfga qo'shil yoki kattalardan profil yaratishni so'ra."
+    "noAudience": "Ulashish uchun sinfga qo'shil yoki kattalardan profil yaratishni so'ra.",
+    "showClass": "Sinfga ko‘rsatish"
   },
-  "shell": { "coinsUnknown": "Tangalar hozircha mavjud emas", "account": "Profil" },
-  "task": { "start": "Boshlash", "overdue": "muddat tugagan", "today": "muddat bugun" },
+  "shell": { "coinsUnknown": "Tangalar hozircha mavjud emas", "nav": "Asosiy menyu", "account": "Profil" },
+  "task": { "start": "Boshlash", "overdue": "muddat tugagan", "today": "muddat bugun", "left_one": "{{count}} kun qoldi", "left_few": "{{count}} kun qoldi", "left_many": "{{count}} kun qoldi", "left_other": "{{count}} kun qoldi" },
   "panel": { "model": "Muse Image", "format": "1:1", "style": "Uslub", "uploadSoon": "Rasm yuklash tez orada qo'shiladi", "allStyles": "Barcha uslublar", "styleFilter": "Uslub bo'yicha filtr", "noStyleMatch": "Bu uslubda hali rasm yo'q" },
   "templates": {
     "superhero": "Men superqahramonman",
@@ -164,7 +186,9 @@
     "pixel": "Piksel o‘yin",
     "watercolor": "Akvarel ertagi",
     "paper": "Qog‘oz shahar",
-    "castle": "Ertak qasri"
+    "castle": "Ertak qasri",
+    "remix": "Remiks",
+    "upload": "Yuklangan rasm"
   },
   "myWorks": {
     "title": "Mening ishlarim",
@@ -229,6 +253,9 @@
     "urgentNote": "Bolaning ahvoli yomon boʻlishi mumkin — iltimos, qarab chiqing",
     "urgentBadge": "Eʻtibor kerak",
     "urgentHint": "Bu eʻlon qilinmaydi. Qulay payt bolangiz bilan gaplashing.",
+    "loading": "…",
+    "modalFailed": "Ochib bo‘lmadi. Qayta urinib ko‘ring.",
+    "retry": "Qayta urinish",
     "now": "hozirgina",
     "childRejected": "Kattalar buni eʻlon qilmaslikka qaror qildi: «{{text}}»",
     "childRejectedNoText": "Kattalar buni eʻlon qilmaslikka qaror qildi.",
@@ -250,6 +277,13 @@
       "kinder_failed": "Mehribon variant topilmadi",
       "content_policy": "Rasm chizilmadi",
       "held": "Tekshirish kerak",
+      "blurred_face": "Yuz xiralashtirildi",
+      "blurred_school_uniform": "Maktab formasi xiralashtirildi",
+      "blurred_house_number": "Uy raqami xiralashtirildi",
+      "blurred_handwritten_name": "Qo‘lda yozilgan ism xiralashtirildi",
+      "blurred_written_word": "Yozuv xiralashtirildi",
+      "sam_failed": "Xiralashtirish ishlamadi",
+      "remix_source_gone": "Asl rasm endi yo‘q",
       "unknown": "Tekshirish kerak"
     }
   },
@@ -259,5 +293,124 @@
     "signingIn": "Kiryapmiz…",
     "failed": "Bu QR-kod yaroqsiz: u bir martalik va 5 daqiqa amal qiladi. Kattalardan yangisini so‘ra.",
     "toLogin": "Kirish sahifasiga"
+  },
+  "login": {
+    "title": "Mentorium akkaunti orqali kirish",
+    "login": "Mentorium logini",
+    "password": "Parol",
+    "submit": "Kirish",
+    "back": "Bekor qilish",
+    "err": {
+      "bad_credentials": "Login yoki parol noto‘g‘ri.",
+      "platform_busy": "Hozir urinishlar juda ko‘p. Bir daqiqa kutib, qayta urinib ko‘ring.",
+      "platform_unavailable": "Mentorium hozir javob bermayapti. Birozdan keyin qayta urinib ko‘ring.",
+      "platform_not_configured": "Mentorium orqali kirish hozircha mavjud emas. Odatdagidek kiring.",
+      "unknown_role": "Bu Mentorium akkaunti bu yerda ishlamaydi."
+    }
+  },
+  "cab": {
+    "allReview": "Hammasi: {{count}}",
+    "tabs": {
+      "kids": "Bolalarim",
+      "review": "Tekshiruv",
+      "plans": "Tariflar",
+      "tasks": "Topshiriqlar",
+      "classes": "Sinflar",
+      "classfeed": "Sinf lentasi"
+    },
+    "meParent": "{{nick}} ota-onasi",
+    "meParentNoKid": "Ota-ona",
+    "meTeacher": "O‘qituvchi",
+    "nav": "Asosiy menyu",
+    "account": "Akkaunt",
+    "myKids": "Bolalarim",
+    "kid": {
+      "ageClass": "{{age}} · {{name}} sinfi",
+      "age": "{{age}} · sinfsiz",
+      "lessons": "bu haftada Mentorium darslaridan tangalar",
+      "open": "Ochish",
+      "addCoins": "+ Tanga",
+      "addChild": "Bola qo‘shish",
+      "closeForm": "Yopish"
+    },
+    "week": {
+      "title": "{{nick}}: shu hafta",
+      "perDay": "Kunlik rasmlar",
+      "pictures": "Rasmlar",
+      "shown": "Ko‘rsatilgan",
+      "held": "Ushlab turilgan",
+      "received": "Olingan tangalar",
+      "spent": "Sarflangan tangalar",
+      "uncertain_one": "{{count}} tanga tasdiqlanishini kutmoqda",
+      "uncertain_few": "{{count}} tanga tasdiqlanishini kutmoqda",
+      "uncertain_many": "{{count}} tanga tasdiqlanishini kutmoqda",
+      "uncertain_other": "{{count}} tanga tasdiqlanishini kutmoqda",
+      "noData": "{{nick}} uchun 7 kun ichida hali rasm, post yoki tanga yo‘q.",
+      "latest": "So‘nggi ishlar",
+      "chart": "So‘nggi 7 kun uchun kunlik rasmlar",
+      "pick": "Haftani ko‘rish uchun bolani tanlang."
+    },
+    "link": {
+      "title": "Mentorium bolasini ulash",
+      "hint": "Bolaning ilovasidagi 6 belgili kodni kiriting.",
+      "submit": "Ulash",
+      "done": "{{nick}} ulandi.",
+      "cell": "Kodning {{n}}-belgisi",
+      "err": {
+        "bad_code": "Kod noto‘g‘ri yoki muddati o‘tgan. Bola yangisini ko‘rsatsin.",
+        "too_many_attempts": "Urinishlar juda ko‘p. 15 daqiqa kuting.",
+        "already_linked": "Bu bolaning ota-onasi allaqachon bor."
+      }
+    },
+    "plans": {
+      "title": "Tariflar",
+      "coins": "{{count}} tanga",
+      "soon": "Tez orada",
+      "note": "Tanga sotib olish hozircha mavjud emas.",
+      "empty": "Tariflar hali yo‘q."
+    },
+    "tasks": {
+      "title": "Topshiriqlar",
+      "empty": "Sinf uchun topshiriqlar tez orada shu yerda paydo bo‘ladi."
+    },
+    "filter": {
+      "label": "Sinf",
+      "all": "Barcha sinflar"
+    },
+    "upload": {
+      "original": "Asl nusxa",
+      "blurred": "Xiralashtirilgan",
+      "noBlur": "Xiralashtirilgan nusxa hali yo‘q"
+    },
+    "child": {
+      "parentCode": "Kodni ota-onaga ko‘rsatish",
+      "codeTitle": "Ota-onang uchun kod",
+      "expires": "{{min}} daqiqa amal qiladi. Uni ota-onangga ko‘rsat.",
+      "alreadyLinked": "Ota-ona allaqachon ulangan.",
+      "needsAdult": "Post qo‘yish va izoh yozish uchun kattalar kerak. Kodni ota-onangga ko‘rsat yoki sinfga qo‘shil."
+    }
+  },
+  "ago": {
+    "minute_one": "{{count}} daqiqa oldin",
+    "minute_few": "{{count}} daqiqa oldin",
+    "minute_many": "{{count}} daqiqa oldin",
+    "minute_other": "{{count}} daqiqa oldin",
+    "hour_one": "{{count}} soat oldin",
+    "hour_few": "{{count}} soat oldin",
+    "hour_many": "{{count}} soat oldin",
+    "hour_other": "{{count}} soat oldin",
+    "day_one": "{{count}} kun oldin",
+    "day_few": "{{count}} kun oldin",
+    "day_many": "{{count}} kun oldin",
+    "day_other": "{{count}} kun oldin"
+  },
+  "weekday": {
+    "0": "Yak",
+    "1": "Dush",
+    "2": "Sesh",
+    "3": "Chor",
+    "4": "Pay",
+    "5": "Jum",
+    "6": "Shan"
   }
 }

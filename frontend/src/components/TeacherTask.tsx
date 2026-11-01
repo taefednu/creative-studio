@@ -18,7 +18,7 @@ type Props = { start?: boolean; assignmentId?: number | null }
 
 /** Строка задания учителя: на ленте с кнопкой «Начать», на «Создать» без неё. Нет задания — ничего. */
 export default function TeacherTask({ start, assignmentId }: Props) {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [list] = useLoad(loadAssignments)
   // заданный, но не найденный id не подменяем другим заданием
   const a = assignmentId ? list?.find((x) => x.id === assignmentId) : list?.find((x) => x.submissions.length === 0)
@@ -32,7 +32,7 @@ export default function TeacherTask({ start, assignmentId }: Props) {
         ? t('task.overdue')
         : left === 0
           ? t('task.today')
-          : new Intl.RelativeTimeFormat(i18n.language, { numeric: 'always' }).format(left, 'day')
+          : t('task.left', { count: left })
 
   return (
     <div

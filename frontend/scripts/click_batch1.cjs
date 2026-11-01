@@ -87,7 +87,7 @@ async function login(b,w,h,nick='StarFox'){
   // ---- на 390×844 кнопка draw над нижним меню (панель липкая), и на «Создать», и на ленте
   const s2 = await login(b, 390, 844)
   await s2.goto(BASE + '/create'); await T(s2, 'draw').waitFor()
-  const bx = await T(s2, 'draw').boundingBox(); const nv = await s2.locator('nav[aria-label=main]').boundingBox()
+  const bx = await T(s2, 'draw').boundingBox(); const nv = await T(s2, 'main-nav').boundingBox()
   ok('create 390: draw выше нижнего меню', bx.y + bx.height <= nv.y + 1, `${bx.y + bx.height} <= ${nv.y}`)
   // ---- ретраи: 5xx оставляет request_id, правка текста меняет его
   const ids = []

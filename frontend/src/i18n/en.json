@@ -15,6 +15,7 @@
     "picture": "Picture",
     "clear": "Clear",
     "login": "Sign in",
+    "childLogin": "Let’s create",
     "register": "Sign up",
     "toRegister": "No account? Sign up",
     "toLogin": "Already have an account? Sign in",
@@ -29,6 +30,11 @@
     "classHint": "Have a class code? Enter it after signing in"
   },
   "errors": {
+    "own_post": "This is your own picture: remix a friend's work.",
+    "remix_not_allowed": "The author has turned off remixes for this picture.",
+    "remix_class_only": "Remixes work only inside your class.",
+    "remix_source_gone": "The original picture is gone.",
+    "needs_adult": "A grown-up must be set up on your profile first.",
     "generic": "Something went wrong. Please try again.",
     "validation": "Please check that everything is filled in correctly. Password needs 8+ characters.",
     "unauthorized": "Please sign in again.",
@@ -37,6 +43,7 @@
     "bad_email": "This email looks wrong.",
     "nick_format": "Nickname: 2 to 20 letters and digits, no spaces.",
     "nick_taken": "This nickname is taken. Pick another one.",
+    "name_rejected": "This name is not suitable. It should not contain a real name, school or contacts.",
     "nick_rejected": "This nickname will not work. It must not contain a real name, surname, school or contacts. Make up a pretend name.",
     "bad_code": "No class with this code. Check it and try again.",
     "too_many_attempts": "Too many tries. Wait 15 minutes or ask your teacher.",
@@ -86,7 +93,12 @@
     "supportBack": "Go back",
     "failedTitle": "That didn't work, your coin is back",
     "failedText": "Shall we try again?",
-    "teacherTask": "Teacher task"
+    "teacherTask": "Teacher task",
+    "retry": "Try again",
+    "proposedTitle": "We have an idea!",
+    "sideReadyTitle": "Looks great!",
+    "sideReadyText": "Show it to the class or draw another one.",
+    "styleLabel": "Style"
   },
   "hint": {
     "generic": "Let's draw it another way, for example a brave knight protecting a castle.",
@@ -140,7 +152,16 @@
     "kinderCancel": "Cancel",
     "classFeed": "Class feed",
     "familyFeed": "Family feed",
-    "back": "Back to the cabinet"
+    "back": "Back to the cabinet",
+    "model": "Model",
+    "made": "Made",
+    "today": "today",
+    "yesterday": "yesterday",
+    "remixOf": "Remix of @{{nick}}'s work",
+    "remixText": "What to change? (optional)",
+    "remixNoStyle": "No style",
+    "remixGo": "Draw my remix",
+    "remixAllow": "Allow remixes"
   },
   "publish": {
     "button": "Share",
@@ -151,10 +172,11 @@
     "done": "Shared!",
     "held": "Sent to a grown-up to look at. You will know as soon as they have.",
     "support": "We are here. You are not alone: tell a grown-up you trust. We have already told your grown-ups.",
-    "noAudience": "To share, join a class or ask a grown-up to set up your profile."
+    "noAudience": "To share, join a class or ask a grown-up to set up your profile.",
+    "showClass": "Share with class"
   },
-  "shell": { "coinsUnknown": "Coins are not available right now", "account": "Profile" },
-  "task": { "start": "Start", "overdue": "deadline passed", "today": "due today" },
+  "shell": { "coinsUnknown": "Coins are not available right now", "nav": "Main menu", "account": "Profile" },
+  "task": { "start": "Start", "overdue": "deadline passed", "today": "due today", "left_one": "{{count}} day left", "left_few": "{{count}} days left", "left_many": "{{count}} days left", "left_other": "{{count}} days left" },
   "panel": { "model": "Muse Image", "format": "1:1", "style": "Style", "uploadSoon": "Picture upload is coming soon", "allStyles": "All styles", "styleFilter": "Filter by style", "noStyleMatch": "No pictures in this style yet" },
   "templates": {
     "superhero": "I'm a superhero",
@@ -164,7 +186,9 @@
     "pixel": "Pixel game",
     "watercolor": "Watercolor tale",
     "paper": "Paper city",
-    "castle": "Fairy tale castle"
+    "castle": "Fairy tale castle",
+    "remix": "Remix",
+    "upload": "Uploaded picture"
   },
   "myWorks": {
     "title": "My works",
@@ -229,6 +253,9 @@
     "urgentNote": "The child may not be okay — please take a look",
     "urgentBadge": "Needs your attention",
     "urgentHint": "This is not published. Talk to the child when it suits you.",
+    "loading": "…",
+    "modalFailed": "Could not open this. Try again.",
+    "retry": "Try again",
     "now": "just now",
     "childRejected": "A grown-up decided not to publish: “{{text}}”",
     "childRejectedNoText": "A grown-up decided not to publish this.",
@@ -250,6 +277,13 @@
       "kinder_failed": "No kinder version found",
       "content_policy": "The picture could not be drawn",
       "held": "Needs a review",
+      "blurred_face": "A face was blurred",
+      "blurred_school_uniform": "A school uniform was blurred",
+      "blurred_house_number": "A house number was blurred",
+      "blurred_handwritten_name": "A handwritten name was blurred",
+      "blurred_written_word": "Writing was blurred",
+      "sam_failed": "Blurring did not work",
+      "remix_source_gone": "The original picture is gone",
       "unknown": "Needs a review"
     }
   },
@@ -259,5 +293,124 @@
     "signingIn": "Signing in…",
     "failed": "This QR code does not work: it is single-use and lasts 5 minutes. Ask a grown-up for a new one.",
     "toLogin": "Back to sign in"
+  },
+  "login": {
+    "title": "Sign in with your Mentorium account",
+    "login": "Mentorium login",
+    "password": "Password",
+    "submit": "Sign in",
+    "back": "Cancel",
+    "err": {
+      "bad_credentials": "Wrong login or password.",
+      "platform_busy": "Too many tries right now. Please wait a minute and try again.",
+      "platform_unavailable": "Mentorium does not answer right now. Please try again in a bit.",
+      "platform_not_configured": "Signing in with Mentorium is not available yet. Please sign in the usual way.",
+      "unknown_role": "This Mentorium account cannot be used here."
+    }
+  },
+  "cab": {
+    "allReview": "See all: {{count}}",
+    "tabs": {
+      "kids": "My kids",
+      "review": "Review",
+      "plans": "Plans",
+      "tasks": "Tasks",
+      "classes": "Classes",
+      "classfeed": "Class feed"
+    },
+    "meParent": "Parent of {{nick}}",
+    "meParentNoKid": "Parent",
+    "meTeacher": "Teacher",
+    "nav": "Main menu",
+    "account": "Account",
+    "myKids": "My kids",
+    "kid": {
+      "ageClass": "{{age}} · class {{name}}",
+      "age": "{{age}} · no class",
+      "lessons": "coins from Mentorium lessons this week",
+      "open": "Open",
+      "addCoins": "+ Add coins",
+      "addChild": "Add a child",
+      "closeForm": "Close"
+    },
+    "week": {
+      "title": "{{nick}} this week",
+      "perDay": "Pictures per day",
+      "pictures": "Pictures",
+      "shown": "Shared",
+      "held": "Held",
+      "received": "Coins received",
+      "spent": "Coins spent",
+      "uncertain_one": "{{count}} coin is waiting for confirmation",
+      "uncertain_few": "{{count}} coins are waiting for confirmation",
+      "uncertain_many": "{{count}} coins are waiting for confirmation",
+      "uncertain_other": "{{count}} coins are waiting for confirmation",
+      "noData": "{{nick}} has no pictures, posts or coins in the last 7 days yet.",
+      "latest": "Latest artworks",
+      "chart": "Pictures per day over the last 7 days",
+      "pick": "Pick a child to see the week."
+    },
+    "link": {
+      "title": "Link a Mentorium kid",
+      "hint": "Enter the 6-character code from your child's app.",
+      "submit": "Link",
+      "done": "{{nick}} is linked.",
+      "cell": "Code character {{n}}",
+      "err": {
+        "bad_code": "This code is wrong or has expired. Ask the child to show a new one.",
+        "too_many_attempts": "Too many tries. Wait 15 minutes and try again.",
+        "already_linked": "This child already has a parent."
+      }
+    },
+    "plans": {
+      "title": "Plans",
+      "coins": "{{count}} coins",
+      "soon": "Soon",
+      "note": "Buying coins is not available yet.",
+      "empty": "No plans yet."
+    },
+    "tasks": {
+      "title": "Tasks",
+      "empty": "Tasks for your class will appear here soon."
+    },
+    "filter": {
+      "label": "Class",
+      "all": "All classes"
+    },
+    "upload": {
+      "original": "Original",
+      "blurred": "Blurred",
+      "noBlur": "Not blurred yet"
+    },
+    "child": {
+      "parentCode": "Show code to a parent",
+      "codeTitle": "Code for your parent",
+      "expires": "Valid for {{min}} min. Show it to your parent.",
+      "alreadyLinked": "A parent is already linked.",
+      "needsAdult": "You need a grown-up to post and comment. Show the code to your parent or join your class."
+    }
+  },
+  "ago": {
+    "minute_one": "{{count}} min ago",
+    "minute_few": "{{count}} min ago",
+    "minute_many": "{{count}} min ago",
+    "minute_other": "{{count}} min ago",
+    "hour_one": "{{count}} hr ago",
+    "hour_few": "{{count}} hr ago",
+    "hour_many": "{{count}} hr ago",
+    "hour_other": "{{count}} hr ago",
+    "day_one": "{{count}} day ago",
+    "day_few": "{{count}} days ago",
+    "day_many": "{{count}} days ago",
+    "day_other": "{{count}} days ago"
+  },
+  "weekday": {
+    "0": "Sun",
+    "1": "Mon",
+    "2": "Tue",
+    "3": "Wed",
+    "4": "Thu",
+    "5": "Fri",
+    "6": "Sat"
   }
 }

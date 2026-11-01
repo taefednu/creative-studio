@@ -118,5 +118,101 @@
   "template_id": "pixel",
   "idea_ru": "Ракета",
   "idea_en": "a red rocket flying to the stars"
+ },
+ {
+  "slug": "show_mermaid_cat",
+  "template_id": "anime",
+  "idea_ru": "Кошка-русалка в коралловом замке",
+  "idea_en": "a cute cat mermaid in a coral castle"
+ },
+ {
+  "slug": "show_pizza_planet",
+  "template_id": "space_pet",
+  "idea_ru": "Щенок на планете из пиццы",
+  "idea_en": "a puppy astronaut on a tiny pizza planet"
+ },
+ {
+  "slug": "show_candy_city",
+  "template_id": "clay",
+  "idea_ru": "Город из конфет и зефира",
+  "idea_en": "a tiny candy and marshmallow town"
+ },
+ {
+  "slug": "show_dragon_library",
+  "template_id": "castle",
+  "idea_ru": "Дракон-библиотекарь в волшебной башне",
+  "idea_en": "a kind little dragon reading books in a magic tower"
+ },
+ {
+  "slug": "show_robot_garden",
+  "template_id": "superhero",
+  "idea_ru": "Робот-садовник спасает цветы",
+  "idea_en": "a brave little robot gardener saving flowers"
+ },
+ {
+  "slug": "show_snow_fox",
+  "template_id": "watercolor",
+  "idea_ru": "Снежная лисичка под северным сиянием",
+  "idea_en": "a snow fox cub under the northern lights"
+ },
+ {
+  "slug": "show_paper_boats",
+  "template_id": "paper",
+  "idea_ru": "Бумажные кораблики в городе-реке",
+  "idea_en": "paper boats sailing through a river town"
+ },
+ {
+  "slug": "show_pixel_forest",
+  "template_id": "pixel",
+  "idea_ru": "Сокровище в пиксельном лесу",
+  "idea_en": "a treasure chest in a pixel forest with friendly slimes"
+ },
+ {
+  "slug": "show_panda_baker",
+  "template_id": "clay",
+  "idea_ru": "Панда печёт радужный торт",
+  "idea_en": "a panda baker with a rainbow cake"
+ },
+ {
+  "slug": "show_moon_rabbit",
+  "template_id": "anime",
+  "idea_ru": "Лунный кролик с фонарями",
+  "idea_en": "a moon rabbit with floating paper lanterns"
+ },
+ {
+  "slug": "show_turtle_island",
+  "template_id": "watercolor",
+  "idea_ru": "Остров на спине черепахи",
+  "idea_en": "a little island village on the back of a giant turtle"
+ },
+ {
+  "slug": "show_comet_kitten",
+  "template_id": "space_pet",
+  "idea_ru": "Котёнок верхом на комете",
+  "idea_en": "a kitten riding a shooting comet"
+ },
+ {
+  "slug": "show_tiger_hero",
+  "template_id": "superhero",
+  "idea_ru": "Тигрёнок в плаще над городом",
+  "idea_en": "a tiger cub superhero with a cape over a toy city"
+ },
+ {
+  "slug": "show_paper_zoo",
+  "template_id": "paper",
+  "idea_ru": "Зоопарк из цветной бумаги",
+  "idea_en": "a colorful paper cut-out zoo with giraffes"
+ },
+ {
+  "slug": "show_pixel_ships",
+  "template_id": "pixel",
+  "idea_ru": "Пиксельные пираты и добрый кит",
+  "idea_en": "pixel art pirate ship meeting a friendly whale"
+ },
+ {
+  "slug": "show_cloud_castle",
+  "template_id": "castle",
+  "idea_ru": "Замок на облаках с радугой",
+  "idea_en": "a castle on clouds with a rainbow bridge"
  }
 ]

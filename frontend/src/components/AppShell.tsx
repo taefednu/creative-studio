@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { api } from '../api'
+import { api, ApiError } from '../api'
 import { useSession } from '../features/auth/session'
 import { useLoad } from '../useLoad'
 import ErrorText, { errorKey } from './ErrorText'
@@ -23,6 +23,7 @@ type Me = {
   coins: number | null
   class: { id: number; name: string } | null
   has_parent: boolean
+  needs_adult: boolean
 }
 
 export type ShellContext = {
@@ -30,6 +31,7 @@ export type ShellContext = {
   coins: number | null
   cls: { id: number; name: string } | null
   hasParent: boolean
+  needsAdult: boolean
   ready: boolean
 }
 
@@ -43,6 +45,7 @@ export default function AppShell() {
   const [code, setCode] = useState('')
   const [err, setErr] = useState<string | null>(null)
   const [menu, setMenu] = useState(false)
+  const [link, setLink] = useState<{ code: string; min: number } | string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -71,6 +74,18 @@ export default function AppShell() {
     }
   }
 
+  async function parentCode() {
+    try {
+      const r = await api<{ code: string; expires_in: number }>('/api/child/parent-link-code', 'POST')
+      setLink({ code: r.code, min: Math.round(r.expires_in / 60) })
+    } catch (x) {
+      if (x instanceof ApiError && x.code === 'already_linked') {
+        setLink('already_linked')
+        load()
+      } else setLink('generic')
+    }
+  }
+
   async function logout() {
     await api('/api/logout', 'POST')
     await refresh()
@@ -82,6 +97,7 @@ export default function AppShell() {
     coins: me ? me.coins : null,
     cls: me?.class ?? null,
     hasParent: me?.has_parent ?? false,
+    needsAdult: me?.needs_adult ?? false,
     ready: me !== null,
   }
 
@@ -93,7 +109,8 @@ export default function AppShell() {
       >
         <Logo />
         <nav
-          aria-label="main"
+          aria-label={t('shell.nav')}
+          data-testid="main-nav"
           className="fixed inset-x-0 bottom-0 z-30 flex h-[72px] items-stretch gap-1 border-t border-border bg-surface px-1 py-1 lg:static lg:z-auto lg:h-auto lg:justify-center lg:gap-3 lg:border-0 lg:bg-transparent lg:p-0 2xl:gap-4"
         >
           {TABS.map((tab) => (
@@ -149,6 +166,33 @@ export default function AppShell() {
                       <img src="/art/coin.webp" alt="" className="h-5 w-5 shrink-0" />
                       {t('child.moreCoins')}
                     </p>
+                    {!me.has_parent && (
+                      <div className="mt-3">
+                        <button
+                          type="button"
+                          data-testid="parent-code"
+                          onClick={() => void parentCode()}
+                          className="w-full rounded-full bg-primary-soft px-4 py-2 text-sm font-extrabold text-primary"
+                        >
+                          {t('cab.child.parentCode')}
+                        </button>
+                        {typeof link === 'object' && link && (
+                          <div className="mt-2 text-center">
+                            <p className="text-xs font-extrabold uppercase text-primary">{t('cab.child.codeTitle')}</p>
+                            <p data-testid="parent-code-value" className="text-4xl font-extrabold tracking-widest text-heading">
+                              {link.code}
+                            </p>
+                            <p className="text-xs text-muted">{t('cab.child.expires', { min: link.min })}</p>
+                          </div>
+                        )}
+                        {link === 'already_linked' && (
+                          <p data-testid="parent-code-error" className="mt-2 text-sm font-bold text-muted">
+                            {t('cab.child.alreadyLinked')}
+                          </p>
+                        )}
+                        {link === 'generic' && <p data-testid="parent-code-error" className="mt-2 text-sm font-bold text-danger">{t('errors.generic')}</p>}
+                      </div>
+                    )}
                     <button
                       type="button"
                       data-testid="logout"
@@ -194,6 +238,11 @@ export default function AppShell() {
               <ErrorText code={err} />
             </div>
           </form>
+        )}
+        {me?.needs_adult && (
+          <p data-testid="needs-adult" className="mb-4 rounded-card border border-border bg-primary-soft p-3 text-sm font-bold text-heading">
+            {t('cab.child.needsAdult')}
+          </p>
         )}
         <Outlet context={ctx} />
       </main>

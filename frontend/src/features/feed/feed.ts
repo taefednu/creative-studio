@@ -1,3 +1,5 @@
+import { parseUtc } from '../review/review'
+
 export const REACTIONS = [
   { key: 'star', emoji: '⭐' },
   { key: 'heart', emoji: '❤️' },
@@ -23,6 +25,11 @@ export type Post = {
   can_react: boolean
   can_comment: boolean
   can_delete: boolean
+  can_remix: boolean
+  /** true только автору при срочном: тёплый ответ, без пометок «ждёт взрослого» */
+  support?: boolean
+  remix_allowed: boolean
+  remix_of: { post_id: number; nick: string } | null
   created_at: string
 }
 
@@ -34,6 +41,7 @@ export type PostComment = {
   text: string
   status: 'published' | 'held'
   mine: boolean
+  support?: boolean
 }
 
 export type CommentResult =
@@ -61,4 +69,30 @@ export function cardRatio(id: number): (typeof RATIOS)[number] {
 /** Фильтр по стилю на клиенте: '' — все. */
 export function byStyle(items: Post[], style: string): Post[] {
   return style ? items.filter((p) => p.template_id === style) : items
+}
+
+const dayNo = (d: Date) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86_400_000)
+
+/** «Создано»: сегодня и вчера по местным суткам браузера, иначе дата ДД.ММ.ГГГГ (Intl не знает uz). */
+export function createdLabel(iso: string, now: Date = new Date()): 'today' | 'yesterday' | string {
+  const d = parseUtc(iso)
+  const ago = dayNo(now) - dayNo(d)
+  if (ago === 0) return 'today'
+  if (ago === 1) return 'yesterday'
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`
+}
+
+/** Работа сделана по шаблону из каталога, а не ремиксом или загрузкой: только на такой есть /create?template=. */
+export const isStyle = (id: string | null): id is string => !!id && id !== 'remix' && id !== 'upload'
+
+/** Что показать вместо «Нарисовать так же»: ремикс, переключатель автору или ссылку на стиль (взрослому ничего). */
+export function drawSameKind(
+  p: Pick<Post, 'can_remix' | 'is_author' | 'template_id'>,
+  child = true,
+): 'remix' | 'allow' | 'link' | null {
+  if (!child) return null
+  if (p.can_remix) return 'remix'
+  if (p.is_author) return 'allow'
+  return isStyle(p.template_id) ? 'link' : null
 }

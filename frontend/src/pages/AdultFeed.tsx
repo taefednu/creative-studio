@@ -8,8 +8,8 @@ export default function AdultFeed({ who }: { who: 'teacher' | 'parent' }) {
   const { t } = useTranslation()
   const { classId } = useParams()
   return (
-    <div className="min-h-screen bg-bg">
-      <CabinetHeader title={t(`${who}.title`)} />
+    <div className="min-h-screen bg-bg pb-24 lg:pb-6">
+      <CabinetHeader role={who} />
       <main className="mx-auto max-w-[1672px] px-4 py-4 md:px-8">
         <Link to={`/${who}`} data-testid="back" className="mb-3 inline-block text-sm font-bold text-primary underline">
           {t('feed.back')}

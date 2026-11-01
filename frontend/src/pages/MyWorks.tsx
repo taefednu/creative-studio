@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
 import PublishBox from '../components/PublishBox'
@@ -26,27 +27,39 @@ export default function MyWorks() {
       )}
       <div data-testid="works-grid" className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
         {works?.map((w) => (
-          <div
-            key={w.id}
-            data-testid="work-card"
-            className="overflow-hidden rounded-card border border-border bg-surface shadow-card"
-          >
-            {w.image_url ? (
-              <img src={w.image_url} alt={t(`templates.${w.template_id}`)} className="aspect-square w-full object-cover" />
-            ) : (
-              <div className="flex aspect-square items-center justify-center bg-primary-soft p-3 text-center font-extrabold text-heading">
-                {t(`myWorks.status.${w.status}`)}
-              </div>
-            )}
-            <p className="px-3 py-2 text-sm font-extrabold text-heading">{t(`templates.${w.template_id}`)}</p>
-            {w.status === 'ready' && (
-              <div className="px-3 pb-3">
-                <PublishBox workId={w.id} />
-              </div>
-            )}
-          </div>
+          <WorkCard key={w.id} w={w} />
         ))}
       </div>
+    </div>
+  )
+}
+
+function WorkCard({ w }: { w: Work }) {
+  const { t } = useTranslation()
+  const [support, setSupport] = useState(false)
+  // после публикации с тревожным текстом в карточке только тёплый ответ
+  if (support) {
+    return (
+      <div data-testid="work-card" className="overflow-hidden rounded-card border border-border bg-surface p-3 shadow-card">
+        <p data-testid="publish-support" className="text-sm font-extrabold text-heading">{t('publish.support')}</p>
+      </div>
+    )
+  }
+  return (
+    <div data-testid="work-card" className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
+      {w.image_url ? (
+        <img src={w.image_url} alt={t(`templates.${w.template_id}`)} className="aspect-square w-full object-cover" />
+      ) : (
+        <div className="flex aspect-square items-center justify-center bg-primary-soft p-3 text-center font-extrabold text-heading">
+          {t(`myWorks.status.${w.status}`)}
+        </div>
+      )}
+      <p className="px-3 py-2 text-sm font-extrabold text-heading">{t(`templates.${w.template_id}`)}</p>
+      {w.status === 'ready' && (
+        <div className="px-3 pb-3">
+          <PublishBox workId={w.id} onSupport={() => setSupport(true)} />
+        </div>
+      )}
     </div>
   )
 }

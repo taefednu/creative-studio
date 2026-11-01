@@ -1,4 +1,4 @@
-"""Один раз генерирует 20 детских картинок для демо-стенда в scripts/demo_images/<slug>.webp.
+"""Один раз генерирует детские картинки (первые 20 — лента класса, остальные — витрина) для демо-стенда в scripts/demo_images/<slug>.webp.
 
 Запуск из backend/: uv run python scripts/gen_demo_images.py [slug ...]
 Каждая картинка проходит check_image до сохранения; не allow — не сохраняем. Уже готовые пропускаются
@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.meta.client import client_from_settings
 from app.safety import check_image
 from app.works.image.pipeline import to_webp
+from app.works.image.templates import BY_ID, build_prompt
 
 OUT = Path(__file__).resolve().parent / "demo_images"
 
@@ -39,6 +40,23 @@ IDEAS = [
     ("corgi", "anime", "Корги", "a happy corgi dog running on the grass"),
     ("clownfish", "pixel", "Рыба-клоун", "a clownfish in a coral reef"),
     ("rocket", "pixel", "Ракета", "a red rocket flying to the stars"),
+    # витрина для гостей: посты «Лучшее»
+    ("show_mermaid_cat", "anime", "Кошка-русалка в коралловом замке", "a cute cat mermaid in a coral castle"),
+    ("show_pizza_planet", "space_pet", "Щенок на планете из пиццы", "a puppy astronaut on a tiny pizza planet"),
+    ("show_candy_city", "clay", "Город из конфет и зефира", "a tiny candy and marshmallow town"),
+    ("show_dragon_library", "castle", "Дракон-библиотекарь в волшебной башне", "a kind little dragon reading books in a magic tower"),
+    ("show_robot_garden", "superhero", "Робот-садовник спасает цветы", "a brave little robot gardener saving flowers"),
+    ("show_snow_fox", "watercolor", "Снежная лисичка под северным сиянием", "a snow fox cub under the northern lights"),
+    ("show_paper_boats", "paper", "Бумажные кораблики в городе-реке", "paper boats sailing through a river town"),
+    ("show_pixel_forest", "pixel", "Сокровище в пиксельном лесу", "a treasure chest in a pixel forest with friendly slimes"),
+    ("show_panda_baker", "clay", "Панда печёт радужный торт", "a panda baker with a rainbow cake"),
+    ("show_moon_rabbit", "anime", "Лунный кролик с фонарями", "a moon rabbit with floating paper lanterns"),
+    ("show_turtle_island", "watercolor", "Остров на спине черепахи", "a little island village on the back of a giant turtle"),
+    ("show_comet_kitten", "space_pet", "Котёнок верхом на комете", "a kitten riding a shooting comet"),
+    ("show_tiger_hero", "superhero", "Тигрёнок в плаще над городом", "a tiger cub superhero with a cape over a toy city"),
+    ("show_paper_zoo", "paper", "Зоопарк из цветной бумаги", "a colorful paper cut-out zoo with giraffes"),
+    ("show_pixel_ships", "pixel", "Пиксельные пираты и добрый кит", "pixel art pirate ship meeting a friendly whale"),
+    ("show_cloud_castle", "castle", "Замок на облаках с радугой", "a castle on clouds with a rainbow bridge"),
 ]
 
 
@@ -48,13 +66,13 @@ def main(only: list[str]) -> int:
     (OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1), encoding="utf-8")
     client = None
     failed = 0
-    for slug, _t, _ru, en in IDEAS:
+    for slug, t, _ru, en in IDEAS:
         if (only and slug not in only) or (OUT / f"{slug}.webp").exists():
             continue
         try:
             client = client or client_from_settings()
             raw = client.generate_image(
-                f"A friendly children's illustration, safe for kids, no people. Subject: {en}", "demo", 90
+                build_prompt(BY_ID[t], f"{en}, no people"), "demo", 90
             )
             d = check_image(raw, "image_result", "en")
         except Exception as e:  # noqa: BLE001

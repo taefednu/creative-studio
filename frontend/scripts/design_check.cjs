@@ -1,5 +1,7 @@
 // Сверка экрана с макетом: docs/design/measure/specs/<экран>.json, стенд из scripts/stand.sh.
 // Запуск из frontend/: node scripts/design_check.cjs <экран|all>. Код выхода 1 — есть блок с Δ больше 5 %.
+// Снимок не ждёт document.fonts.ready: на окне «Скажи добрее?» headless зависал в статусе loading при завершённых запросах.
+process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY = '1'
 const fs = require('fs')
 const path = require('path')
 const { chromium } = require('playwright')
@@ -53,6 +55,7 @@ async function check(browser, name) {
     page.on('response', (r) => r.status() >= 400 && r.url().includes('/api/') && !spec.allow4xx && problems.push(`${r.status()} ${r.url()}`))
     await screens[name](page)
     await page.waitForTimeout(600)
+    await Promise.race([page.evaluate(() => document.fonts.ready.then(() => 1)), page.waitForTimeout(3000)])
     const boxes = []
     for (const b of spec.blocks) {
       const loc = page.locator(b.sel).first()
@@ -81,9 +84,9 @@ async function check(browser, name) {
     if (scroll > 0) { bad++; lines.push('', `**Горизонтальный скролл: ${scroll}px**`) }
     if (problems.length) { bad++; lines.push('', '**Ошибки:** ' + [...new Set(problems)].join('; ')) }
     lines.push('')
-    await page.screenshot({ path: path.join(DIR, 'overlay', `${name}-${W}-page.jpg`), type: 'jpeg', quality: 70 })
+    await page.screenshot({ path: path.join(DIR, 'overlay', `${name}-${W}-page.jpg`), type: 'jpeg', quality: 70, timeout: 15000 })
     await drawOverlay(page, spec, boxes.map((b) => b), mode, W)
-    await page.screenshot({ path: path.join(DIR, 'overlay', `${name}-${W}.jpg`), type: 'jpeg', quality: 70 })
+    await page.screenshot({ path: path.join(DIR, 'overlay', `${name}-${W}.jpg`), type: 'jpeg', quality: 70, timeout: 15000 })
     await ctx.close()
   }
   fs.writeFileSync(path.join(DIR, 'report', `${name}.md`), lines.join('\n') + '\n')
@@ -95,9 +98,20 @@ async function check(browser, name) {
 ;(async () => {
   const target = process.argv[2]
   const names = target === 'all' ? Object.keys(screens) : [target]
-  const browser = await chromium.launch()
   let bad = 0
-  for (const n of names) bad += await check(browser, n)
-  await browser.close()
+  for (const n of names) {
+    const browser = await chromium.launch() // свой браузер: после десятка снимков headless зависал на шрифтах
+    // Снимок иногда виснет на «waiting for fonts» в headless с dev-сервером: повторяем экран целиком.
+    for (let attempt = 1; ; attempt++) {
+      try {
+        bad += await check(browser, n)
+        break
+      } catch (e) {
+        if (attempt === 3) throw e
+        console.log(`повтор ${n}: ${e.message.split(String.fromCharCode(10))[0]}`)
+      }
+    }
+    await browser.close()
+  }
   process.exit(bad ? 1 : 0)
 })()

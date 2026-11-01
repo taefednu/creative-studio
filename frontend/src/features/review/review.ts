@@ -13,6 +13,8 @@ export type ReviewItem = {
   created_at: string
   preview_text: string | null
   image_url: string | null
+  original_url?: string | null
+  blurred_url?: string | null
 }
 
 const EVENT = 'review:changed'
@@ -42,13 +44,15 @@ export function parseUtc(iso: string): Date {
   return new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`)
 }
 
-export function agoText(iso: string, lang: string, nowText: string): string {
-  const sec = Math.round((Date.now() - parseUtc(iso).getTime()) / 1000)
-  if (sec < 60) return nowText
-  const rtf = new Intl.RelativeTimeFormat(lang, { numeric: 'always', style: 'short' })
-  if (sec < 3600) return rtf.format(-Math.floor(sec / 60), 'minute')
-  if (sec < 86400) return rtf.format(-Math.floor(sec / 3600), 'hour')
-  return rtf.format(-Math.floor(sec / 86400), 'day')
+type Tr = (key: string, opts?: Record<string, unknown>) => string
+
+/** «5 мин назад» из i18n с plural: Intl.RelativeTimeFormat в Chromium не знает uz. */
+export function agoText(iso: string, t: Tr, nowMs = Date.now()): string {
+  const sec = Math.round((nowMs - parseUtc(iso).getTime()) / 1000)
+  if (sec < 60) return t('review.now')
+  if (sec < 3600) return t('ago.minute', { count: Math.floor(sec / 60) })
+  if (sec < 86400) return t('ago.hour', { count: Math.floor(sec / 3600) })
+  return t('ago.day', { count: Math.floor(sec / 86400) })
 }
 
 const KNOWN = [
@@ -67,6 +71,14 @@ const KNOWN = [
   'kinder_failed',
   'content_policy',
   'held',
+  // загрузка: SAM размыл найденное (backend/app/works/upload/sam.py ENTITIES) или не ответил
+  'blurred_face',
+  'blurred_school_uniform',
+  'blurred_house_number',
+  'blurred_handwritten_name',
+  'blurred_written_word',
+  'sam_failed',
+  'remix_source_gone',
 ]
 
 /** Неизвестный код — общий текст «нужна проверка», а не сырой ключ. */
@@ -81,3 +93,16 @@ export function reasonKeys(codes: string[]): string[] {
   const out = real.length ? real : keys
   return out.length ? out : ['review.reasons.unknown']
 }
+
+/** Фильтр очереди учителя по имени класса; null — все классы. Срочное и без класса видно всегда: его нельзя спрятать. */
+export function filterByClass<T extends { class_name: string | null; urgent?: boolean }>(items: T[], className: string | null): T[] {
+  return className === null ? items : items.filter((i) => i.urgent || i.class_name === null || i.class_name === className)
+}
+
+const CABINET = 'cabinet:changed'
+
+/** Новый ребёнок или класс: шапка кабинета перечитывает имя и ссылку на ленту. */
+export function notifyCabinet() {
+  window.dispatchEvent(new Event(CABINET))
+}
+export const CABINET_EVENT = CABINET

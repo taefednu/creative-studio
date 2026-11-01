@@ -1,39 +1,55 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
+import Avatar from '../components/Avatar'
 import CabinetHeader from '../components/CabinetHeader'
-import Coin from '../components/Coin'
 import ErrorText, { errorKey } from '../components/ErrorText'
+import LinkCard from '../components/LinkCard'
 import PictureGrid from '../components/PictureGrid'
 import QrBox from '../components/QrBox'
 import ReviewQueue from '../components/ReviewQueue'
+import WeekChart from '../components/WeekChart'
+import { notifyCabinet } from '../features/review/review'
+import { weekBars } from '../features/review/week'
 import { PASSWORD_LENGTH } from '../features/auth/pictures'
 import { useLoad } from '../useLoad'
 
-type Kid = { id: number; nick: string; age_group: string; lang: string; coins: number | null; locked: boolean }
-type Note = { id: number; kind: string; nick: string; created_at: string; read: boolean }
-
-const loadAll = async () => {
-  const [kids, notes] = await Promise.all([
-    api<Kid[]>('/api/parent/children'),
-    api<Note[]>('/api/parent/notifications'),
-  ])
-  return { kids, notes }
+type Kid = {
+  id: number
+  nick: string
+  age_group: string
+  class_name: string | null
+  lang: string
+  coins: number | null
+  locked: boolean
 }
+type Analytics = {
+  has_data: boolean
+  created: number | null
+  ready_at: string[]
+  published: number | null
+  held: number | null
+  coins_received: number | null
+  coins_earned_lessons: number | null
+  coins_uncertain: number
+  coins_spent: number | null
+}
+type FamilyPost = { id: number; nick: string; image_url: string }
+
+const loadKids = () => api<Kid[]>('/api/parent/children')
+const loadFamily = () => api<{ items: FamilyPost[] }>('/api/feed/family?limit=40')
 
 const input =
   'w-full rounded-2xl border border-border bg-surface px-4 py-2 font-bold text-heading outline-none focus:border-primary'
 const label = 'mb-1 block text-xs font-extrabold uppercase text-primary'
 const card = 'rounded-card border border-border bg-surface p-4 shadow-card'
+const dash = (v: number | null | undefined) => v ?? '—'
 
-export default function ParentCabinet() {
+/** Форма добавления ребёнка в окне поверх кабинета (затемнение — токен scrim). */
+function AddKidModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const { t } = useTranslation()
-  const [data, load] = useLoad(loadAll)
-  const kids = data?.kids ?? null
-  const notes = data?.notes ?? []
-  const [qr, setQr] = useState<{ id: number; nick: string; token: string } | null>(null)
   const [nick, setNick] = useState('')
   const [age, setAge] = useState('5-8')
   const [lang, setLang] = useState('ru')
@@ -41,15 +57,21 @@ export default function ParentCabinet() {
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && !busy && onClose()
+    document.addEventListener('keydown', esc)
+    return () => document.removeEventListener('keydown', esc)
+  }, [busy, onClose])
+
   async function addKid(e: FormEvent) {
     e.preventDefault()
     setBusy(true)
     setErr(null)
     try {
       await api('/api/parent/children', 'POST', { nick, age_group: age, lang, pictures: pics })
-      setNick('')
-      setPics([])
-      load()
+      onAdded()
+      notifyCabinet()
+      onClose()
     } catch (x) {
       setErr(errorKey(x))
     } finally {
@@ -57,125 +79,248 @@ export default function ParentCabinet() {
     }
   }
 
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-scrim p-4 backdrop-blur-sm" data-testid="add-kid-modal">
+      <form onSubmit={(e) => void addKid(e)} className={`${card} my-auto flex w-full max-w-lg flex-col gap-4`} data-testid="add-kid" role="dialog" aria-modal="true">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-extrabold text-heading">{t('parent.addChild')}</h2>
+          <button type="button" data-testid="add-kid-close" onClick={onClose} className="text-sm font-bold text-muted underline">
+            {t('cab.kid.closeForm')}
+          </button>
+        </div>
+        <div>
+          <label htmlFor="kid-nick" className={label}>
+            {t('auth.nick')}
+          </label>
+          <input id="kid-nick" data-testid="kid-nick" className={input} value={nick} maxLength={20} autoComplete="off" onChange={(e) => setNick(e.target.value)} />
+          <p className="mt-1 text-xs text-muted">{t('parent.nickHint')}</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="kid-age" className={label}>
+              {t('parent.age')}
+            </label>
+            <select id="kid-age" data-testid="kid-age" className={input} value={age} onChange={(e) => setAge(e.target.value)}>
+              <option value="5-8">5–8</option>
+              <option value="9-12">9–12</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="kid-lang" className={label}>
+              {t('parent.lang')}
+            </label>
+            <select id="kid-lang" data-testid="kid-lang" className={input} value={lang} onChange={(e) => setLang(e.target.value)}>
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+              <option value="uz">Oʻzbekcha</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <span className={label}>{t('auth.picturePassword')}</span>
+          <PictureGrid value={pics} onChange={setPics} />
+        </div>
+        <ErrorText code={err} />
+        <button
+          type="submit"
+          data-testid="kid-submit"
+          disabled={busy || nick.trim().length < 2 || pics.length !== PASSWORD_LENGTH}
+          className="rounded-full bg-primary px-6 py-3 font-extrabold uppercase text-primary-fg disabled:opacity-50"
+        >
+          {t('parent.create')}
+        </button>
+      </form>
+    </div>
+  )
+}
+
+export default function ParentCabinet() {
+  const { t } = useTranslation()
+  const [kids, load] = useLoad(loadKids)
+  const [family] = useLoad(loadFamily)
+  const [qr, setQr] = useState<{ id: number; nick: string; token: string } | null>(null)
+  const [pick, setPick] = useState<number | null>(null)
+  const [stats, setStats] = useState<Record<number, Analytics>>({})
+  const [adding, setAdding] = useState(false)
+
+  const ids = kids?.map((k) => k.id).join(',') ?? ''
+  useEffect(() => {
+    let alive = true
+    for (const k of kids ?? []) {
+      api<Analytics>(`/api/parent/children/${k.id}/analytics`)
+        .then((a) => alive && setStats((s) => ({ ...s, [k.id]: a })))
+        .catch(() => {})
+    }
+    return () => {
+      alive = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids])
+
+  const sel = kids?.find((k) => k.id === pick) ?? kids?.[0] ?? null
+  const st = sel ? stats[sel.id] : undefined
+  const latest = sel ? (family?.items ?? []).filter((p) => p.nick === sel.nick).slice(0, 5) : []
+
   async function showQr(k: Kid) {
     const r = await api<{ token: string }>(`/api/parent/children/${k.id}/qr`, 'POST')
     setQr({ id: k.id, nick: k.nick, token: r.token })
   }
 
-  async function markRead() {
-    await api('/api/parent/notifications/read', 'POST')
-    load()
-  }
+  const tile = (icon: string, name: string, value: number | null | undefined, testid: string) => (
+    <div className="flex min-w-0 flex-col gap-1 rounded-2xl border border-border bg-surface p-2 sm:flex-row sm:items-center sm:gap-3 sm:p-3" data-testid={testid}>
+      <img src={icon} alt="" className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10" />
+      <div className="min-w-0">
+        <p className="truncate text-xs text-muted sm:text-sm">{name}</p>
+        <p className="text-3xl font-extrabold text-heading">{dash(value)}</p>
+      </div>
+    </div>
+  )
 
   return (
-    <div className="min-h-screen bg-bg">
-      <CabinetHeader title={t('parent.title')} />
-      <main className="mx-auto grid max-w-5xl gap-6 px-4 py-6 md:grid-cols-2 md:px-8">
-        <div className="md:col-span-2">
-          <ReviewQueue title={t('review.okTitle')} />
-        </div>
-        <section className="flex flex-col gap-3" data-testid="kids">
-          <h2 className="text-xl font-extrabold text-heading">{t('parent.children')}</h2>
-          {kids && kids.length === 0 && <p className="text-muted">{t('parent.noChildren')}</p>}
-          {kids?.map((k) => (
-            <div key={k.id} className={card} data-testid={`kid-${k.nick}`}>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-lg font-extrabold text-heading">{k.nick}</span>
-                <span className="text-sm text-muted">{k.age_group}</span>
-                <span className="ml-auto flex items-center gap-1 font-extrabold text-heading" data-testid="kid-coins">
-                  <Coin />
-                  {k.coins ?? '—'}
-                </span>
-              </div>
-              {k.locked && <p className="mt-2 text-sm font-bold text-danger">{t('parent.locked')}</p>}
-              <button
-                type="button"
-                data-testid={`qr-${k.nick}`}
-                onClick={() => void showQr(k)}
-                className="mt-3 rounded-full bg-primary-soft px-4 py-2 text-sm font-extrabold text-primary"
-              >
-                {t('parent.qrButton')}
-              </button>
-              {qr?.id === k.id && <QrBox token={qr.token} nick={qr.nick} />}
-            </div>
-          ))}
-
-          <Link
-            to="/parent/feed"
-            data-testid="family-feed-link"
-            className="self-start rounded-full bg-primary px-5 py-2 text-sm font-extrabold text-primary-fg"
-          >
-            {t('feed.familyFeed')}
-          </Link>
-          <h2 className="mt-4 text-xl font-extrabold text-heading">{t('parent.notifications')}</h2>
-          {notes.length === 0 && <p className="text-muted">{t('parent.noNotifications')}</p>}
-          {notes.map((n) => (
-            <p key={n.id} className={`${card} text-sm ${n.read ? 'text-muted' : 'font-bold text-heading'}`}>
-              {t(`parent.notif.${n.kind}`, { nick: n.nick, defaultValue: n.kind })}
-            </p>
-          ))}
-          {notes.some((n) => !n.read) && (
-            <button type="button" onClick={() => void markRead()} className="self-start text-sm font-bold text-primary underline">
-              {t('parent.markRead')}
-            </button>
-          )}
-        </section>
-
-        <section>
-          <form onSubmit={(e) => void addKid(e)} className={`${card} flex flex-col gap-4`} data-testid="add-kid">
-            <h2 className="text-xl font-extrabold text-heading">{t('parent.addChild')}</h2>
-            <div>
-              <label htmlFor="kid-nick" className={label}>
-                {t('auth.nick')}
-              </label>
-              <input
-                id="kid-nick"
-                data-testid="kid-nick"
-                className={input}
-                value={nick}
-                maxLength={20}
-                autoComplete="off"
-                onChange={(e) => setNick(e.target.value)}
-              />
-              <p className="mt-1 text-xs text-muted">{t('parent.nickHint')}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="kid-age" className={label}>
-                  {t('parent.age')}
-                </label>
-                <select id="kid-age" data-testid="kid-age" className={input} value={age} onChange={(e) => setAge(e.target.value)}>
-                  <option value="5-8">5–8</option>
-                  <option value="9-12">9–12</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="kid-lang" className={label}>
-                  {t('parent.lang')}
-                </label>
-                <select id="kid-lang" data-testid="kid-lang" className={input} value={lang} onChange={(e) => setLang(e.target.value)}>
-                  <option value="ru">Русский</option>
-                  <option value="en">English</option>
-                  <option value="uz">Oʻzbekcha</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <span className={label}>{t('auth.picturePassword')}</span>
-              <PictureGrid value={pics} onChange={setPics} />
-            </div>
-            <ErrorText code={err} />
+    <div className="min-h-screen bg-bg pb-24 lg:pb-6">
+      <CabinetHeader role="parent" />
+      <main className="px-4 pb-4 pt-3 md:px-7 lg:pt-[18px]">
+        <h1 data-testid="page-title" className="mb-3 lg:mb-[17px] w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-[54px] lg:leading-[50px]">
+          {t('cab.myKids')}
+        </h1>
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 xl:grid-cols-[494fr_593fr_500fr]">
+          <section className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[520px]:grid-cols-[repeat(2,minmax(0,1fr))]" data-testid="kids">
+            {kids && kids.length === 0 && <p className="col-span-full text-muted">{t('parent.noChildren')}</p>}
+            {kids?.map((k) => {
+              const lessons = stats[k.id]?.coins_earned_lessons
+              return (
+                <div key={k.id} data-testid={`kid-${k.nick}`}>
+                  <div
+                    data-testid="kid-card"
+                    className={`flex h-full flex-col items-center gap-2 xl:min-h-[484px] rounded-card border bg-surface p-4 shadow-card ${sel?.id === k.id ? 'border-primary' : 'border-border'}`}
+                  >
+                    <Avatar nick={k.nick} className="h-auto w-full max-w-[170px] aspect-square" />
+                    <p className="text-3xl font-extrabold text-heading">{k.nick}</p>
+                    <p className="text-center text-muted">
+                      {k.class_name ? t('cab.kid.ageClass', { age: k.age_group, name: k.class_name }) : t('cab.kid.age', { age: k.age_group })}
+                    </p>
+                    <p className="flex items-center gap-2 rounded-full bg-primary-soft px-6 py-1 text-3xl font-extrabold text-heading" data-testid="kid-coins">
+                      <img src="/art/coin.webp" alt="" className="h-10 w-10" />
+                      {k.coins ?? '—'}
+                    </p>
+                    {lessons != null && (
+                      <p className="flex w-full items-center justify-between gap-2 rounded-xl border border-dashed border-border px-3 py-2 text-xs text-muted" data-testid="kid-lessons">
+                        {t('cab.kid.lessons')}
+                        <b className="text-lg text-primary">+{lessons}</b>
+                      </p>
+                    )}
+                    {k.locked && <p className="text-sm font-bold text-danger">{t('parent.locked')}</p>}
+                    <div className="mt-auto flex w-full items-center gap-2">
+                      <button
+                        type="button"
+                        data-testid={`kid-open-${k.nick}`}
+                        onClick={() => setPick(k.id)}
+                        className="h-[55px] flex-1 rounded-full bg-primary px-3 text-lg font-extrabold uppercase text-primary-fg"
+                      >
+                        {t('cab.kid.open')}
+                      </button>
+                      <button
+                        type="button"
+                        disabled
+                        data-testid={`add-coins-${k.nick}`}
+                        className="relative h-[55px] flex-1 rounded-full border border-border bg-surface px-2 text-sm font-bold text-heading opacity-70"
+                      >
+                        {t('cab.kid.addCoins')}
+                        <span className="absolute -top-2 right-1 rounded-full bg-primary-soft px-2 text-[10px] font-extrabold text-primary">{t('auth.soon')}</span>
+                      </button>
+                    </div>
+                    <button type="button" data-testid={`qr-${k.nick}`} onClick={() => void showQr(k)} className="text-sm font-bold text-primary underline">
+                      {t('parent.qrButton')}
+                    </button>
+                    {qr?.id === k.id && <QrBox token={qr.token} nick={qr.nick} />}
+                  </div>
+                </div>
+              )
+            })}
             <button
-              type="submit"
-              data-testid="kid-submit"
-              disabled={busy || nick.trim().length < 2 || pics.length !== PASSWORD_LENGTH}
-              className="rounded-full bg-primary px-6 py-3 font-extrabold uppercase text-primary-fg disabled:opacity-50"
+              type="button"
+              data-testid="add-child-tile"
+              onClick={() => setAdding(true)}
+              className="col-span-full flex h-[120px] flex-col items-center justify-center gap-1 rounded-card border-2 border-dashed border-border bg-surface p-2 text-xl font-extrabold text-primary xl:h-[236px]"
             >
-              {t('parent.create')}
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-4xl leading-none xl:h-16 xl:w-16 xl:text-5xl">+</span>
+              {t('cab.kid.addChild')}
             </button>
-          </form>
-        </section>
+          </section>
+
+          <section className="flex flex-col gap-4">
+            <div data-testid="week" className={`${card} flex flex-col gap-3 p-5`}>
+              {sel ? (
+                <>
+                  <h2 className="text-3xl font-extrabold text-heading">{t('cab.week.title', { nick: sel.nick })}</h2>
+                  {st && !st.has_data ? (
+                    <p data-testid="week-empty" className="rounded-2xl bg-primary-soft p-4 text-heading">
+                      {t('cab.week.noData', { nick: sel.nick })}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-sm font-bold uppercase text-primary">{t('cab.week.perDay')}</p>
+                      {st ? <WeekChart readyAt={st.ready_at} /> : <div className="h-[200px]" />}
+                      <div className="grid grid-cols-3 gap-2">
+                        {tile('/art/tab-create.webp', t('cab.week.pictures'), st && weekBars(st.ready_at, new Date()).reduce((n, b) => n + b.count, 0), 'week-created')}
+                        {tile('/art/tab-feed.webp', t('cab.week.shown'), st?.published, 'week-published')}
+                        {tile('/art/shield.webp', t('cab.week.held'), st?.held, 'week-held')}
+                      </div>
+                      <p className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
+                        <span>
+                          {t('cab.week.received')}: <b data-testid="week-received" className="text-heading">{dash(st?.coins_received)}</b>
+                        </span>
+                        <span>
+                          {t('cab.week.spent')}: <b data-testid="week-spent" className="text-heading">{dash(st?.coins_spent)}</b>
+                        </span>
+                      </p>
+                      {!!st?.coins_uncertain && (
+                        <p data-testid="week-uncertain" className="text-sm font-bold text-muted">
+                          {t('cab.week.uncertain', { count: st.coins_uncertain })}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </>
+              ) : (
+                <p className="text-muted">{t('cab.week.pick')}</p>
+              )}
+            </div>
+            {latest.length > 0 && (
+              <div data-testid="latest" className={`${card} flex flex-col gap-3 p-5`}>
+                <p className="text-sm font-bold uppercase text-primary">{t('cab.week.latest')}</p>
+                <Link to="/parent/feed" data-testid="latest-link" className="grid grid-cols-5 gap-2">
+                  {latest.map((p) => (
+                    <img key={p.id} src={p.image_url} alt="" className="aspect-[3/4] w-full rounded-xl object-cover" />
+                  ))}
+                </Link>
+                <Link to="/parent/feed" data-testid="family-feed-link" className="self-start rounded-full bg-primary px-5 py-2 text-sm font-extrabold text-primary-fg">
+                  {t('feed.familyFeed')}
+                </Link>
+              </div>
+            )}
+            {latest.length === 0 && (
+              <Link to="/parent/feed" data-testid="family-feed-link" className="self-start rounded-full bg-primary px-5 py-2 text-sm font-extrabold text-primary-fg">
+                {t('feed.familyFeed')}
+              </Link>
+            )}
+          </section>
+
+          <section className="flex flex-col gap-4">
+            <div data-testid="ok-card" className={`${card} flex flex-col gap-3 p-5 xl:min-h-[408px]`}>
+              <h2 className="text-3xl font-extrabold text-heading">{t('review.okTitle')}</h2>
+              <div className="min-h-0 overflow-y-auto"><ReviewQueue compact /></div>
+            </div>
+            <LinkCard
+              onLinked={() => {
+                load()
+                notifyCabinet()
+              }}
+            />
+          </section>
+        </div>
       </main>
+      {adding && <AddKidModal onClose={() => setAdding(false)} onAdded={load} />}
     </div>
   )
 }

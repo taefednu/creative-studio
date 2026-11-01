@@ -3,25 +3,25 @@ import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { api } from '../api'
-import Coin from '../components/Coin'
 import ErrorText, { errorKey } from '../components/ErrorText'
 import LangSwitch from '../components/LangSwitch'
+import Logo from '../components/Logo'
 import PictureGrid from '../components/PictureGrid'
 import { PASSWORD_LENGTH } from '../features/auth/pictures'
 import { HOME, useSession } from '../features/auth/session'
 import type { Role } from '../features/auth/session'
 
 const ROLES: { role: Role; icon: string }[] = [
-  { role: 'child', icon: '🎒' },
-  { role: 'parent', icon: '🏡' },
-  { role: 'teacher', icon: '📖' },
+  { role: 'child', icon: '/art/backpack.webp' },
+  { role: 'parent', icon: '/art/house.webp' },
+  { role: 'teacher', icon: '/art/tab-tasks.webp' },
 ]
 
 const input =
-  'w-full rounded-2xl border border-border bg-surface px-4 py-3 text-lg font-bold text-heading outline-none focus:border-primary'
+  'w-full rounded-2xl border border-border bg-surface px-4 py-0 h-12 text-2xl font-bold text-heading outline-none focus:border-primary'
 const label = 'mb-1 block text-xs font-extrabold uppercase text-primary'
 const primaryBtn =
-  'w-full rounded-full bg-primary px-6 py-3 text-lg font-extrabold uppercase text-primary-fg disabled:opacity-50'
+  'w-full rounded-full bg-primary px-6 h-[52px] lg:h-14 text-2xl font-extrabold uppercase text-primary-fg disabled:opacity-50'
 
 function ChildForm({ onDone }: { onDone: (r: Role) => void }) {
   const { t } = useTranslation()
@@ -72,9 +72,9 @@ function ChildForm({ onDone }: { onDone: (r: Role) => void }) {
         disabled={busy || !nick.trim() || pics.length !== PASSWORD_LENGTH}
         className={primaryBtn}
       >
-        {t('auth.login')}
+        {t('auth.childLogin')}
       </button>
-      <p className="text-center text-sm font-bold text-primary underline">{t('auth.qrHelp')}</p>
+      <p className="text-center text-base font-bold leading-5 text-primary underline">{t('auth.qrHelp')}</p>
     </form>
   )
 }
@@ -150,11 +150,112 @@ function EmailForm({ role, onDone }: { role: 'parent' | 'teacher'; onDone: (r: R
   )
 }
 
+type PlatformErr = { code: string; text?: string }
+
+/** Вход через платформу: свой fetch, потому что api() теряет тело ошибки captcha (там тексты ru/en/uz). */
+function PlatformForm({ onDone, onClose }: { onDone: (r: Role) => void; onClose: () => void }) {
+  const { t, i18n } = useTranslation()
+  const [login, setLogin] = useState('')
+  const [password, setPassword] = useState('')
+  const [err, setErr] = useState<PlatformErr | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setErr(null)
+    try {
+      const res = await fetch('/api/auth/platform-login', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login, password, lang: i18n.language }),
+      })
+      if (res.ok) {
+        setPassword('')
+        // вход удался: сбой чтения сессии не значит «Mentorium не отвечает»
+        let role: Role | null = null
+        try {
+          role = (await api<{ role: Role | null }>('/api/session')).role
+        } catch {
+          /* role остаётся null */
+        }
+        if (role) return onDone(role)
+        return setErr({ code: 'generic' })
+      }
+      let d: unknown
+      try {
+        d = ((await res.json()) as { detail?: unknown }).detail
+      } catch {
+        /* пустое тело */
+      }
+      if (typeof d === 'string') setErr({ code: d })
+      else if (d && typeof d === 'object') {
+        const o = d as { code?: string; messages?: Record<string, string> }
+        setErr({ code: o.code ?? 'generic', text: o.messages?.[i18n.language] ?? o.messages?.ru })
+      } else setErr({ code: 'generic' })
+    } catch {
+      setErr({ code: 'platform_unavailable' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const known = err && i18n.exists(`login.err.${err.code}`)
+  return (
+    <form onSubmit={(e) => void submit(e)} className="mt-3 flex flex-col gap-3" data-testid="platform-form">
+      <p className="text-sm font-extrabold text-heading">{t('login.title')}</p>
+      <div>
+        <label htmlFor="platform-login" className={label}>
+          {t('login.login')}
+        </label>
+        <input
+          id="platform-login"
+          data-testid="platform-login"
+          className={input}
+          value={login}
+          maxLength={255}
+          autoComplete="username"
+          onChange={(e) => setLogin(e.target.value)}
+        />
+      </div>
+      <div>
+        <label htmlFor="platform-password" className={label}>
+          {t('login.password')}
+        </label>
+        <input
+          id="platform-password"
+          data-testid="platform-password"
+          type="password"
+          className={input}
+          value={password}
+          autoComplete="current-password"
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </div>
+      {err && (
+        <p role="alert" data-testid="platform-error" className="rounded-xl bg-danger-soft px-3 py-2 text-sm font-bold text-danger">
+          {err.text ?? (known ? t(`login.err.${err.code}`) : t('errors.generic'))}
+        </p>
+      )}
+      <div className="flex gap-2">
+        <button type="submit" data-testid="platform-submit" disabled={busy || !login.trim() || !password} className={primaryBtn}>
+          {t('login.submit')}
+        </button>
+        <button type="button" data-testid="platform-close" onClick={onClose} className="rounded-full border border-border px-5 font-extrabold text-heading">
+          {t('login.back')}
+        </button>
+      </div>
+    </form>
+  )
+}
+
 export default function Login() {
   const { t } = useTranslation()
   const { role: current, refresh } = useSession()
   const navigate = useNavigate()
   const [role, setRole] = useState<Role>('child')
+  const [platform, setPlatform] = useState(false)
 
   if (current) return <Navigate to={HOME[current]} replace />
 
@@ -164,15 +265,16 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-bg">
-      <header className="flex items-center gap-3 px-4 py-3 md:px-8">
-        <img src="/mentorium-logo.png" alt="Mentorium" className="h-9 w-auto" />
-        <span className="text-lg font-extrabold text-heading">{t('app.name')}</span>
-        <LangSwitch />
+    <div className="min-h-screen bg-bg bg-cover bg-center" style={{ backgroundImage: 'url(/art/login-bg.webp)' }}>
+      <header data-testid="login-header" className="flex h-[60px] items-center justify-between border-b border-border bg-surface px-3 lg:h-[84px] lg:px-8">
+        <Logo />
+        <div className="rounded-full border border-border bg-surface px-2 shadow-card">
+          <LangSwitch />
+        </div>
       </header>
-      <main className="mx-auto w-full max-w-[560px] px-4 pb-10 pt-4">
-        <div className="rounded-card border border-border bg-surface p-4 shadow-card md:p-6">
-          <div className="mb-5 grid grid-cols-3 gap-2 md:gap-3" role="tablist">
+      <main className="mx-auto w-full max-w-[719px] px-3 pb-10 pt-3 lg:pt-[23px] xl:ml-[calc(22.5%-12px)] xl:mr-0">
+        <div data-testid="login-card" className="rounded-card border border-border bg-surface p-3 shadow-card md:p-[29px]">
+          <div className="mb-4 grid grid-cols-3 gap-2 md:gap-3" role="tablist">
             {ROLES.map((r) => (
               <button
                 key={r.role}
@@ -180,14 +282,22 @@ export default function Login() {
                 role="tab"
                 aria-selected={role === r.role}
                 data-testid={`role-${r.role}`}
-                onClick={() => setRole(r.role)}
-                className={`flex flex-col items-center gap-1 rounded-2xl border-2 px-1 py-3 text-sm font-extrabold text-heading md:text-base ${
+                onClick={() => {
+                  setRole(r.role)
+                  setPlatform(false)
+                }}
+                className={`relative flex flex-col items-center gap-1 rounded-2xl border-2 px-1 py-2 text-sm font-extrabold text-heading md:h-[176px] md:justify-center md:text-2xl ${
                   role === r.role ? 'border-primary bg-primary-soft' : 'border-border bg-surface'
                 }`}
               >
-                <span className="text-4xl md:text-5xl" aria-hidden="true">
-                  {r.icon}
-                </span>
+                {role === r.role && (
+                  <span data-testid={`role-check-${r.role}`} className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-fg">
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M5 12l5 5 9-10" />
+                    </svg>
+                  </span>
+                )}
+                <img src={r.icon} alt="" className="h-16 w-16 object-contain md:h-[110px] md:w-[110px]" />
                 {t(`auth.roles.${r.role}`)}
               </button>
             ))}
@@ -199,25 +309,27 @@ export default function Login() {
             <EmailForm key={role} role={role} onDone={(r) => void done(r)} />
           )}
 
-          <div className="my-4 flex items-center gap-3 text-sm text-muted">
+          <div className="my-1 flex items-center gap-3 text-base leading-5 text-muted">
             <span className="h-px flex-1 bg-border" />
             {t('auth.or')}
             <span className="h-px flex-1 bg-border" />
           </div>
           <button
             type="button"
-            disabled
             data-testid="mentorium-login"
-            className="flex w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3 font-extrabold text-muted"
+            aria-expanded={platform}
+            onClick={() => setPlatform((v) => !v)}
+            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-3 py-1 text-base md:text-xl font-extrabold text-heading"
           >
+            <img src="/mentorium-logo.png" alt="" className="h-6 w-auto md:h-8" />
             {t('auth.mentorium')}
-            <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs text-primary">{t('auth.soon')}</span>
           </button>
-          <p className="mt-4 flex items-center justify-center gap-2 text-center text-sm text-muted">
-            <Coin className="h-5 w-5 shrink-0" />
+          {platform && <PlatformForm onDone={(r) => void done(r)} onClose={() => setPlatform(false)} />}
+          <p className="mt-2 flex items-center justify-center gap-2 text-center text-base text-muted">
+            <img src="/art/coin.webp" alt="" className="h-6 w-6 shrink-0" />
             {t('auth.coinsLine')}
           </p>
-          <p className="mt-2 text-center text-sm font-bold text-primary underline">{t('auth.classHint')}</p>
+          <p className="text-center text-base font-bold text-primary underline">{t('auth.classHint')}</p>
         </div>
       </main>
     </div>
