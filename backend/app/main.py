@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.accounts.router import router as accounts_router
+from app.assignments import models as _assignment_models  # noqa: F401  (таблицы)
+from app.assignments.router import router as assignments_router
 from app.config import get_settings
 from app.db import init_db
 from app.feed import models as _feed_models  # noqa: F401  (таблицы)
@@ -25,6 +27,7 @@ app.include_router(accounts_router)
 app.include_router(image_router)
 app.include_router(feed_router)
 app.include_router(moderation_router)
+app.include_router(assignments_router)
 
 
 @app.get("/api/health")

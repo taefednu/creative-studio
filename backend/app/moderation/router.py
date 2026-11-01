@@ -16,6 +16,7 @@ from app import clock
 from app.accounts.deps import current_child
 from app.accounts.models import Child, ClassMembership, Classroom
 from app.accounts.security import COOKIE, read_session
+from app.assignments.models import Submission
 from app.db import get_session
 from app.feed.models import Comment, Post
 from app.moderation.models import HeldItem
@@ -25,7 +26,7 @@ from app.works.image.models import Work
 router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
 
-IMAGE_TYPES = ("image", "post")  # у остальных видов своей картинки нет (upload — #15)
+IMAGE_TYPES = ("image", "post", "submission")  # у остальных видов своей картинки нет (upload — #15)
 
 
 def adult(
@@ -83,6 +84,9 @@ def _work_of(db: Session, item: HeldItem) -> Work | None:
     if item.item_type == "post":
         p = db.get(Post, int(item.target_id))
         return db.get(Work, p.work_id) if p is not None else None
+    if item.item_type == "submission":
+        s = db.get(Submission, int(item.target_id))
+        return db.get(Work, s.work_id) if s is not None else None
     return None
 
 
