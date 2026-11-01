@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import ErrorText, { errorKey } from '../components/ErrorText'
 import LangSwitch from '../components/LangSwitch'
@@ -331,6 +331,9 @@ export default function Login() {
           </p>
           <p className="text-center text-base font-bold text-primary underline">{t('auth.classHint')}</p>
         </div>
+        <Link to="/" data-testid="to-showcase" className="mt-3 block text-center text-base font-bold text-primary underline">
+          {t('showcase.fromLogin')}
+        </Link>
       </main>
     </div>
   )

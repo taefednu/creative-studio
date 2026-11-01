@@ -1,18 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { api } from '../api'
-import { remaining } from '../features/assignments/due'
+import { isOpen, loadAssignments } from '../features/assignments/assignments'
+import { dueLabel } from '../features/assignments/due'
 import { useLoad } from '../useLoad'
-
-type Assignment = {
-  id: number
-  title: string
-  description: string | null
-  due_at: string | null
-  submissions: { work_id: number; status: string }[]
-}
-
-const loadAssignments = () => api<Assignment[]>('/api/child/assignments')
 
 type Props = { start?: boolean; assignmentId?: number | null }
 
@@ -21,18 +11,12 @@ export default function TeacherTask({ start, assignmentId }: Props) {
   const { t } = useTranslation()
   const [list] = useLoad(loadAssignments)
   // заданный, но не найденный id не подменяем другим заданием
-  const a = assignmentId ? list?.find((x) => x.id === assignmentId) : list?.find((x) => x.submissions.length === 0)
+  // сданное задание (принятое или у учителя на проверке) из строки уходит
+  const a = assignmentId ? list?.find((x) => x.id === assignmentId && isOpen(x)) : list?.find(isOpen)
   if (!a) return null
 
-  const left = remaining(a.due_at)
-  const leftText =
-    left === null
-      ? null
-      : left === 'overdue'
-        ? t('task.overdue')
-        : left === 0
-          ? t('task.today')
-          : t('task.left', { count: left })
+  const due = dueLabel(a.due_at)
+  const leftText = due && t(due.key, { count: due.count })
 
   return (
     <div

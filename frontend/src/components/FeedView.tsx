@@ -15,10 +15,12 @@ type Props = {
   title?: string
   /** Лента ребёнка: строка задания, фильтр по стилям и место под панель создания. */
   child?: { templates: TemplateInfo[]; onStyle: (id: string) => void }
+  /** Витрина для гостя: та же сетка, но без строки задания, комментариев и реакций. */
+  guest?: boolean
 }
 
 /** Лента (docs/design/feed.jpg): «кирпичная» сетка в CSS-колонках, клик по карточке — работа поверх. */
-export default function FeedView({ kinds, classId, title, child }: Props) {
+export default function FeedView({ kinds, classId, title, child, guest }: Props) {
   const { t } = useTranslation()
   const [kind, setKind] = useState<FeedKind>(kinds[0])
   const [page, setPage] = useState<{ key: string; items: Post[]; cursor: number | null } | null>(null)
@@ -93,7 +95,7 @@ export default function FeedView({ kinds, classId, title, child }: Props) {
           />
         )}
       </div>
-      {child && (
+      {child && !guest && (
         <div className="mt-3 empty:hidden">
           <TeacherTask start />
         </div>
@@ -173,7 +175,7 @@ export default function FeedView({ kinds, classId, title, child }: Props) {
           {t('feed.more')}
         </button>
       )}
-      {open !== null && <PostModal postId={open} isChild={!!child} onClose={close} onChanged={() => setTick((n) => n + 1)} />}
+      {open !== null && <PostModal postId={open} isChild={!!child} guest={guest} onClose={close} onChanged={() => setTick((n) => n + 1)} />}
     </div>
   )
 }

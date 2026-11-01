@@ -13,16 +13,21 @@ type Props = {
   tpl: string | null
   onTpl: (id: string) => void
   floating?: boolean
+  /** Гость витрины: все контролы ведут на вход, ничего не отправляется. */
+  guest?: boolean
+  /** Задание, по которому рисуем: уходит дальше в ссылку на экран работы. */
+  assignmentId?: number | null
 }
 
 const chip = 'hidden h-11 items-center rounded-full border border-border bg-surface px-4 text-sm font-extrabold text-heading md:inline-flex md:h-12 md:text-base'
-const round = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary opacity-50 md:h-12 md:w-12'
+const roundOn = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary md:h-12 md:w-12'
+const round = `${roundOn} opacity-50`
 
 /** Панель создания: одна на ленте (поверх) и на «Создать» (в потоке). Создаёт работу и ведёт на /create?work=<id>. */
-export default function CreatePanel({ templates, price, tpl, onTpl, floating }: Props) {
+export default function CreatePanel({ templates, price, tpl, onTpl, floating, guest, assignmentId }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { reloadMe } = useOutletContext<ShellContext>()
+  const shell = useOutletContext<ShellContext | null>()
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -34,6 +39,7 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating }: 
   }, [tpl, text])
 
   async function draw() {
+    if (guest) return navigate('/login')
     if (!tpl || sending) return
     setSending(true)
     setErr(null)
@@ -44,8 +50,8 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating }: 
         text: text.trim() || null,
         request_id: requestId.current,
       })
-      reloadMe()
-      navigate(`/create?work=${r.id}`)
+      shell?.reloadMe()
+      navigate(`/create?work=${r.id}${assignmentId ? `&assignment=${assignmentId}` : ''}`)
     } catch (x) {
       setErr(errorKey(x))
       // 4xx — сервер запрос отверг; сеть и 5xx — работа могла создаться, id оставляем
@@ -80,7 +86,7 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating }: 
         <button
           type="button"
           data-testid="draw"
-          disabled={!tpl || sending}
+          disabled={!guest && (!tpl || sending)}
           onClick={() => void draw()}
           className="row-span-2 flex w-[88px] flex-col items-center justify-center gap-1 rounded-2xl bg-primary px-1 text-[11px] md:px-0 font-extrabold uppercase text-primary-fg shadow-card disabled:opacity-60 md:w-[168px] md:text-xl"
         >
@@ -91,13 +97,13 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating }: 
           </span>
         </button>
         <div className="flex min-w-0 items-center gap-2 md:gap-3">
-          <button type="button" data-testid="voice" disabled title={t('create.voiceSoon')} aria-label={t('create.voiceSoon')} className={round}>
+          <button type="button" data-testid="voice" disabled={!guest} onClick={() => guest && navigate('/login')} title={t(guest ? 'showcase.loginToCreate' : 'create.voiceSoon')} aria-label={t(guest ? 'showcase.loginToCreate' : 'create.voiceSoon')} className={guest ? roundOn : round}>
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <rect x="9" y="3" width="6" height="12" rx="3" />
               <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
             </svg>
           </button>
-          <button type="button" data-testid="upload-open" disabled title={t('panel.uploadSoon')} aria-label={t('panel.uploadSoon')} className={round}>
+          <button type="button" data-testid="upload-open" disabled={!guest} onClick={() => guest && navigate('/login')} title={t(guest ? 'showcase.loginToCreate' : 'panel.uploadSoon')} aria-label={t(guest ? 'showcase.loginToCreate' : 'panel.uploadSoon')} className={guest ? roundOn : round}>
             <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
               <path d="M12 5v14M5 12h14" />
             </svg>

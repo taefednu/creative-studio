@@ -11,14 +11,14 @@ import Avatar from './Avatar'
 import ChipSelect from './ChipSelect'
 import ErrorText, { errorKey } from './ErrorText'
 
-type Props = { postId: number; isChild: boolean; onClose: () => void; onChanged: () => void }
+type Props = { postId: number; isChild: boolean; guest?: boolean; onClose: () => void; onChanged: () => void }
 type Suggest = { id: number; kinder: string }
 
 /** Работа поверх ленты (docs/design/work.jpg) и «Скажи добрее?» (kinder.jpg). Ссылка «Ремикс работы» открывает исходный пост. */
-export default function PostModal({ postId, isChild, onClose, onChanged }: Props) {
+export default function PostModal({ postId, isChild, guest, onClose, onChanged }: Props) {
   const [pid, setPid] = useState(postId)
   // key: состояние окна не переезжает с поста на пост
-  return <PostBody key={pid} postId={pid} isChild={isChild} onOpen={setPid} onClose={onClose} onChanged={onChanged} />
+  return <PostBody key={pid} postId={pid} isChild={isChild} guest={guest} onOpen={setPid} onClose={onClose} onChanged={onChanged} />
 }
 
 const drawBtn =
@@ -99,7 +99,7 @@ function RemixBox({ postId }: { postId: number }) {
   )
 }
 
-function PostBody({ postId, isChild, onOpen, onClose, onChanged }: Props & { onOpen: (id: number) => void }) {
+function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props & { onOpen: (id: number) => void }) {
   const { t, i18n } = useTranslation()
   const [post, setPost] = useState<Post | null>(null)
   const [tab, setTab] = useState<'about' | 'comments'>('about')
@@ -111,6 +111,7 @@ function PostBody({ postId, isChild, onOpen, onClose, onChanged }: Props & { onO
   const [remixOpen, setRemixOpen] = useState(false)
   const [allowErr, setAllowErr] = useState<string | null>(null)
   const [actErr, setActErr] = useState<string | null>(null)
+  const [hint, setHint] = useState(false) // гость нажал на реакцию
   const [busy, setBusy] = useState(false) // отправка комментария и «Использовать»: двойной клик не шлёт второй запрос
 
   const loadPost = useCallback(async () => {
@@ -129,13 +130,16 @@ function PostBody({ postId, isChild, onOpen, onClose, onChanged }: Props & { onO
     api<Post>(`/api/posts/${postId}`)
       .then((p) => alive && setPost(p))
       .catch(() => alive && onClose())
-    api<PostComment[]>(`/api/posts/${postId}/comments`)
-      .then((c) => alive && setComments(c))
-      .catch(() => {})
+    // гостю комментарии закрыты (401): не спрашиваем
+    if (!guest) {
+      api<PostComment[]>(`/api/posts/${postId}/comments`)
+        .then((c) => alive && setComments(c))
+        .catch(() => {})
+    }
     return () => {
       alive = false
     }
-  }, [postId, onClose])
+  }, [postId, onClose, guest])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -144,6 +148,7 @@ function PostBody({ postId, isChild, onOpen, onClose, onChanged }: Props & { onO
   }, [onClose])
 
   async function react(k: ReactionKey) {
+    if (guest) return setHint(true)
     if (!post || !post.can_react) return
     const had = post.mine.includes(k)
     setActErr(null)
@@ -237,7 +242,8 @@ function PostBody({ postId, isChild, onOpen, onClose, onChanged }: Props & { onO
 
   const tabCls = (on: boolean) =>
     `h-11 rounded-full text-base font-extrabold lg:h-[47px] lg:text-xl ${on ? 'bg-primary text-primary-fg' : 'border border-border bg-surface text-heading'}`
-  const kind = post ? drawSameKind(post, isChild) : null
+  const raw = post ? drawSameKind(post, isChild) : null
+  const kind = guest && raw !== 'link' ? null : raw
   const styleName = post?.template_id && i18n.exists(`templates.${post.template_id}`) ? t(`templates.${post.template_id}`) : null
   const made = post ? createdLabel(post.created_at) : ''
   const row = (k: string, v: ReactNode) => (
@@ -296,6 +302,7 @@ function PostBody({ postId, isChild, onOpen, onClose, onChanged }: Props & { onO
               {t('feed.heldMark')}
             </p>
           )}
+          {!guest && (
           <div className="grid grid-cols-2 gap-[14px] lg:gap-[13px]">
             <button type="button" className={tabCls(tab === 'about')} onClick={() => setTab('about')} data-testid="tab-about">
               {t('feed.about')}
@@ -310,6 +317,7 @@ function PostBody({ postId, isChild, onOpen, onClose, onChanged }: Props & { onO
               {t('feed.comments')} {post?.comments ?? 0}
             </button>
           </div>
+          )}
           {tab === 'about' && post && (
             <>
               <div data-testid="about" className="flex flex-col gap-2">
@@ -337,6 +345,12 @@ function PostBody({ postId, isChild, onOpen, onClose, onChanged }: Props & { onO
               </div>
               <div className="border-t border-border" />
               <ErrorText code={actErr} />
+              {hint && (
+                <p data-testid="guest-hint" role="status" className="rounded-2xl bg-primary-soft px-3 py-2 text-sm font-bold text-heading">
+                  {t('showcase.reactHint')}{' '}
+                  <Link to="/login" className="text-primary underline">{t('showcase.login')}</Link>
+                </p>
+              )}
               <div className="grid grid-cols-4 gap-2 lg:gap-3" data-testid="reactions">
                 {REACTIONS.map((r) => {
                   const on = post.mine.includes(r.key)
@@ -346,7 +360,7 @@ function PostBody({ postId, isChild, onOpen, onClose, onChanged }: Props & { onO
                       type="button"
                       data-testid={`react-${r.key}`}
                       aria-pressed={on}
-                      disabled={!post.can_react}
+                      disabled={!post.can_react && !guest}
                       onClick={() => void react(r.key)}
                       className={`flex h-[52px] items-center justify-center gap-1.5 rounded-2xl border font-extrabold text-heading lg:h-[58px] lg:gap-2 ${on ? 'border-primary bg-primary-soft' : 'border-border bg-surface'}`}
                     >
@@ -390,7 +404,7 @@ function PostBody({ postId, isChild, onOpen, onClose, onChanged }: Props & { onO
                 </div>
               )}
               {kind === 'link' && (
-                <Link to={`/create?template=${post.template_id}`} data-testid="draw-same" className={drawBtn}>
+                <Link to={guest ? '/login' : `/create?template=${post.template_id}`} data-testid="draw-same" className={drawBtn}>
                   {t('feed.drawSame')}
                 </Link>
               )}

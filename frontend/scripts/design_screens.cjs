@@ -43,6 +43,11 @@ module.exports = {
     await p.getByTestId('comment-send').click()
     await p.getByTestId('kinder').waitFor({ timeout: 15000 })
   },
+  // гость: витрина «Лучшее», без входа
+  showcase: async (p) => { await go(p, '/', 'post-card') },
+  // новые экраны без макета (партия 4а): план в specs/tasks.json и specs/teacher-tasks.json
+  tasks: async (p) => { await child(p, 'Lumi'); await go(p, '/tasks', 'task-card') },
+  'teacher-tasks': async (p) => { await adult(p, 'teacher'); await go(p, '/teacher/tasks', 'assignment-card') },
   login: async (p) => { await go(p, '/login', 'role-child') },
   parent: async (p) => { await adult(p, 'parent'); await go(p, '/parent', 'kid-card') },
   teacher: async (p) => { await adult(p, 'teacher'); await go(p, '/teacher', 'review-urgent') },

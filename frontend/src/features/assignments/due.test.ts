@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { remaining } from './due'
+import { dueLabel, remaining } from './due'
 
 // пояс не UTC: иначе чтение наивной строки как местного времени не отличить от UTC
 vi.stubEnv('TZ', 'Asia/Tashkent')
@@ -21,5 +21,14 @@ describe('remaining', () => {
     const at = new Date('2026-11-01T12:00:00Z')
     expect(remaining(naive, at)).toBe(remaining(`${naive}Z`, at))
     expect(remaining('2026-11-01T13:00:00', at)).toBe(0)
+  })
+})
+
+describe('dueLabel', () => {
+  it('те же ключи, что у строки задания', () => {
+    expect(dueLabel(null, now)).toBeNull()
+    expect(dueLabel(new Date(2026, 10, 1, 9, 0).toISOString(), now)).toEqual({ key: 'task.overdue' })
+    expect(dueLabel(new Date(2026, 10, 1, 18, 0).toISOString(), now)).toEqual({ key: 'task.today' })
+    expect(dueLabel(new Date(2026, 10, 4, 9, 0).toISOString(), now)).toEqual({ key: 'task.left', count: 3 })
   })
 })

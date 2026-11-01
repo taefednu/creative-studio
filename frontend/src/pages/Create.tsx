@@ -7,8 +7,10 @@ import type { ShellContext } from '../components/AppShell'
 import CreatePanel from '../components/CreatePanel'
 import ErrorText, { errorKey } from '../components/ErrorText'
 import PublishBox from '../components/PublishBox'
+import SubmitBox from '../components/SubmitBox'
 import SupportCard from '../components/SupportCard'
 import TeacherTask from '../components/TeacherTask'
+import { loadAssignments, submitTarget } from '../features/assignments/assignments'
 import { POLLING, hintKey, loadTemplates } from '../features/works/works'
 import type { TemplateInfo, Work } from '../features/works/works'
 import { useSession } from '../features/auth/session'
@@ -143,6 +145,7 @@ export default function Create() {
         onMine={() => navigate('/my-works')}
         onChoose={setLoaded}
         templates={templates}
+        assignmentId={assignmentId}
         coinLine={t(work.status === 'refused' && work.reason_codes.includes('content_policy') ? 'create.coinBack' : 'create.coinKept')}
       />
     )
@@ -192,7 +195,7 @@ export default function Create() {
           </button>
         ))}
       </div>
-      {templates && <CreatePanel templates={templates} price={price} tpl={tpl} onTpl={setSelected} />}
+      {templates && <CreatePanel templates={templates} price={price} tpl={tpl} onTpl={setSelected} assignmentId={assignmentId} />}
     </div>
   )
 }
@@ -255,6 +258,7 @@ function WorkView({
   onChoose,
   coinLine,
   templates,
+  assignmentId,
 }: {
   work: Work
   onAgain: () => void
@@ -262,10 +266,13 @@ function WorkView({
   onChoose: (w: Work) => void
   coinLine: string
   templates: TemplateInfo[] | undefined
+  assignmentId: number | null
 }) {
   const { t } = useTranslation()
   const [supportFor, setSupportFor] = useState<number | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [tasks] = useLoad(loadAssignments)
+  const task = submitTarget(tasks, assignmentId)
   const s = work.status
   const tpl = templates?.find((x) => x.id === work.template_id)
   const wrap = 'mx-auto max-w-[1672px]'
@@ -368,6 +375,7 @@ function WorkView({
                 {work.rewrite_text && <p className="mt-2 text-sm text-muted lg:text-lg">{t('create.rewrite', { text: work.rewrite_text })}</p>}
               </StyleSample>
             </div>
+            {task && <SubmitBox big workId={work.id} assignment={task} onSupport={() => setSupportFor(work.id)} />}
             <PublishBox workId={work.id} grid onSupport={() => setSupportFor(work.id)} />
             <button type="button" data-testid="draw-more" onClick={onAgain} className={btnOutline}>
               <svg viewBox="0 0 24 24" className={`${ICON} text-primary`} {...stroke} aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.5-5.8" /><path d="M20 4v5h-5" /></svg>

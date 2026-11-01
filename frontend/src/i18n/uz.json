@@ -2,6 +2,7 @@
   "app": { "name": "Creative Studio" },
   "nav": { "feed": "Lenta", "create": "Yaratish", "tasks": "Topshiriqlar", "mine": "Mening ishlarim" },
   "lang": { "label": "Til" },
+  "showcase": { "title": "Vitrina", "login": "Kirish", "reactHint": "Rasmlarga munosabat bildirish uchun kir.", "loginToCreate": "Chizish uchun kir", "fromLogin": "Bolalar ishlarini ko‘rish" },
   "pages": {
     "feed": "Bu yerda sinf lentasi bo‘ladi",
     "create": "Bu yerda sen rasmlar yaratasan",
@@ -62,6 +63,15 @@
     "comments_closed": "Bu yerda faqat reaksiya bildirish mumkin.",
     "not_published": "Bu post hali kattalarni kutmoqda.",
     "already_decided": "Bu allaqachon hal qilingan.",
+    "assignment_rejected": "Topshiriq matni bolalar uchun mos kelmadi. Uni soddaroq va mehribonroq qilib qayta yozing.",
+    "check_unavailable": "Tekshiruv hozir ishlamayapti, topshiriq saqlanmadi. Birozdan keyin qayta urinib ko‘ring.",
+    "task_invalid": "Nomni tekshiring: u shart, 100 belgigacha. Tavsif 1000 belgigacha.",
+    "task_not_found": "Bu topshiriq endi mavjud emas.",
+    "show_not_accepted": "Bu rasm hali qabul qilinmagan, uni lentada ko‘rsatib bo‘lmaydi.",
+    "show_work_not_ready": "Rasm hali tayyor emas.",
+    "show_removed_by_adult": "Kattalar bu rasmni lentadan olib tashlagan, uni qayta joylab bo‘lmaydi.",
+    "show_already_in_feed": "Bu rasm allaqachon lentada.",
+    "show_not_found": "Bu rasm topilmadi.",
     "empty": "Avval biror narsa yoz."
   },
   "create": {
@@ -176,7 +186,7 @@
     "showClass": "Sinfga ko‘rsatish"
   },
   "shell": { "coinsUnknown": "Tangalar hozircha mavjud emas", "nav": "Asosiy menyu", "account": "Profil" },
-  "task": { "start": "Boshlash", "overdue": "muddat tugagan", "today": "muddat bugun", "left_one": "{{count}} kun qoldi", "left_few": "{{count}} kun qoldi", "left_many": "{{count}} kun qoldi", "left_other": "{{count}} kun qoldi" },
+  "task": { "start": "Boshlash", "overdue": "muddat tugagan", "today": "muddat bugun", "left_one": "{{count}} kun qoldi", "left_few": "{{count}} kun qoldi", "left_many": "{{count}} kun qoldi", "left_other": "{{count}} kun qoldi", "draw": "Chizish", "noClass": "Sinfga qo‘shilganingdan keyin topshiriqlar shu yerda chiqadi: o‘qituvchidan sinf kodini kiritgin.", "empty": "Hozircha topshiriq yo‘q. Keyinroq qara: o‘qituvchi tez orada nimadir o‘ylab topadi!", "sentMark": "Topshirildi, o‘qituvchi ko‘radi", "heldMark": "O‘qituvchiga ko‘rish uchun yuborildi", "submit": "Topshiriqqa topshirish", "submitFor": "Topshiryapman:", "submitComment": "Rasm izohi (shart emas)", "submitDone": "Topshirildi! O‘qituvchi rasmingni ko‘radi.", "submitHeld": "O‘qituvchiga ko‘rish uchun yuborildi. Tekshirgach, u javob beradi.", "pick": "Qaysi topshiriqqa topshirish" },
   "panel": { "model": "Muse Image", "format": "1:1", "style": "Uslub", "uploadSoon": "Rasm yuklash tez orada qo'shiladi", "allStyles": "Barcha uslublar", "styleFilter": "Uslub bo'yicha filtr", "noStyleMatch": "Bu uslubda hali rasm yo'q" },
   "templates": {
     "superhero": "Men superqahramonman",
@@ -371,7 +381,22 @@
     },
     "tasks": {
       "title": "Topshiriqlar",
-      "empty": "Sinf uchun topshiriqlar tez orada shu yerda paydo bo‘ladi."
+      "empty": "Avval «Sinflar» bo‘limida sinf yarating, so‘ng topshiriq bering.",
+      "class": "Sinf",
+      "titlePh": "Topshiriq nomi",
+      "descPh": "Nima chizish kerak (shart emas)",
+      "due": "Muddat",
+      "lang": "Til",
+      "create": "Berish",
+      "none": "Bu sinfda hozircha topshiriq yo‘q.",
+      "noDue": "muddatsiz",
+      "count": "Topshirdi: {{count}}",
+      "subsTitle": "Ishlar: {{title}}",
+      "subsEmpty": "Hozircha hech kim topshirmadi.",
+      "held": "Tekshiruvda",
+      "shown": "Sinf lentasida ko‘rsatilgan",
+      "show": "Sinf lentasida ko‘rsatish",
+      "pending": "Rasm tekshiruvni kutyapti, undan keyin lentada paydo bo‘ladi."
     },
     "filter": {
       "label": "Sinf",

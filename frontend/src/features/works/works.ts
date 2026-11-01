@@ -33,3 +33,5 @@ export function hintKey(codes: string[]): string {
   const c = codes.find((x) => HINTED.includes(x))
   return `hint.${c ?? 'generic'}`
 }
+
+export const loadMine = () => api<Work[]>('/api/works/mine')

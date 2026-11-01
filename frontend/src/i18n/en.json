@@ -2,6 +2,7 @@
   "app": { "name": "Creative Studio" },
   "nav": { "feed": "Feed", "create": "Create", "tasks": "Tasks", "mine": "My works" },
   "lang": { "label": "Language" },
+  "showcase": { "title": "Showcase", "login": "Sign in", "reactHint": "Sign in to react to pictures.", "loginToCreate": "Sign in to draw", "fromLogin": "See what kids made" },
   "pages": {
     "feed": "Your class feed will be here",
     "create": "You will make pictures here",
@@ -62,6 +63,15 @@
     "comments_closed": "Only reactions are possible here.",
     "not_published": "This post is still waiting for a grown-up.",
     "already_decided": "This is already decided.",
+    "assignment_rejected": "The task text is not suitable for children. Please rewrite it simpler and kinder.",
+    "check_unavailable": "The check is unavailable right now, so the task was not saved. Please try again in a bit.",
+    "task_invalid": "Check the title: it is required, up to 100 characters. The description is up to 1000.",
+    "task_not_found": "This task is no longer available.",
+    "show_not_accepted": "This picture has not been accepted yet, so it cannot go to the feed.",
+    "show_work_not_ready": "The picture is not ready yet.",
+    "show_removed_by_adult": "A grown-up already removed this picture from the feed, it cannot be posted again.",
+    "show_already_in_feed": "This picture is already in the feed.",
+    "show_not_found": "We could not find this picture.",
     "empty": "Write something first."
   },
   "create": {
@@ -176,7 +186,7 @@
     "showClass": "Share with class"
   },
   "shell": { "coinsUnknown": "Coins are not available right now", "nav": "Main menu", "account": "Profile" },
-  "task": { "start": "Start", "overdue": "deadline passed", "today": "due today", "left_one": "{{count}} day left", "left_few": "{{count}} days left", "left_many": "{{count}} days left", "left_other": "{{count}} days left" },
+  "task": { "start": "Start", "overdue": "deadline passed", "today": "due today", "left_one": "{{count}} day left", "left_few": "{{count}} days left", "left_many": "{{count}} days left", "left_other": "{{count}} days left", "draw": "Draw", "noClass": "Tasks show up once you join a class: enter the class code from your teacher.", "empty": "No tasks yet. Check back later: your teacher will think of something soon!", "sentMark": "Handed in, your teacher will see it", "heldMark": "Sent to your teacher to look at", "submit": "Hand in", "submitFor": "Handing in to:", "submitComment": "Caption (optional)", "submitDone": "Handed in! Your teacher will see your picture.", "submitHeld": "Sent to your teacher to look at. They will answer once they have.", "pick": "Which task to hand in to" },
   "panel": { "model": "Muse Image", "format": "1:1", "style": "Style", "uploadSoon": "Picture upload is coming soon", "allStyles": "All styles", "styleFilter": "Filter by style", "noStyleMatch": "No pictures in this style yet" },
   "templates": {
     "superhero": "I'm a superhero",
@@ -371,7 +381,22 @@
     },
     "tasks": {
       "title": "Tasks",
-      "empty": "Tasks for your class will appear here soon."
+      "empty": "Create a class on the Classes tab first, then assign tasks.",
+      "class": "Class",
+      "titlePh": "Task title",
+      "descPh": "What to draw (optional)",
+      "due": "Due",
+      "lang": "Language",
+      "create": "Assign",
+      "none": "No tasks in this class yet.",
+      "noDue": "no due date",
+      "count": "Handed in: {{count}}",
+      "subsTitle": "Pictures: {{title}}",
+      "subsEmpty": "Nobody has handed in yet.",
+      "held": "Under review",
+      "shown": "Shown in the class feed",
+      "show": "Show in class feed",
+      "pending": "This picture is waiting for review and will appear in the feed after it."
     },
     "filter": {
       "label": "Class",
