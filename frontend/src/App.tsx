@@ -37,6 +37,7 @@ export default function App() {
         <Route path="tasks" element={<Stub name="tasks" />} />
         <Route path="my-works" element={<MyWorks />} />
       </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

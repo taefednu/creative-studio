@@ -332,11 +332,12 @@ function WorkView({
       : s === 'held'
         ? t('create.heldText')
         : s === 'support'
-          ? t('create.supportText')
+          ? t(work.adult_notified === false ? 'create.supportTextNoAdult' : 'create.supportText')
           : t('create.failedText')
   return (
     <div data-testid={`work-${s}`} className="mx-auto mt-6 max-w-xl rounded-3xl border border-border bg-surface p-6 text-center shadow-card">
-      <p className="text-sm font-extrabold uppercase text-primary">{t('create.friendly')}</p>
+      {/* Ребёнку, которому плохо, не «дружеская идея для рисунка» и не «нарисуй иначе». */}
+      {s !== 'support' && <p className="text-sm font-extrabold uppercase text-primary">{t('create.friendly')}</p>}
       <h1 data-testid="work-title" className="mt-2 text-3xl font-extrabold text-heading">
         {title}
       </h1>
@@ -350,7 +351,7 @@ function WorkView({
         onClick={onAgain}
         className="mt-5 rounded-full bg-primary px-8 py-3 text-lg font-extrabold uppercase text-primary-fg shadow-card"
       >
-        {t('create.tryAgain')}
+        {t(s === 'support' ? 'create.supportBack' : 'create.tryAgain')}
       </button>
     </div>
   )

@@ -15,6 +15,7 @@ export type Work = {
   reason_codes: string[]
   rewrite_text: string | null
   image_url: string | null
+  adult_notified?: boolean
 }
 
 export type TemplateInfo = { id: string; image_url: string }

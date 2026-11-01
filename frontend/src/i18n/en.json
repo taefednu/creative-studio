@@ -78,6 +78,8 @@
     "heldText": "You'll know as soon as they have looked. Your coin is safe.",
     "supportTitle": "We're here",
     "supportText": "It sounds like things are hard right now. You're not alone: tell a grown-up you trust. We've already told your grown-up.",
+    "supportTextNoAdult": "It sounds like things are hard right now. You're not alone: tell a grown-up you trust, like a parent or a teacher.",
+    "supportBack": "Go back",
     "failedTitle": "That didn't work, your coin is back",
     "failedText": "Shall we try again?",
     "teacherTask": "Teacher task"

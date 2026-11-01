@@ -78,6 +78,8 @@
     "heldText": "Ular ko‘rishi bilan bilib olasan. Tangang joyida.",
     "supportTitle": "Biz yoningdamiz",
     "supportText": "Hozir senga qiyin bo‘lsa kerak. Sen yolg‘iz emassan: ishongan kattangga ayt. Kattangga biz xabar berdik.",
+    "supportTextNoAdult": "Hozir senga qiyin bo‘lsa kerak. Sen yolg‘iz emassan: ishongan kattangga, ota-onangga yoki o‘qituvchingga ayt.",
+    "supportBack": "Qaytish",
     "failedTitle": "Bo‘lmadi, tangang qaytdi",
     "failedText": "Yana urinib ko‘ramizmi?",
     "teacherTask": "O‘qituvchi topshirig‘i"
