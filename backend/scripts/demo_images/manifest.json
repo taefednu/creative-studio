@@ -1,0 +1,122 @@
+[
+ {
+  "slug": "fox_lantern",
+  "template_id": "anime",
+  "idea_ru": "Лиса с фонарём ночью в лесу",
+  "idea_en": "a little fox with a lantern in a night forest"
+ },
+ {
+  "slug": "clay_mill",
+  "template_id": "clay",
+  "idea_ru": "Домик из пластилина с мельницей",
+  "idea_en": "a plasticine clay house with a windmill"
+ },
+ {
+  "slug": "robot_comic",
+  "template_id": "superhero",
+  "idea_ru": "Робот-комикс",
+  "idea_en": "a friendly robot in a comic book panel"
+ },
+ {
+  "slug": "night_castle",
+  "template_id": "castle",
+  "idea_ru": "Ночной замок под луной",
+  "idea_en": "a fairy tale castle at night under a big moon"
+ },
+ {
+  "slug": "bunny_flowers",
+  "template_id": "watercolor",
+  "idea_ru": "Зайчик в цветах",
+  "idea_en": "a little bunny sitting in a field of flowers"
+ },
+ {
+  "slug": "tree_house",
+  "template_id": "paper",
+  "idea_ru": "Дом на дереве",
+  "idea_en": "a cozy tree house with a rope ladder"
+ },
+ {
+  "slug": "whale_clouds",
+  "template_id": "watercolor",
+  "idea_ru": "Кит в облаках",
+  "idea_en": "a friendly blue whale swimming through pink clouds"
+ },
+ {
+  "slug": "toy_dino",
+  "template_id": "space_pet",
+  "idea_ru": "Динозавр-игрушка",
+  "idea_en": "a cute toy dinosaur on a play mat"
+ },
+ {
+  "slug": "space_cat_neon",
+  "template_id": "space_pet",
+  "idea_ru": "Кот-космонавт в неоне",
+  "idea_en": "a cat astronaut in neon lights among planets"
+ },
+ {
+  "slug": "toucan_jungle",
+  "template_id": "anime",
+  "idea_ru": "Тукан в джунглях",
+  "idea_en": "a colorful toucan in the jungle"
+ },
+ {
+  "slug": "floating_island",
+  "template_id": "castle",
+  "idea_ru": "Летающий остров",
+  "idea_en": "a floating island with trees and a waterfall"
+ },
+ {
+  "slug": "owl_glass",
+  "template_id": "paper",
+  "idea_ru": "Сова-витраж",
+  "idea_en": "an owl in stained glass style"
+ },
+ {
+  "slug": "kitten_wreath",
+  "template_id": "watercolor",
+  "idea_ru": "Котёнок с венком",
+  "idea_en": "a kitten wearing a flower wreath"
+ },
+ {
+  "slug": "jellyfish",
+  "template_id": "watercolor",
+  "idea_ru": "Медуза",
+  "idea_en": "a glowing jellyfish in the deep blue sea"
+ },
+ {
+  "slug": "fog_castle",
+  "template_id": "castle",
+  "idea_ru": "Замок в тумане",
+  "idea_en": "a castle in the morning fog on a hill"
+ },
+ {
+  "slug": "little_dragon",
+  "template_id": "clay",
+  "idea_ru": "Дракончик",
+  "idea_en": "a tiny friendly dragon with round wings"
+ },
+ {
+  "slug": "sakura_house",
+  "template_id": "paper",
+  "idea_ru": "Японский домик в сакуре",
+  "idea_en": "a small japanese house among sakura trees"
+ },
+ {
+  "slug": "corgi",
+  "template_id": "anime",
+  "idea_ru": "Корги",
+  "idea_en": "a happy corgi dog running on the grass"
+ },
+ {
+  "slug": "clownfish",
+  "template_id": "pixel",
+  "idea_ru": "Рыба-клоун",
+  "idea_en": "a clownfish in a coral reef"
+ },
+ {
+  "slug": "rocket",
+  "template_id": "pixel",
+  "idea_ru": "Ракета",
+  "idea_en": "a red rocket flying to the stars"
+ }
+]

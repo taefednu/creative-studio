@@ -1,0 +1,76 @@
+"""Демо-наполнение (scripts/seed_demo.py): очереди, лента, аналитика, оригинал загрузки закрыт ребёнку."""
+
+import os
+import sys
+from pathlib import Path
+
+os.environ.setdefault("SESSION_SECRET", "test-session-secret-0123456789abcdef")
+
+import pytest
+from fastapi.testclient import TestClient
+from PIL import Image
+
+from app import db
+from app.config import get_settings
+from app.main import app
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+import seed_demo
+
+
+@pytest.fixture
+def seeded(tmp_path, monkeypatch):
+    monkeypatch.setattr(db, "_engine", None)
+    monkeypatch.setattr(db, "_session_factory", None)
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path}/t.db")
+    monkeypatch.setenv("UPLOAD_DIR", str(tmp_path / "up"))
+    get_settings.cache_clear()
+    imgs = tmp_path / "img"  # заглушки вместо сети: без манифеста берутся все *.webp
+    imgs.mkdir()
+    for n, col in (("a", "tomato"), ("b", "skyblue")):
+        Image.new("RGB", (64, 64), col).save(imgs / f"{n}.webp", "WEBP")
+    out = seed_demo.seed(imgs)
+    yield out, imgs
+    db._engine.dispose()
+    get_settings.cache_clear()
+
+
+def _login(role_path, body):
+    c = TestClient(app)
+    assert c.post(role_path, json=body).status_code == 200
+    return c
+
+
+def test_seed_queues_feed_analytics(seeded):
+    out, _ = seeded
+    pw = out["adult_password"]
+    teacher = _login("/api/teacher/login", {"email": out["teacher"]["email"], "password": pw})
+    q = teacher.get("/api/review/queue").json()
+    assert len(q) == 5
+    urgent = [i for i in q if i["urgent"]]
+    assert len(urgent) == 1 and urgent[0]["preview_text"] is None
+
+    kid = _login("/api/child/login", {"nick": "StarFox", "pictures": out["child_pictures"]})
+    posts = kid.get("/api/feed/class").json()["items"]
+    assert len(posts) >= 20 and all(p["status"] == "published" for p in posts)
+    assert kid.get(f"/api/posts/{posts[0]['id']}/image").status_code == 200
+    up = out["upload_item"]
+    assert kid.get(f"/api/review/items/{up}/image?version=original").status_code in (401, 403, 404)
+
+    # проверяющий оригинал видит
+    assert teacher.get(f"/api/review/items/{up}/image?version=original").status_code == 200
+
+    parent = _login("/api/parent/login", {"email": out["parent"]["email"], "password": pw})
+    assert len(parent.get("/api/review/queue").json()) >= 2
+    a = parent.get(f"/api/parent/children/{out['children']['StarFox']}/analytics").json()
+    assert a["has_data"] is True
+
+
+def test_seed_refuses_nonempty_db_and_no_images(seeded, tmp_path):
+    _out, imgs = seeded
+    with pytest.raises(SystemExit):
+        seed_demo.seed(imgs)  # родители и учителя уже есть
+    empty = tmp_path / "none"
+    empty.mkdir()
+    with pytest.raises(SystemExit):
+        seed_demo.seed(empty)
