@@ -15,6 +15,7 @@ from app.db import get_session
 from app.feed import service
 from app.feed.models import REACTIONS, Comment, CommentSuggestion, Post, Reaction
 from app.feed.service import Viewer
+from app.moderation import hold
 from app.moderation.models import HeldItem
 from app.works.image.models import Work
 
@@ -94,8 +95,22 @@ def publish(body: NewPost, c: Annotated[Child, Depends(current_child)], db: Db):
     caption = (body.caption or "").strip() or None
     # Модель зовём до первой записи: SQLite держит блокировку до коммита, а проверка идёт секунды.
     d = service.judge(caption, "caption", c.lang) if caption is not None else None
-    # без подписи — картинка уже прошла check_image в #6
+    # За время проверки взрослый мог отклонить работу: свежий статус, иначе пост уйдёт в ленту.
+    db.refresh(w)
+    if w.status != "ready":
+        raise HTTPException(409, "work_not_ready")
+    # без подписи — картинка уже прошла check_image в #6; подпись прошла проверку выше
     clean = caption is None or (d is not None and d.action == "allow")
+    # Загрузку с размытым или задержанным ждёт учитель класса: он видит оригинал и размытую.
+    gated = (
+        clean
+        and w.kind == "upload"
+        and body.audience == "class"
+        and db.scalar(
+            select(HeldItem.id).where(HeldItem.item_type == "upload", HeldItem.target_id == str(w.id))
+        )
+        is not None
+    )
     post = Post(
         work_id=w.id,
         work_kind=w.kind,
@@ -103,13 +118,24 @@ def publish(body: NewPost, c: Annotated[Child, Depends(current_child)], db: Db):
         audience=body.audience,
         class_id=class_id if body.audience == "class" else None,
         caption=caption,
-        status="published" if clean else "held",
+        status="published" if clean and not gated else "held",
     )
     db.add(post)
     support = False
     try:
         db.flush()
-        if not clean:
+        if gated:
+            hold(
+                db,
+                item_type="post",
+                target_id=post.id,
+                child_id=c.id,
+                reviewer="teacher",
+                reason_codes=list(w.reason_codes or []) or ["upload_review"],
+                class_id=class_id,
+                commit=False,
+            )
+        elif not clean:
             support = service.hold_for(
                 db, item_type="post", target_id=post.id, child_id=c.id, post=post, d=d, text=caption
             )

@@ -233,15 +233,19 @@ def test_unsafe_or_unchecked_image_not_shown(kid, fake, mode, api):
     if mode == "exception":
         fake.image_exc = RuntimeError("down")
     else:
-        fake.image = D(mode)
+        fake.image = D(mode, categories=["self_harm"] if mode == "support" else ())
     wid = draw(k).json()["id"]
     st = status(k, wid)
-    assert st["status"] == "held" and st["image_url"] is None
+    assert st["status"] == ("support" if mode == "support" else "held") and st["image_url"] is None
     assert k.get(f"/api/works/{wid}/image").status_code == 404
     assert bal(cid) == 20
     (h,) = held_items("image")
     assert h.reviewer == ("both" if mode == "support" else "parent")
     assert h.urgent == (mode == "support")
+    if mode == "support":  # просмотр взрослым не превращает поддержку в отказ
+        assert st["reason_codes"] == []
+        assert api.post(f"/api/review/items/{h.id}/seen").status_code == 200
+        assert status(k, wid)["status"] == "support"
     # родитель видит held для проверки
     assert api.get(f"/api/works/{wid}/image").status_code == 200
 

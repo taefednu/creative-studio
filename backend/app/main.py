@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from app.accounts.router import router as accounts_router
 from app.assignments import models as _assignment_models  # noqa: F401  (таблицы)
@@ -35,3 +36,18 @@ app.include_router(assignments_router)
 @app.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+MULTIPART_SLACK = 64 * 1024  # поля формы и границы поверх самого файла
+
+
+@app.middleware("http")
+async def limit_upload_body(request: Request, call_next):
+    """Тело загрузки не читаем, если оно заведомо больше лимита: проверка размера до чтения."""
+    if request.method == "POST" and request.url.path == "/api/works/upload":
+        length = request.headers.get("content-length")
+        if length is None:
+            return JSONResponse({"detail": "length_required"}, status_code=411)
+        if not length.isdigit() or int(length) > get_settings().UPLOAD_MAX_BYTES + MULTIPART_SLACK:
+            return JSONResponse({"detail": "file_too_large"}, status_code=413)
+    return await call_next(request)

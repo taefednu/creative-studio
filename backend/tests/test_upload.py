@@ -219,6 +219,8 @@ def test_found_is_blurred_and_original_never_served(w, sam, chk, monkeypatch):
     assert not it.urgent and it.reviewer == "parent" and it.reason_codes == ["blurred_face"]
 
     pid = w.a.post("/api/posts", json={"work_id": wid, "audience": "class"}).json()["id"]
+    [pit] = [i for i in w.teacher.get("/api/review/queue").json() if i["item_type"] == "post"]
+    w.teacher.post(f"/api/review/items/{pit['id']}/approve")  # учитель одобрил, дальше видят все
     aid = w.teacher.post(
         f"/api/teacher/classes/{w.room['id']}/assignments", json={"title": "Тема", "description": "x"}
     ).json()["id"]
@@ -295,11 +297,12 @@ def test_check_support_is_urgent_both_and_exception_holds(w, sam, chk):
     chk.d = D("support", urgent=True, reason_codes=["self_harm"])
     wid = up(w.a).json()["id"]
     [it] = items()
-    assert it.urgent and it.reviewer == "both" and work(wid).status == "held"
+    assert it.urgent and it.reviewer == "both" and work(wid).status == "support"
     chk.d = D("allow")
     chk.exc = ModelTimeout("t")
     wid2 = up(w.a).json()["id"]
     assert work(wid2).status == "held" and sam.calls == []
+    assert w.a.get(f"/api/works/{wid}").json()["reason_codes"] == []  # self_harm ребёнку не отдаём
 
 
 def test_exif_not_kept(w, sam, chk):
@@ -381,7 +384,7 @@ def test_review_original_and_blurred_only_for_reviewer(w, sam, chk):
 
 def test_review_reject_refuses_and_hides_posts(w, sam, chk):
     wid = good(w, sam, chk)
-    pid = w.a.post("/api/posts", json={"work_id": wid, "audience": "class"}).json()["id"]
+    pid = w.a.post("/api/posts", json={"work_id": wid, "audience": "family"}).json()["id"]
     assert w.b.get(f"/api/posts/{pid}/image").status_code == 200
     [it] = items()
     assert w.parent.post(f"/api/review/items/{it.id}/reject").json()["status"] == "rejected"
@@ -417,3 +420,96 @@ def test_approve_held_reruns_sam_not_publishes_original(w, sam, chk, monkeypatch
     [it2] = [i for i in items() if i.target_id == str(wid2)]
     w.parent.post(f"/api/review/items/{it2.id}/approve")
     assert work(wid2).status == "held" and work(wid2).file_path is None
+
+
+# ---------------- правки ревью ----------------
+
+
+def test_self_harm_upload_stays_support_after_both_adults_seen(w, sam, chk):
+    chk.d = D("support", urgent=True, reason_codes=["self_harm"])
+    wid = up(w.a).json()["id"]
+    [it] = items()
+    v = w.a.get(f"/api/works/{wid}").json()
+    assert v["status"] == "support" and v["reason_codes"] == [] and v["image_url"] is None
+    assert w.parent.post(f"/api/review/items/{it.id}/seen").json()["status"] == "pending"
+    assert w.teacher.post(f"/api/review/items/{it.id}/seen").json()["status"] == "rejected"
+    assert work(wid).status == "support"  # не «отказ»: ребёнок остаётся на тёплом ответе
+    assert w.a.get("/api/held/mine").json() == []
+
+
+def class_post(w, wid, caption=None):
+    r = w.a.post("/api/posts", json={"work_id": wid, "audience": "class", "caption": caption})
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+def test_class_post_of_blurred_upload_waits_for_teacher(w, sam, chk):
+    wid = good(w, sam, chk)
+    calls = len(chk.calls)
+    p = class_post(w, wid)
+    assert p["status"] == "held" and len(chk.calls) == calls
+    pid = p["id"]
+    assert w.b.get(f"/api/posts/{pid}").status_code == 404
+    assert w.b.get("/api/feed/class").json()["items"] == []
+    [it] = [i for i in w.teacher.get("/api/review/queue").json() if i["item_type"] == "post"]
+    assert it["original_url"] and it["blurred_url"] and it["reason_codes"] == ["blurred_face"]
+    orig = w.teacher.get(it["original_url"]).content
+    blur = w.teacher.get(it["blurred_url"]).content
+    assert orig == pipeline.original_path(wid).read_bytes() and orig != blur
+    assert w.teacher2.get(f"/api/review/items/{it['id']}/image?version=original").status_code == 404
+    assert w.b.get(f"/api/review/items/{it['id']}/image?version=original").status_code == 401
+    assert w.teacher.post(f"/api/review/items/{it['id']}/approve").json()["status"] == "approved"
+    r = w.b.get(f"/api/posts/{pid}/image")
+    assert r.status_code == 200 and r.content == Path(work(wid).file_path).read_bytes()
+    assert r.content != orig
+
+
+def test_clean_upload_and_family_post_publish_at_once(w, sam, chk):
+    wid = good(w, sam, chk, found=())
+    assert class_post(w, wid)["status"] == "published"
+    wid2 = good(w, sam, chk)
+    r = w.a.post("/api/posts", json={"work_id": wid2, "audience": "family"})
+    assert r.json()["status"] == "published"
+
+
+def test_upload_body_checked_before_reading(w, sam, chk):
+    big = get_settings().UPLOAD_MAX_BYTES + 100_000
+    r = w.a.post("/api/works/upload", content=b"x" * big, headers={"content-type": "multipart/form-data; boundary=b"})
+    assert r.status_code == 413
+    r = w.a.post(
+        "/api/works/upload",
+        content=iter([b"--b\r\n"]),  # без Content-Length (chunked)
+        headers={"content-type": "multipart/form-data; boundary=b"},
+    )
+    assert r.status_code == 411
+    assert up(w.a).status_code == 200
+
+
+def test_publish_rechecks_work_after_caption_check(w, fake, monkeypatch):
+    def judge(text, kind, lang):
+        with db.new_session() as s:  # пока идёт проверка подписи, взрослый отклонил работу
+            s.get(Work, w.work).status = "refused"
+            s.commit()
+        return D("allow")
+
+    monkeypatch.setattr("app.feed.service.check_text", judge)
+    r = w.a.post("/api/posts", json={"work_id": w.work, "audience": "class", "caption": "привет"})
+    assert r.status_code == 409
+    with db.new_session() as s:
+        assert list(s.scalars(select(Post))) == []
+
+
+def test_rejected_upload_in_held_mine_and_removed_from_assignment(w, sam, chk):
+    wid = good(w, sam, chk)
+    aid = w.teacher.post(
+        f"/api/teacher/classes/{w.room['id']}/assignments", json={"title": "Тема", "description": "x"}
+    ).json()["id"]
+    sid = w.a.post(f"/api/assignments/{aid}/submit", json={"work_id": wid}).json()["id"]
+    assert len(w.teacher.get(f"/api/teacher/assignments/{aid}/submissions").json()) == 1
+    [it] = items()
+    assert w.parent.post(f"/api/review/items/{it.id}/reject").json()["status"] == "rejected"
+    assert w.teacher.get(f"/api/teacher/assignments/{aid}/submissions").json() == []
+    assert w.teacher.post(f"/api/teacher/submissions/{sid}/show-in-feed").status_code == 409
+    assert w.a.get("/api/held/mine").json() == [
+        {"id": it.id, "item_type": "upload", "text": None}
+    ]

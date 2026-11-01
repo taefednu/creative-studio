@@ -244,5 +244,5 @@ def _run(db: Session, work: Work, skip_text_check: bool) -> None:
         commit=False,
     )
     work.reason_codes = codes
-    work.status = "held"
+    work.status = "support" if both else "held"  # ребёнок видит тёплый ответ, не «ждём»
     db.commit()

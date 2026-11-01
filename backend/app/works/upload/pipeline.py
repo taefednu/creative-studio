@@ -125,7 +125,7 @@ def _hold(db: Session, work: Work, codes: list[str], urgent: bool = False) -> No
         commit=False,
     )
     work.reason_codes = codes
-    work.status = "held"
+    work.status = "support" if urgent else "held"
     db.commit()
 
 

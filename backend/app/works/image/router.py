@@ -35,7 +35,7 @@ def _view(w: Work) -> dict:
         "kind": w.kind,
         "template_id": w.template_id,
         "status": w.status,
-        "reason_codes": w.reason_codes or [],
+        "reason_codes": [] if w.status == "support" else (w.reason_codes or []),
         "rewrite_text": w.rewrite_text,
         "image_url": f"/api/works/{w.id}/image" if w.status == "ready" else None,
         "created_at": w.created_at.isoformat(),
@@ -111,7 +111,9 @@ def work_image(
             owner = db.get(Child, w.child_id)
             # родителю — только после проверки картинки (ready) или на проверку (held), не во время генерации
             allowed = (
-                owner is not None and owner.parent_id == s[1] and w.status in ("ready", "held")
+                owner is not None
+                and owner.parent_id == s[1]
+                and w.status in ("ready", "held", "support")
             )
     if not allowed or w is None or w.file_path is None or not Path(w.file_path).is_file():
         raise HTTPException(404, "not_found")
@@ -169,7 +171,7 @@ def _approve(db: Session, item: HeldItem) -> None:
 def _reject(db: Session, item: HeldItem) -> None:
     w = db.get(Work, int(item.target_id))
     # Ребёнок с самоповреждением остаётся на тёплом ответе, не на отказе.
-    if w is not None and w.status != "support":
+    if w is not None and w.status != "support" and not item.urgent:
         w.status = "refused"
         db.commit()
 

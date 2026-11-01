@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.accounts.deps import current_child
 from app.accounts.models import Child
+from app.assignments.models import Submission
 from app.config import get_settings
 from app.db import get_session
 from app.feed.models import Post
@@ -67,12 +68,17 @@ def _approve(db: Session, item: HeldItem) -> None:
 
 def _reject(db: Session, item: HeldItem) -> None:
     w = db.get(Work, int(item.target_id))
-    if w is None or w.status == "support":
-        return
+    if w is None or w.status == "support" or item.urgent:
+        return  # срочное (самоповреждение) не становится отказом: ребёнок остаётся на поддержке
     w.status = "refused"
     db.execute(
         update(Post)
         .where(Post.work_id == w.id, Post.status.in_(("pending", "held", "published")))
+        .values(status="rejected")
+    )
+    db.execute(  # сданное в задание тоже уходит из галереи и из показа в ленте
+        update(Submission)
+        .where(Submission.work_id == w.id, Submission.status.in_(("pending", "accepted", "held")))
         .values(status="rejected")
     )
     db.commit()

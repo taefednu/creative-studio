@@ -135,9 +135,11 @@ def _view(db: Session, item: HeldItem, nick: str, class_name: str | None, full: 
 
 def _upload_urls(db: Session, item: HeldItem, show: bool) -> dict:
     """Загрузка: оригинал и размытая рядом (blurred_url пуст, если до SAM дело не дошло)."""
-    if item.item_type != "upload":
+    if item.item_type not in ("upload", "post", "submission"):
         return {}
     w = _work_of(db, item) if show else None
+    if item.item_type != "upload" and (w is None or w.kind != "upload"):
+        return {}  # обычная работа: оригинала нет
     base = f"/api/review/items/{item.id}/image?version="
     return {
         "original_url": base + "original" if w and _upload_file(w, "original") else None,
@@ -182,7 +184,7 @@ def item_detail(item_id: int, db: Db, who: Adult):
 def item_image(item_id: int, db: Db, who: Adult, version: str | None = None):
     item = _mine(db, who, item_id)
     w = _work_of(db, item) if item.item_type in IMAGE_TYPES else None
-    if w is not None and item.item_type == "upload":
+    if w is not None and w.kind == "upload":
         if version not in (None, "original", "blurred"):
             raise HTTPException(422, "bad_version")
         p = _upload_file(w, version) if version else (
@@ -257,7 +259,7 @@ def held_mine(c: Annotated[Child, Depends(current_child)], db: Db):
             HeldItem.child_id == c.id,
             HeldItem.status == "rejected",
             HeldItem.urgent.is_(False),
-            HeldItem.item_type.in_(("post", "comment", "prompt", "image")),
+            HeldItem.item_type.in_(("post", "comment", "prompt", "image", "upload")),
         )
         .order_by(HeldItem.id.desc())
         .limit(20)
@@ -267,6 +269,8 @@ def held_mine(c: Annotated[Child, Depends(current_child)], db: Db):
         if i.item_type == "post":
             p = db.get(Post, int(i.target_id))
             text = p.caption if p is not None else None
+        elif i.item_type == "upload":
+            text = None  # у загрузки нет текста ребёнка
         elif i.item_type in ("prompt", "image"):
             w = db.get(Work, int(i.target_id))
             text = w.child_text if w is not None else None
