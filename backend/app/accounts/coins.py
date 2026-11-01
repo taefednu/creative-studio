@@ -12,11 +12,17 @@ def balance(db: Session, child_id: int) -> int:
     return int(db.scalar(q) or 0)
 
 
-def add_entry(db: Session, child_id: int, delta: int, reason: str, ref_id: str | None) -> bool:
+def add_entry(
+    db: Session, child_id: int, delta: int, reason: str, ref_id: str | None, status: str = "done"
+) -> bool:
     """False — запись с таким ref_id уже есть (идемпотентность)."""
     try:
         with db.begin_nested():
-            db.add(CoinLedger(child_id=child_id, delta=delta, reason=reason, ref_id=ref_id))
+            db.add(
+                CoinLedger(
+                    child_id=child_id, delta=delta, reason=reason, ref_id=ref_id, status=status
+                )
+            )
             db.flush()
     except IntegrityError:
         return False

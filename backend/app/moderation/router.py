@@ -50,11 +50,18 @@ def _scope(role: str, uid: int):
         in_class = HeldItem.child_id.in_(
             select(ClassMembership.child_id).where(ClassMembership.class_id.in_(rooms))
         )
-        return (
-            HeldItem.reviewer.in_(("teacher", "both")),
+        mine = HeldItem.reviewer.in_(("teacher", "both")) & (
             HeldItem.class_id.in_(rooms)
-            | (HeldItem.urgent.is_(True) & (HeldItem.reviewer == "both") & in_class),
+            | (HeldItem.urgent.is_(True) & (HeldItem.reviewer == "both") & in_class)
         )
+        # Ребёнок класса без родителя (вход через Mentorium): личное, что иначе ушло бы родителю,
+        # проверяет учитель. Появился родитель — записи идут ему, старые остаются видны родителю.
+        orphan = (
+            (HeldItem.reviewer == "parent")
+            & in_class
+            & HeldItem.child_id.in_(select(Child.id).where(Child.parent_id.is_(None)))
+        )
+        return (mine | orphan,)
     return (
         HeldItem.reviewer.in_(("parent", "both")),
         HeldItem.child_id.in_(select(Child.id).where(Child.parent_id == uid)),

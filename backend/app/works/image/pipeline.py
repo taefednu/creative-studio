@@ -14,8 +14,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import db as dbmod
-from app.accounts import coins
 from app.accounts.models import Child
+from app.accounts.wallet import recover_platform, wallet_for
 from app.config import get_settings
 from app.meta.client import ContentPolicyViolation
 from app.moderation import hold
@@ -78,17 +78,34 @@ def gen_ref(work: Work) -> str:
     return f"gen:{work.id}:{work.attempt}"
 
 
+def _refund_ref(work: Work) -> str:
+    return f"refund:{work.id}:{work.attempt}"
+
+
 def _refund(db: Session, work: Work) -> None:
-    """Возврат ровно один раз: ref_id уникален. Возвращаем, только если списывали. Без commit."""
-    if coins.has_entry(db, gen_ref(work)):
-        coins.add_entry(
-            db, work.child_id, get_settings().IMAGE_PRICE, "refund", f"refund:{work.id}:{work.attempt}"
+    """Возврат ровно один раз: ref_id уникален. Возвращаем, только если списывали. Без commit и без сети."""
+    child = db.get(Child, work.child_id)
+    if child is not None:
+        wallet_for(child).refund_prepare(
+            db, child, get_settings().IMAGE_PRICE, gen_ref(work), _refund_ref(work)
         )
+
+
+def settle_refund(db: Session, work: Work) -> None:
+    """Платформенный возврат уходит на платформу только после commit (SQLite не держим открытым)."""
+    try:
+        child = db.get(Child, work.child_id)
+        if child is not None:
+            wallet_for(child).refund_settle(db, child, _refund_ref(work))
+    except Exception:  # noqa: BLE001 — статус работы (support, held, refused) сбой возврата не меняет
+        log.warning("refund settle failed: work=%s", work.id)
+        db.rollback()
 
 
 def refund_once(db: Session, work: Work) -> None:
     _refund(db, work)
     db.commit()
+    settle_refund(db, work)
 
 
 def fail_remix(db: Session, work: Work) -> None:
@@ -97,10 +114,24 @@ def fail_remix(db: Session, work: Work) -> None:
     work.reason_codes = ["remix_source_gone"]
     work.status = "failed"
     db.commit()
+    settle_refund(db, work)
 
 
-def recover_stuck() -> int:
-    """При старте: работы, застрявшие в checking/generating (процесс упал), → failed + возврат."""
+def _recover_platform() -> None:
+    db = dbmod.new_session()
+    try:
+        recover_platform(db)
+    except Exception:  # noqa: BLE001
+        log.warning("platform recover failed")
+    finally:
+        db.close()
+
+
+def recover_stuck(platform_in_background: bool = False) -> int:
+    """При старте: работы, застрявшие в checking/generating (процесс упал), -> failed + возврат.
+
+    Затем повтор недошедших возвратов платформы (refund_pending): не больше одного успешного.
+    """
     db = dbmod.new_session()
     try:
         rows = db.scalars(select(Work).where(Work.status.in_(("checking", "generating")))).all()
@@ -108,6 +139,10 @@ def recover_stuck() -> int:
             _refund(db, w)
             w.status = "failed"
         db.commit()
+        if platform_in_background:  # платформа может молчать: старту не мешаем
+            threading.Thread(target=_recover_platform, daemon=True).start()
+        else:
+            recover_platform(db)
         return len(rows)
     finally:
         db.close()
@@ -207,10 +242,15 @@ def _run(db: Session, work: Work, skip_text_check: bool) -> None:
             _set(db, work, "failed", ["remix_source_gone"])
             return
 
-    outcome = coins.charge(db, child.id, s.IMAGE_PRICE, "generation", gen_ref(work))
-    if outcome != "ok":  # нет монет или это уже списанная попытка: не генерируем
-        if outcome == "no_coins":
-            _set(db, work, "failed", ["no_coins"])
+    outcome = wallet_for(child).charge(db, child, s.IMAGE_PRICE, "generation", gen_ref(work))
+    if outcome != "ok":  # нет монет, платформа молчит или это уже списанная попытка: не генерируем
+        code = {
+            "no_coins": "no_coins",
+            "unavailable": "platform_unavailable",
+            "uncertain": "platform_uncertain",  # результат списания неизвестен: не возвращаем
+        }.get(outcome)
+        if code:
+            _set(db, work, "failed", [code])
         else:
             db.rollback()
         return
@@ -245,6 +285,7 @@ def _run(db: Session, work: Work, skip_text_check: bool) -> None:
         work.reason_codes = ["content_policy"]
         work.status = "refused"
         db.commit()
+        settle_refund(db, work)
         return
     except Exception:  # noqa: BLE001 — таймаут, 4xx/5xx, пустой или битый ответ
         refund_once(db, work)
@@ -283,3 +324,4 @@ def _run(db: Session, work: Work, skip_text_check: bool) -> None:
     work.reason_codes = codes
     work.status = "support" if both else "held"  # ребёнок видит тёплый ответ, не «ждём»
     db.commit()
+    settle_refund(db, work)

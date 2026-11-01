@@ -19,6 +19,8 @@ from app.works.image.models import Work
 router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
 DAYS = 7
+DONE = CoinLedger.status == "done"
+UNSURE = ("pending", "sending", "refund_pending", "uncertain")
 
 
 @router.get("/parent/tariffs")
@@ -50,20 +52,29 @@ def analytics(child_id: int, p: Annotated[Parent, Depends(current_parent)], db: 
     gained = int(
         db.scalar(
             select(func.coalesce(func.sum(CoinLedger.delta), 0)).where(
-                *led, CoinLedger.delta > 0, CoinLedger.reason != "refund"
+                *led, CoinLedger.delta > 0, CoinLedger.reason != "refund", DONE
             )
         )
         or 0
     )
     charged = int(
         db.scalar(
-            select(func.coalesce(func.sum(-CoinLedger.delta), 0)).where(*led, CoinLedger.delta < 0)
+            select(func.coalesce(func.sum(-CoinLedger.delta), 0)).where(*led, CoinLedger.delta < 0, DONE)
         )
         or 0
     )
     refunded = int(
         db.scalar(
-            select(func.coalesce(func.sum(CoinLedger.delta), 0)).where(*led, CoinLedger.reason == "refund")
+            select(func.coalesce(func.sum(CoinLedger.delta), 0)).where(*led, CoinLedger.reason == "refund", DONE)
+        )
+        or 0
+    )
+    # Платформа: pending, sending, refund_pending, uncertain не факт, но и не ноль: считаем отдельно.
+    uncertain = int(
+        db.scalar(
+            select(func.coalesce(func.sum(func.abs(CoinLedger.delta)), 0)).where(
+                *led, CoinLedger.status.in_(UNSURE)
+            )
         )
         or 0
     )
@@ -78,5 +89,6 @@ def analytics(child_id: int, p: Annotated[Parent, Depends(current_parent)], db: 
         "held": held if has_data else None,  # только число: ни содержания, ни срочного текста
         "coins_received": gained if has_data else None,  # старт и дневные монеты студии
         "coins_earned_lessons": None,  # уроки Mentorium: появится с платформой (#5), сейчас нет данных
+        "coins_uncertain": uncertain,  # монет в записях без подтверждения платформы
         "coins_spent": max(0, charged - refunded) if has_data else None,  # возвраты вычтены
     }

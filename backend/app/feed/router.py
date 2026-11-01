@@ -8,7 +8,7 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.accounts.deps import current_child
+from app.accounts.adults import AdultChild
 from app.accounts.models import Child
 from app.accounts.security import COOKIE
 from app.db import get_session
@@ -57,7 +57,7 @@ def _get_post(db: Session, v: Viewer, post_id: int) -> tuple[Post, str]:
 
 
 @router.post("/posts")
-def publish(body: NewPost, c: Annotated[Child, Depends(current_child)], db: Db):
+def publish(body: NewPost, c: AdultChild, db: Db):
     w = db.get(Work, body.work_id)
     if w is None or w.child_id != c.id:
         raise HTTPException(404, "not_found")
@@ -356,7 +356,7 @@ def _react_target(db: Session, c: Child, post_id: int, kind: str) -> Post:
 
 
 @router.put("/posts/{post_id}/reactions/{kind}")
-def add_reaction(post_id: int, kind: str, c: Annotated[Child, Depends(current_child)], db: Db):
+def add_reaction(post_id: int, kind: str, c: AdultChild, db: Db):
     p = _react_target(db, c, post_id, kind)
     if not db.scalar(
         select(Reaction.id).where(
@@ -372,7 +372,7 @@ def add_reaction(post_id: int, kind: str, c: Annotated[Child, Depends(current_ch
 
 
 @router.delete("/posts/{post_id}/reactions/{kind}")
-def remove_reaction(post_id: int, kind: str, c: Annotated[Child, Depends(current_child)], db: Db):
+def remove_reaction(post_id: int, kind: str, c: AdultChild, db: Db):
     p = _react_target(db, c, post_id, kind)
     db.execute(
         delete(Reaction).where(
@@ -421,7 +421,7 @@ def list_comments(post_id: int, db: Db, v: V):
 
 @router.post("/posts/{post_id}/comments")
 def add_comment(
-    post_id: int, body: NewComment, c: Annotated[Child, Depends(current_child)], db: Db
+    post_id: int, body: NewComment, c: AdultChild, db: Db
 ):
     p, _ = _get_post(db, Viewer("child", c), post_id)
     if p.best:
@@ -466,7 +466,7 @@ def _own_suggestion(db: Session, c: Child, sid: int) -> CommentSuggestion:
 
 
 @router.post("/comments/suggestions/{sid}/accept")
-def accept_suggestion(sid: int, c: Annotated[Child, Depends(current_child)], db: Db):
+def accept_suggestion(sid: int, c: AdultChild, db: Db):
     """Публикуется только добрая версия, уже прошедшая проверку. Атомарно: один раз."""
     s = _own_suggestion(db, c, sid)
     p, _ = _get_post(db, Viewer("child", c), s.post_id)
@@ -487,7 +487,7 @@ def accept_suggestion(sid: int, c: Annotated[Child, Depends(current_child)], db:
 
 
 @router.post("/comments/suggestions/{sid}/cancel")
-def cancel_suggestion(sid: int, c: Annotated[Child, Depends(current_child)], db: Db):
+def cancel_suggestion(sid: int, c: AdultChild, db: Db):
     _own_suggestion(db, c, sid)
     db.execute(
         update(CommentSuggestion)

@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, SecretStr, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -57,6 +57,19 @@ class Settings(BaseSettings):
     QR_TTL_MINUTES: int = 5
     CODE_FAILS_MAX: int = 10
     CODE_FAILS_WINDOW_MINUTES: int = 15
+    # Платформа Mentorium (#5). Без адреса и служебного аккаунта вход через Mentorium отвечает 503.
+    # Служебный админ-аккаунт и его пароль — только из env сервера, ни в ответы, ни в логи.
+    PLATFORM_API_URL: str | None = None
+    PLATFORM_ADMIN_LOGIN: str | None = None
+    PLATFORM_ADMIN_PASSWORD: SecretStr | None = None
+    PLATFORM_TIMEOUT: float = 10.0  # connect и read, секунды; повторов нет (у adjust нет идемпотентности)
+    PLATFORM_ADMIN_PAUSE_SECONDS: float = 60.0  # после отказа входа служебного админа новый логин не шлём
+    PLATFORM_LOGIN_PER_MINUTE: int = 60  # лимит студии на адрес клиента; запас на класс за одним NAT
+    PLATFORM_CAPTCHA_PAUSE_MINUTES: int = 10  # после капчи/429 тот же логин на платформу не шлём
+    # Безопасные выдуманные ники для детей Mentorium: имя на платформе может быть личным.
+    NICK_ADJECTIVES: list[str] = ["Brave", "Kind", "Happy", "Swift", "Bright", "Calm", "Merry", "Sunny"]
+    NICK_ANIMALS: list[str] = ["Fox", "Owl", "Panda", "Otter", "Koala", "Falcon", "Bunny", "Dolphin"]
+    PARENT_LINK_TTL_MINUTES: int = 60  # жизнь кода «покажи родителю»
 
 
 @lru_cache

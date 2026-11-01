@@ -12,6 +12,7 @@ from app.feed import models as _feed_models  # noqa: F401  (таблицы)
 from app.feed.router import router as feed_router
 from app.moderation.router import router as moderation_router
 from app.parent.router import router as parent_router
+from app.platform.router import router as platform_router
 from app.voice.router import router as voice_router
 from app.works.image import pipeline
 from app.works.image.router import router as image_router
@@ -23,7 +24,7 @@ from app.works.upload.router import router as upload_router
 async def lifespan(_: FastAPI):
     get_settings()  # без ключа и id моделей падаем сразу, с понятной ошибкой
     init_db()
-    pipeline.recover_stuck()  # процесс мог упасть посреди генерации: вернуть монеты
+    pipeline.recover_stuck(platform_in_background=True)  # процесс мог упасть посреди генерации: вернуть монеты
     yield
 
 
@@ -37,6 +38,7 @@ app.include_router(assignments_router)
 app.include_router(voice_router)
 app.include_router(remix_router)
 app.include_router(parent_router)
+app.include_router(platform_router)
 
 
 @app.get("/api/health")

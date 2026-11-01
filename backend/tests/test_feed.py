@@ -212,7 +212,8 @@ def test_publish_rules(w):
     with db.new_session() as s:
         s.get(Child, w.d_id).parent_id = None
         s.commit()
-    assert publish(w, audience="family", client=w.d, work=wd).status_code == 409  # нет родителя
+    # нет родителя и нет класса: #5, ребёнок без взрослого не публикует
+    assert publish(w, audience="family", client=w.d, work=wd).status_code == 403
     assert w.teacher.post("/api/posts", json={"work_id": w.work, "audience": "class"}).status_code == 401
     # двойной клик не плодит пост
     a = pub_id(w)

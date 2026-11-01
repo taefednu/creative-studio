@@ -5,19 +5,22 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
-from sqlalchemy import func, or_, select, update
+from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import clock
 from app.accounts import coins
+from app.accounts.adults import has_adult
 from app.accounts.deps import current_child, current_parent, current_teacher
 from app.accounts.models import (
     Child,
     ClassMembership,
     Classroom,
     CodeAttempt,
+    LinkAttempt,
     Parent,
+    ParentLinkCode,
     ParentNotification,
     QrToken,
     Teacher,
@@ -32,6 +35,7 @@ from app.accounts.security import (
     sha256,
     verify_secret,
 )
+from app.accounts.wallet import WalletUnavailable, balance_of
 from app.config import get_settings
 from app.db import get_session
 
@@ -183,6 +187,14 @@ def _own_child(db: Session, p: Parent, child_id: int) -> Child:
     return c
 
 
+def _coins_or_none(db: Session, c: Child) -> int | None:
+    """Баланс ребёнка; None, если платформа не ответила (список детей из-за этого не падает)."""
+    try:
+        return balance_of(db, c)
+    except WalletUnavailable:
+        return None
+
+
 @router.get("/parent/children")
 def list_children(p: Annotated[Parent, Depends(current_parent)], db: Db):
     now = clock.now()
@@ -193,7 +205,7 @@ def list_children(p: Annotated[Parent, Depends(current_parent)], db: Db):
             "nick": c.nick,
             "age_group": c.age_group,
             "lang": c.lang,
-            "coins": coins.balance(db, c.id),
+            "coins": _coins_or_none(db, c),
             "locked": bool(c.locked_until and c.locked_until > now),
         }
         for c in rows
@@ -231,6 +243,8 @@ def read_notifications(p: Annotated[Parent, Depends(current_parent)], db: Db):
 
 
 def _new_qr(db: Session, child: Child) -> dict:
+    if child.platform_user_id:  # пути «забыл» нет: вход только через платформу, а сессия тратит её монеты
+        raise HTTPException(409, "platform_child")
     token = secrets.token_urlsafe(24)
     ttl = get_settings().QR_TTL_MINUTES
     expires = clock.now() + timedelta(minutes=ttl)
@@ -349,7 +363,7 @@ def child_login(body: ChildLogin, resp: Response, db: Db):
     stored = child.picture_password_hash if child else None
     ok = verify_secret(picture_secret(body.pictures), stored)
     # Один и тот же ответ на «нет ника», «неверно» и «закрыто»: ник не выдаём.
-    if child is None:
+    if child is None or child.picture_password_hash is None:  # ребёнок Mentorium: картинок-пароля нет
         raise HTTPException(401, "bad_credentials")
     # Счётчик и замок меняются только условным UPDATE по незапертой строке: параллельная
     # пачка попыток не обходит лимит (SQLite сериализует запись), запертый ник не входит.
@@ -412,9 +426,21 @@ def join_class(body: JoinClass, c: Annotated[Child, Depends(current_child)], db:
     return {"class": {"id": room.id, "name": room.name}}
 
 
+class ChildLang(BaseModel):
+    lang: Literal["ru", "en", "uz"]
+
+
+@router.post("/child/lang")
+def set_lang(body: ChildLang, c: Annotated[Child, Depends(current_child)], db: Db):
+    c.lang = body.lang
+    db.commit()
+    return {"lang": c.lang}
+
+
 @router.get("/child/me")
 def child_me(c: Annotated[Child, Depends(current_child)], db: Db):
-    coins.grant_daily(db, c.id)
+    if c.platform_user_id is None:  # дневные и стартовые монеты — только детям студии
+        coins.grant_daily(db, c.id)
     room = db.scalar(
         select(Classroom)
         .join(ClassMembership, ClassMembership.class_id == Classroom.id)
@@ -425,7 +451,77 @@ def child_me(c: Annotated[Child, Depends(current_child)], db: Db):
         "nick": c.nick,
         "lang": c.lang,
         "age_group": c.age_group,
-        "coins": coins.balance(db, c.id),
+        "coins": _coins_or_none(db, c),  # null — платформа не ответила, не «ноль монет»
+        "coins_source": "platform" if c.platform_user_id else "studio",
         "class": {"id": room.id, "name": room.name} if room else None,
         "has_parent": c.parent_id is not None,
+        "needs_adult": not has_adult(db, c),  # нельзя публиковать и комментировать
     }
+
+
+# ---------- привязка родителя к ребёнку Mentorium ----------
+
+
+@router.post("/child/parent-link-code")
+def parent_link_code(c: Annotated[Child, Depends(current_child)], db: Db):
+    """Код «покажи родителю»: 6 символов, одноразовый, живёт PARENT_LINK_TTL_MINUTES."""
+    if c.parent_id is not None:
+        raise HTTPException(409, "already_linked")
+    ttl = get_settings().PARENT_LINK_TTL_MINUTES
+    db.execute(delete(ParentLinkCode).where(ParentLinkCode.child_id == c.id))  # старый код гаснет
+    for _ in range(20):
+        code = "".join(secrets.choice(CODE_ALPHABET) for _ in range(6))
+        db.add(
+            ParentLinkCode(code=code, child_id=c.id, expires_at=clock.now() + timedelta(minutes=ttl))
+        )
+        try:
+            db.commit()
+            return {"code": code, "expires_in": ttl * 60}
+        except IntegrityError:
+            db.rollback()
+            db.execute(delete(ParentLinkCode).where(ParentLinkCode.child_id == c.id))
+    raise HTTPException(500, "code_generation_failed")
+
+
+class LinkChild(BaseModel):
+    code: str = Field(min_length=1, max_length=12)
+
+
+@router.post("/parent/link-child")
+def link_child(body: LinkChild, p: Annotated[Parent, Depends(current_parent)], db: Db):
+    s = get_settings()
+    now = clock.now()
+    since = now - timedelta(minutes=s.CODE_FAILS_WINDOW_MINUTES)
+    fails = db.scalar(
+        select(func.count())
+        .select_from(LinkAttempt)
+        .where(LinkAttempt.parent_id == p.id, LinkAttempt.at > since)
+    )
+    if (fails or 0) >= s.CODE_FAILS_MAX:
+        raise HTTPException(429, "too_many_attempts")
+    code = body.code.strip().upper()
+    # Код забираем условным UPDATE: два родителя с одним кодом не привяжутся оба.
+    claimed = db.execute(
+        update(ParentLinkCode)
+        .where(
+            ParentLinkCode.code == code,
+            ParentLinkCode.used_at.is_(None),
+            ParentLinkCode.expires_at > now,
+        )
+        .values(used_at=now)
+    )
+    if claimed.rowcount != 1:
+        db.rollback()
+        db.add(LinkAttempt(parent_id=p.id, at=now))
+        db.commit()
+        raise HTTPException(404, "bad_code")
+    child_id = db.scalar(select(ParentLinkCode.child_id).where(ParentLinkCode.code == code))
+    bound = db.execute(
+        update(Child).where(Child.id == child_id, Child.parent_id.is_(None)).values(parent_id=p.id)
+    )
+    if bound.rowcount != 1:  # у ребёнка уже есть родитель: чужого не перепривязываем
+        db.rollback()
+        raise HTTPException(409, "already_linked")
+    db.commit()
+    child = db.get(Child, child_id)
+    return {"child": {"id": child.id, "nick": child.nick}}

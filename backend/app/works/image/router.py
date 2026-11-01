@@ -8,10 +8,11 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.accounts import coins
+from app.accounts.adults import has_adult
 from app.accounts.deps import current_child
 from app.accounts.models import Child
 from app.accounts.security import COOKIE, read_session
+from app.accounts.wallet import WalletUnavailable, balance_of
 from app.config import get_settings
 from app.db import get_session
 from app.moderation import HeldItem, register
@@ -30,7 +31,7 @@ class NewWork(BaseModel):
     request_id: str = Field(min_length=8, max_length=64)
 
 
-def _view(w: Work) -> dict:
+def _view(w: Work, adult_notified: bool = True) -> dict:
     return {
         "id": w.id,
         "kind": w.kind,
@@ -40,6 +41,8 @@ def _view(w: Work) -> dict:
         "rewrite_text": w.rewrite_text,
         "image_url": f"/api/works/{w.id}/image" if w.status == "ready" else None,
         "created_at": w.created_at.isoformat(),
+        # false: у ребёнка нет ни родителя, ни класса, сигнал пока некому увидеть (open-questions №14)
+        "adult_notified": adult_notified,
     }
 
 
@@ -61,7 +64,11 @@ def create_work(
     existing = db.scalar(select(Work).where(Work.child_id == c.id, Work.request_id == body.request_id))
     if existing:
         return {"id": existing.id, "status": existing.status}
-    if coins.balance(db, c.id) < get_settings().IMAGE_PRICE:
+    try:
+        bal = balance_of(db, c)
+    except WalletUnavailable:
+        raise HTTPException(503, "platform_unavailable") from None  # монеты не тронуты
+    if bal < get_settings().IMAGE_PRICE:
         raise HTTPException(402, "not_enough_coins")
     text = (body.text or "").strip() or None
     work = Work(child_id=c.id, template_id=body.template_id, child_text=text, request_id=body.request_id)
@@ -82,7 +89,8 @@ def my_works(c: Annotated[Child, Depends(current_child)], db: Db):
     rows = db.scalars(
         select(Work).where(Work.child_id == c.id).order_by(Work.id.desc()).limit(100)
     )
-    return [_view(w) for w in rows]
+    adult = has_adult(db, c)
+    return [_view(w, adult) for w in rows]
 
 
 def _own(db: Session, c: Child, work_id: int) -> Work:
@@ -94,7 +102,7 @@ def _own(db: Session, c: Child, work_id: int) -> Work:
 
 @router.get("/works/{work_id}")
 def get_work(work_id: int, c: Annotated[Child, Depends(current_child)], db: Db):
-    return _view(_own(db, c, work_id))
+    return _view(_own(db, c, work_id), has_adult(db, c))
 
 
 @router.get("/works/{work_id}/image")
@@ -135,7 +143,7 @@ def accept_work(
     db.commit()
     if res.rowcount == 1:  # текст уже проверен: повторно не проверяем
         bg.add_task(pipeline.run, work_id, True)
-    return _view(_own(db, c, work_id))
+    return _view(_own(db, c, work_id), has_adult(db, c))
 
 
 @router.post("/works/{work_id}/decline")
@@ -148,7 +156,7 @@ def decline_work(work_id: int, c: Annotated[Child, Depends(current_child)], db: 
         .values(status="refused")
     )
     db.commit()
-    return _view(_own(db, c, work_id))
+    return _view(_own(db, c, work_id), has_adult(db, c))
 
 
 # ---- решения взрослого из «Задержано» (#9) приходят сюда через реестр ----

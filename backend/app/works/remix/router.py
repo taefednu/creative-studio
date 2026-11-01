@@ -9,9 +9,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.accounts import coins
+from app.accounts.adults import child_with_adult
 from app.accounts.deps import current_child
 from app.accounts.models import Child
+from app.accounts.wallet import WalletUnavailable, balance_of
 from app.config import get_settings
 from app.db import get_session
 from app.feed import service
@@ -40,7 +41,7 @@ def remix(
     post_id: int,
     body: NewRemix,
     bg: BackgroundTasks,
-    c: Annotated[Child, Depends(current_child)],
+    c: Annotated[Child, Depends(child_with_adult)],
     db: Db,
 ):
     # двойной клик: тот же request_id — та же работа, второй генерации и второго списания нет
@@ -70,7 +71,11 @@ def remix(
         raise HTTPException(422, "bad_template")
     if tid is None and text is None:
         raise HTTPException(422, "template_or_text_required")
-    if coins.balance(db, c.id) < get_settings().IMAGE_PRICE:
+    try:
+        bal = balance_of(db, c)
+    except WalletUnavailable:
+        raise HTTPException(503, "platform_unavailable") from None
+    if bal < get_settings().IMAGE_PRICE:
         raise HTTPException(402, "not_enough_coins")
     work = Work(
         child_id=c.id,

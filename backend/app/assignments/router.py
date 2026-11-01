@@ -17,6 +17,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.accounts.adults import AdultChild
 from app.accounts.deps import current_child, current_teacher
 from app.accounts.models import Child, Teacher
 from app.accounts.security import COOKIE
@@ -258,7 +259,7 @@ def _result(db: Session, s: Submission) -> dict:
 
 
 @router.post("/assignments/{assignment_id}/submit")
-def submit(assignment_id: int, body: NewSubmission, c: ChildDep, db: Db):
+def submit(assignment_id: int, body: NewSubmission, c: AdultChild, db: Db):
     a = db.get(Assignment, assignment_id)
     if a is None or a.status != "published" or service.class_of(db, c.id) != a.class_id:
         raise HTTPException(404, "not_found")
