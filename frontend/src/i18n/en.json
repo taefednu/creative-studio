@@ -3,9 +3,87 @@
   "nav": { "feed": "Feed", "create": "Create", "tasks": "Tasks", "mine": "My works" },
   "lang": { "label": "Language" },
   "pages": {
-    "feed": "Your class feed will appear here",
-    "create": "This is where you will create pictures",
-    "tasks": "Tasks from your teacher will appear here",
-    "mine": "Your works will appear here"
+    "feed": "Your class feed will be here",
+    "create": "You will make pictures here",
+    "tasks": "Your teacher's tasks will be here",
+    "mine": "Your works will be here"
+  },
+  "auth": {
+    "roles": { "child": "I'm a kid", "parent": "I'm a parent", "teacher": "I'm a teacher" },
+    "nick": "Your nickname",
+    "picturePassword": "Picture password: tap 3 in order",
+    "picture": "Picture",
+    "clear": "Clear",
+    "login": "Sign in",
+    "register": "Sign up",
+    "toRegister": "No account? Sign up",
+    "toLogin": "Already have an account? Sign in",
+    "email": "Email",
+    "password": "Password (8+ characters)",
+    "logout": "Sign out",
+    "qrHelp": "Can't sign in? Ask a grown-up for a QR code",
+    "or": "or",
+    "mentorium": "Sign in with Mentorium",
+    "soon": "soon",
+    "coinsLine": "Earn coins in lessons: draw for free",
+    "classHint": "Have a class code? Enter it after signing in"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "validation": "Please check that everything is filled in correctly. Password needs 8+ characters.",
+    "unauthorized": "Please sign in again.",
+    "bad_credentials": "Could not sign in. Check your nickname and pictures, or ask a grown-up for a QR code.",
+    "email_taken": "This email is already taken.",
+    "bad_email": "This email looks wrong.",
+    "nick_format": "Nickname: 2 to 20 letters and digits, no spaces.",
+    "nick_taken": "This nickname is taken. Pick another one.",
+    "nick_rejected": "This nickname will not work. It must not contain a real name, surname, school or contacts. Make up a pretend name.",
+    "bad_code": "No class with this code. Check it and try again.",
+    "too_many_attempts": "Too many tries. Wait 15 minutes or ask your teacher.",
+    "already_in_class": "You are already in a class.",
+    "bad_token": "This QR code does not work."
+  },
+  "parent": {
+    "title": "Parent dashboard",
+    "children": "My children",
+    "noChildren": "No profiles yet. Add your first child.",
+    "addChild": "Add a child",
+    "nickHint": "A made-up name: no surname, school or contacts.",
+    "age": "Age",
+    "lang": "Language",
+    "create": "Create profile",
+    "locked": "Picture sign-in is closed for 15 minutes",
+    "qrButton": "Sign-in QR",
+    "notifications": "Notifications",
+    "noNotifications": "Nothing yet.",
+    "markRead": "Mark as read",
+    "notif": {
+      "login_locked": "{{nick}}: 5 wrong tries, picture sign-in is closed for 15 minutes."
+    }
+  },
+  "teacher": {
+    "title": "Teacher dashboard",
+    "classes": "My classes",
+    "noClasses": "No classes yet.",
+    "newClass": "Create a class",
+    "className": "Class name",
+    "create": "Create",
+    "code": "Class code",
+    "children": "Class members",
+    "noChildren": "Nobody has joined yet."
+  },
+  "child": {
+    "coins": "Studio coins",
+    "classCode": "Class code",
+    "join": "Join",
+    "myClass": "Class: {{name}}",
+    "moreCoins": "More coins for lessons: sign in with Mentorium"
+  },
+  "qr": {
+    "for": "Sign-in for {{nick}}",
+    "hint": "One use only, valid for 5 minutes.",
+    "signingIn": "Signing in…",
+    "failed": "This QR code does not work: it is single-use and lasts 5 minutes. Ask a grown-up for a new one.",
+    "toLogin": "Back to sign in"
   }
 }

@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.accounts.router import router as accounts_router
 from app.config import get_settings
 from app.db import init_db
 
@@ -14,6 +15,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Mentorium Creative Studio", lifespan=lifespan)
+app.include_router(accounts_router)
 
 
 @app.get("/api/health")

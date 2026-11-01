@@ -7,5 +7,83 @@
     "create": "Bu yerda sen rasmlar yaratasan",
     "tasks": "Bu yerda o‘qituvchining topshiriqlari bo‘ladi",
     "mine": "Bu yerda sening ishlaring bo‘ladi"
+  },
+  "auth": {
+    "roles": { "child": "Men bolaman", "parent": "Men ota-onaman", "teacher": "Men o‘qituvchiman" },
+    "nick": "Sening nikning",
+    "picturePassword": "Rasmli parol: 3 ta rasmni ketma-ket tanla",
+    "picture": "Rasm",
+    "clear": "Tozalash",
+    "login": "Kirish",
+    "register": "Ro‘yxatdan o‘tish",
+    "toRegister": "Akkaunting yo‘qmi? Ro‘yxatdan o‘t",
+    "toLogin": "Akkaunting bormi? Kirish",
+    "email": "Elektron pochta",
+    "password": "Parol (kamida 8 belgi)",
+    "logout": "Chiqish",
+    "qrHelp": "Kira olmayapsanmi? Kattalardan QR-kod so‘ra",
+    "or": "yoki",
+    "mentorium": "Mentorium orqali kirish",
+    "soon": "tez orada",
+    "coinsLine": "Darslar uchun tangalar: bepul chiz",
+    "classHint": "Sinf kodi bormi? Kirgandan keyin kiritasan"
+  },
+  "errors": {
+    "generic": "Nimadir xato ketdi. Yana bir bor urinib ko‘r.",
+    "validation": "Hammasi to‘g‘ri to‘ldirilganini tekshir. Parol kamida 8 belgi bo‘lsin.",
+    "unauthorized": "Qaytadan kirish kerak.",
+    "bad_credentials": "Kirib bo‘lmadi. Nik va rasmlarni tekshir yoki kattalardan QR-kod so‘ra.",
+    "email_taken": "Bu pochta band.",
+    "bad_email": "Pochtada xato bor shekilli.",
+    "nick_format": "Nik: 2 tadan 20 tagacha harf va raqam, probelsiz.",
+    "nick_taken": "Bunday nik bor. Boshqasini o‘yla.",
+    "nick_rejected": "Bu nik to‘g‘ri kelmaydi. Unda ism, familiya, maktab yoki aloqa ma‘lumotlari bo‘lmasin. O‘ylab topilgan ism tanla.",
+    "bad_code": "Bunday sinf kodi yo‘q. Tekshirib, qayta urinib ko‘r.",
+    "too_many_attempts": "Urinishlar juda ko‘p. 15 daqiqa kut yoki o‘qituvchidan so‘ra.",
+    "already_in_class": "Sen allaqachon sinfdasan.",
+    "bad_token": "Bu QR-kod yaroqsiz."
+  },
+  "parent": {
+    "title": "Ota-ona kabineti",
+    "children": "Mening bolalarim",
+    "noChildren": "Hozircha profil yo‘q. Birinchi bolani qo‘shing.",
+    "addChild": "Bola qo‘shish",
+    "nickHint": "O‘ylab topilgan ism: familiya, maktab va aloqa ma‘lumotlarisiz.",
+    "age": "Yoshi",
+    "lang": "Til",
+    "create": "Profil yaratish",
+    "locked": "Rasm bilan kirish 15 daqiqaga yopilgan",
+    "qrButton": "Kirish uchun QR",
+    "notifications": "Xabarnomalar",
+    "noNotifications": "Hozircha hech narsa yo‘q.",
+    "markRead": "O‘qilgan deb belgilash",
+    "notif": {
+      "login_locked": "{{nick}}: 5 ta noto‘g‘ri urinish, rasm bilan kirish 15 daqiqaga yopildi."
+    }
+  },
+  "teacher": {
+    "title": "O‘qituvchi kabineti",
+    "classes": "Mening sinflarim",
+    "noClasses": "Hozircha sinf yo‘q.",
+    "newClass": "Sinf yaratish",
+    "className": "Sinf nomi",
+    "create": "Yaratish",
+    "code": "Sinf kodi",
+    "children": "Sinf o‘quvchilari",
+    "noChildren": "Hali hech kim qo‘shilmagan."
+  },
+  "child": {
+    "coins": "Studiya tangalari",
+    "classCode": "Sinf kodi",
+    "join": "Qo‘shilish",
+    "myClass": "Sinf: {{name}}",
+    "moreCoins": "Darslar uchun ko‘proq tanga: Mentorium orqali kir"
+  },
+  "qr": {
+    "for": "{{nick}} uchun kirish",
+    "hint": "Bir marta ishlaydi, 5 daqiqa amal qiladi.",
+    "signingIn": "Kiryapmiz…",
+    "failed": "Bu QR-kod yaroqsiz: u bir martalik va 5 daqiqa amal qiladi. Kattalardan yangisini so‘ra.",
+    "toLogin": "Kirish sahifasiga"
   }
 }
