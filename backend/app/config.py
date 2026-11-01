@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     META_BASE_URL: str = "https://api.meta.ai/v1"
     DATABASE_URL: str = "sqlite:///data/studio.db"
     # Проверка безопасности (spec §5). Подбираются только на dev-части evals.
-    SAFETY_TIMEOUT: float = 8.0
+    SAFETY_TIMEOUT: float = 20.0
     ALLOW_THRESHOLD: float = 0.8  # «категории нет» принимаем, только если уверенность не ниже
     PRESENT_MIN: float = 0.5  # «категория есть» ниже этого — серая зона, hold
     SELF_HARM_MIN: float = 0.2  # self_harm выше этого — support (лучше лишний сигнал)
