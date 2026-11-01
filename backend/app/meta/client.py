@@ -76,6 +76,7 @@ class MetaClient:
         text_model: str,
         image_model: str,
         sam_model: str,
+        asr_model: str = "",
         sleep: Callable[[float], None] = time.sleep,
     ):
         self._sdk = OpenAI(base_url=base_url, api_key=api_key, max_retries=0)
@@ -84,6 +85,7 @@ class MetaClient:
         self.text_model = text_model
         self.image_model = image_model
         self.sam_model = sam_model
+        self.asr_model = asr_model
         self._sleep = sleep
 
     def _call(self, fn: Callable[[], Any]) -> Any:
@@ -132,6 +134,56 @@ class MetaClient:
         if not b64:
             raise ModelError("empty image response")
         return base64.b64decode(b64)
+
+    def edit_image(self, image: bytes, prompt: str, user: str, timeout: float) -> bytes:
+        """POST /v1/images/edits: multipart, поле image (проверено живым вызовом)."""
+        mime = _sniff_mime(image)
+        r = self._call(
+            lambda: self._sdk.images.edit(
+                model=self.image_model,
+                image=("source." + mime.split("/")[1], image, mime),
+                prompt=prompt,
+                n=1,
+                size="1024x1024",
+                response_format="b64_json",
+                user=user,
+                timeout=timeout,
+            )
+        )
+        b64 = r.data[0].b64_json if r.data else None
+        if not b64:
+            raise ModelError("empty image response")
+        return base64.b64decode(b64)
+
+    def transcribe(self, wav: bytes, timeout: float, languages: list[str] | None = None) -> str:
+        """POST /v1/asr/transcribe: multipart из частей request (JSON) и audio (WAV mono 16 бит,
+        16 или 24 кГц). Формат снят живым вызовом и докой dev.meta.ai/docs/speech-to-text."""
+        req: dict[str, Any] = {
+            "model": self.asr_model,
+            "audioEncoding": "WAV",
+            "mode": "PUSH_TO_TALK",
+        }
+        if languages:
+            req["languageBias"] = languages
+
+        def run() -> str:
+            resp = httpx.post(
+                f"{self._base_url}/asr/transcribe",
+                headers={"Authorization": f"Bearer {self._api_key}", "Accept": "application/json"},
+                files={
+                    "request": (None, json.dumps(req), "application/json"),
+                    "audio": ("audio.wav", wav, "audio/wav"),
+                },
+                timeout=timeout,
+            )
+            if resp.status_code >= 400:
+                raise _HttpStatus(resp)
+            text = resp.json().get("transcript")
+            if not isinstance(text, str):
+                raise ModelError("asr: no transcript")
+            return text
+
+        return self._call(run)
 
     def sam(self, image_bytes: bytes, phrase: str, timeout: float) -> str:
         data_url = f"data:{_sniff_mime(image_bytes)};base64," + base64.b64encode(image_bytes).decode()
@@ -195,4 +247,6 @@ def client_from_settings() -> MetaClient:
     from app.config import get_settings
 
     s = get_settings()
-    return MetaClient(s.MODEL_API_KEY, s.META_BASE_URL, s.MODEL_TEXT, s.MODEL_IMAGE, s.MODEL_SAM)
+    return MetaClient(
+        s.MODEL_API_KEY, s.META_BASE_URL, s.MODEL_TEXT, s.MODEL_IMAGE, s.MODEL_SAM, s.MODEL_ASR
+    )

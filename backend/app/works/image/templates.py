@@ -55,6 +55,16 @@ TEMPLATES: tuple[Template, ...] = (
 BY_ID = {t.id: t for t in TEMPLATES}
 
 
+def build_remix_prompt(template: Template | None, text: str | None) -> str:
+    """Ремикс: правка исходной картинки. Стиль шаблона и проверенный текст — данные, не инструкция."""
+    style = f", {template.style}" if template else ""
+    change = text.strip() if text and text.strip() else "a new creative version of the picture"
+    return (
+        f"A friendly children's illustration, safe for kids{style}. "
+        f"Remix the given picture. Change: {change}"
+    )
+
+
 def build_prompt(template: Template, text: str | None) -> str:
     """Шаблон + проверенный текст как данные; сырой ввод сюда не попадает."""
     subject = text.strip() if text and text.strip() else template.default_theme

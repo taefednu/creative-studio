@@ -18,6 +18,7 @@ from app.feed.service import Viewer
 from app.moderation import hold
 from app.moderation.models import HeldItem
 from app.works.image.models import Work
+from app.works.remix.source import alive, hide_remixes, open_for_remix
 
 router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
@@ -62,6 +63,11 @@ def publish(body: NewPost, c: Annotated[Child, Depends(current_child)], db: Db):
         raise HTTPException(404, "not_found")
     if w.status != "ready":
         raise HTTPException(409, "work_not_ready")
+    if w.remix_of_post_id is not None:
+        if body.audience != "class":  # ремикс — работа одноклассника, за пределы класса не уходит
+            raise HTTPException(409, "remix_class_only")
+        if not alive(db, w.remix_of_post_id):  # исходник скрыли или удалили, пока ремикс ждал
+            raise HTTPException(409, "remix_source_gone")
     class_id = service.class_of(db, c.id)
     if body.audience == "class" and class_id is None:
         raise HTTPException(409, "no_class")
@@ -203,6 +209,20 @@ def _views(db: Session, v: Viewer, posts: list[Post]) -> list[dict]:
             select(Work.id, Work.template_id).where(Work.id.in_({p.work_id for p in posts}))
         ).all()
     )
+    # ремикс: «ремикс работы @ник» — ник автора исходного поста, id поста нужен фронту для ссылки
+    origin = dict(
+        db.execute(
+            select(Work.id, Work.remix_of_post_id).where(
+                Work.id.in_({p.work_id for p in posts}), Work.remix_of_post_id.is_not(None)
+            )
+        ).all()
+    )
+    # ник исходного автора видит только тот, кто видит сам исходный пост (иначе ремикс выдал бы ник)
+    origin_nick = {}
+    for op in db.scalars(select(Post).where(Post.id.in_(set(origin.values())))):
+        if service.access(db, v, op) is not None:
+            origin_nick[op.id] = db.scalar(select(Child.nick).where(Child.id == op.child_id))
+    my_class = service.class_of(db, v.id) if v.role == "child" else None
     out = []
     for p in posts:
         is_author = v.role == "child" and v.id == p.child_id
@@ -214,6 +234,17 @@ def _views(db: Session, v: Viewer, posts: list[Post]) -> list[dict]:
                 "image_url": f"/api/posts/{p.id}/image",
                 "template_id": tpl.get(p.work_id),
                 "work_kind": p.work_kind,
+                "remix_of": (
+                    {"post_id": origin[p.work_id], "nick": origin_nick[origin[p.work_id]]}
+                    if origin.get(p.work_id) in origin_nick
+                    else None
+                ),
+                "remix_allowed": p.remix_allowed,
+                "can_remix": v.role == "child"
+                and not is_author
+                and my_class is not None
+                and p.class_id == my_class
+                and open_for_remix(p),
                 "audience": p.audience,
                 "status": p.status,
                 "best": p.best,
@@ -301,6 +332,8 @@ def delete_post(post_id: int, db: Db, v: V):
         raise HTTPException(403, "forbidden")  # из «Лучшего» чужой пост взрослый не скрывает
     new = "deleted" if is_author else "hidden"
     db.execute(update(Post).where(Post.id == p.id).values(status=new))
+    if new == "hidden":  # взрослый скрыл исходник: ремиксы с него тоже скрыты, одной транзакцией
+        hide_remixes(db, p.id)
     db.commit()
     return {"id": p.id, "status": new}
 

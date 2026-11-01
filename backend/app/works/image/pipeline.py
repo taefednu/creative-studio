@@ -20,7 +20,8 @@ from app.config import get_settings
 from app.meta.client import ContentPolicyViolation
 from app.moderation import hold
 from app.works.image.models import Work
-from app.works.image.templates import BY_ID, build_prompt
+from app.works.image.templates import BY_ID, build_prompt, build_remix_prompt
+from app.works.remix import source as remix_source
 
 log = logging.getLogger("app.works.image")
 
@@ -47,6 +48,15 @@ def generate_image(prompt: str, user: str, timeout: float) -> bytes:
 
         _client_cache = client_from_settings()
     return _client_cache.generate_image(prompt, user, timeout)
+
+
+def edit_image(source: bytes, prompt: str, user: str, timeout: float) -> bytes:
+    global _client_cache
+    if _client_cache is None:
+        from app.meta.client import client_from_settings
+
+        _client_cache = client_from_settings()
+    return _client_cache.edit_image(source, prompt, user, timeout)
 
 
 def spawn(work_id: int, skip_text_check: bool = False) -> None:
@@ -78,6 +88,14 @@ def _refund(db: Session, work: Work) -> None:
 
 def refund_once(db: Session, work: Work) -> None:
     _refund(db, work)
+    db.commit()
+
+
+def fail_remix(db: Session, work: Work) -> None:
+    """Исходник ремикса пропал: работа failed, монета возвращается (если списана и не возвращена)."""
+    _refund(db, work)
+    work.reason_codes = ["remix_source_gone"]
+    work.status = "failed"
     db.commit()
 
 
@@ -143,7 +161,7 @@ def _run(db: Session, work: Work, skip_text_check: bool) -> None:
     s = get_settings()
     child = db.get(Child, work.child_id)
     assert child is not None
-    template = BY_ID[work.template_id]
+    template = BY_ID.get(work.template_id)  # у ремикса без шаблона его нет
     text = work.child_text
 
     if skip_text_check:  # текст уже проверен кодом или одобрен взрослым
@@ -181,6 +199,14 @@ def _run(db: Session, work: Work, skip_text_check: bool) -> None:
             _hold_prompt(db, work, codes, urgent=bool(getattr(d, "urgent", False)))
             return
 
+    source = None
+    if work.remix_of_post_id is not None:
+        # Исходник читаем до списания: пост могли скрыть или запретить ремикс, пока шла проверка.
+        source = remix_source.load(db, work.remix_of_post_id)
+        if source is None:
+            _set(db, work, "failed", ["remix_source_gone"])
+            return
+
     outcome = coins.charge(db, child.id, s.IMAGE_PRICE, "generation", gen_ref(work))
     if outcome != "ok":  # нет монет или это уже списанная попытка: не генерируем
         if outcome == "no_coins":
@@ -188,12 +214,20 @@ def _run(db: Session, work: Work, skip_text_check: bool) -> None:
         else:
             db.rollback()
         return
-    work.safe_prompt = build_prompt(template, text)
+    if source is not None:
+        work.safe_prompt = build_remix_prompt(template, text)
+    else:
+        assert template is not None
+        work.safe_prompt = build_prompt(template, text)
     work.status = "generating"
     db.commit()
 
     try:
-        raw = generate_image(work.safe_prompt, f"child-{child.id}", s.IMAGE_TIMEOUT)
+        user = f"child-{child.id}"
+        if source is not None:
+            raw = edit_image(source, work.safe_prompt, user, s.IMAGE_TIMEOUT)
+        else:
+            raw = generate_image(work.safe_prompt, user, s.IMAGE_TIMEOUT)
         webp = to_webp(raw)
     except ContentPolicyViolation:
         # возврат, запись в очередь и статус — одним коммитом
@@ -229,6 +263,9 @@ def _run(db: Session, work: Work, skip_text_check: bool) -> None:
     except Exception:  # noqa: BLE001
         action, codes, urgent = "hold", ["check_failed"], False
     if action == "allow":
+        if work.remix_of_post_id is not None and not remix_source.alive(db, work.remix_of_post_id):
+            fail_remix(db, work)  # исходник скрыли за время генерации: ребёнку не показываем
+            return
         _set(db, work, "ready")
         return
     _refund(db, work)

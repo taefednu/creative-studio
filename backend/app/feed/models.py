@@ -25,6 +25,7 @@ class Post(Base):
     caption: Mapped[str | None] = mapped_column(String(300), nullable=True)  # только проверенная
     status: Mapped[str] = mapped_column(String(10), default="pending", index=True)
     best: Mapped[bool] = mapped_column(default=False, index=True)  # ставит только скрипт команды
+    remix_allowed: Mapped[bool] = mapped_column(default=True, server_default=text("1"))  # автор может выключить
     created_at: Mapped[datetime] = mapped_column(DateTime, default=clock.now)
     # Живой пост один на работу и аудиторию: гонка публикации и «показать в ленте» не даст дубль.
     __table_args__ = (

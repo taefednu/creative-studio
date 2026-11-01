@@ -24,5 +24,7 @@ class Work(Base):
     file_path: Mapped[str | None] = mapped_column(String(300), nullable=True)
     request_id: Mapped[str] = mapped_column(String(64))
     reason_codes: Mapped[list] = mapped_column(JSON, default=list)
+    # Ремикс (#10): пост, из картинки которого сделана работа. Сама картинка не хранится.
+    remix_of_post_id: Mapped[int | None] = mapped_column(ForeignKey("posts.id"), nullable=True)
     attempt: Mapped[int] = mapped_column(default=1)  # новая попытка = новые ref_id списания и возврата
     created_at: Mapped[datetime] = mapped_column(DateTime, default=clock.now)

@@ -71,6 +71,11 @@ def _reject(db: Session, item: HeldItem) -> None:
     if w is None or w.status == "support" or item.urgent:
         return  # срочное (самоповреждение) не становится отказом: ребёнок остаётся на поддержке
     w.status = "refused"
+    from app.works.remix.source import hide_remixes
+
+    # Ремиксы отклонённой загрузки уходят вместе с ней: в них та же картинка.
+    for post_id in db.scalars(select(Post.id).where(Post.work_id == w.id)).all():
+        hide_remixes(db, post_id)
     db.execute(
         update(Post)
         .where(Post.work_id == w.id, Post.status.in_(("pending", "held", "published")))

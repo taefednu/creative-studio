@@ -13,6 +13,7 @@ from app.accounts.models import Child, ClassMembership, Classroom, Parent, Teach
 from app.accounts.security import read_session
 from app.feed.models import Comment, Post
 from app.moderation import HeldItem, hold, register
+from app.works.remix.source import hide_remixes
 
 OPEN_STATUSES = ("pending", "held")  # не опубликовано: видят автор и проверяющий взрослый
 LIVE_POST = ("pending", "published", "held")
@@ -137,6 +138,7 @@ def _reject_post(db: Session, item: HeldItem) -> None:
     # Срочное закрыто просмотром: это не отказ, ребёнок остаётся на тёплом ответе.
     if p is not None and p.status in OPEN_STATUSES and not item.urgent:
         p.status = "rejected"
+        hide_remixes(db, p.id)
         db.commit()
 
 

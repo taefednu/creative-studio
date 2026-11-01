@@ -1,7 +1,13 @@
 from functools import lru_cache
 
-from pydantic import Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class CoinPack(BaseModel):
+    id: str
+    coins: int
+    price_usd: float  # черновые цифры (spec §3); платёжных полей здесь нет и не будет
 
 
 class Settings(BaseSettings):
@@ -29,6 +35,16 @@ class Settings(BaseSettings):
     UPLOAD_MAX_SIDE: int = 1600  # длинная сторона после перекодирования
     SAM_TIMEOUT: float = 60.0
     BLUR_PAD: float = 0.15  # запас вокруг бокса, доля большей стороны
+    # Голос (#16): аудио только WAV mono 16 бит, 16 или 24 кГц (требование ручки Meta ASR).
+    VOICE_MAX_BYTES: int = 2_000_000
+    VOICE_MAX_SECONDS: float = 30.0
+    VOICE_TIMEOUT: float = 30.0
+    # Тарифы (#11): черновые пакеты, покупка пока недоступна.
+    COIN_PACKS: list[CoinPack] = [
+        CoinPack(id="small", coins=50, price_usd=2.0),
+        CoinPack(id="medium", coins=150, price_usd=5.0),
+        CoinPack(id="large", coins=400, price_usd=10.0),
+    ]
     # Аккаунты (#4). Секрет подписи сессий — только из env.
     SESSION_SECRET: str = Field(min_length=32)  # пустой ключ = любой подделает cookie
     SESSION_DAYS: int = 30

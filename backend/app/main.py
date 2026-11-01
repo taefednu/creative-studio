@@ -11,8 +11,11 @@ from app.db import init_db
 from app.feed import models as _feed_models  # noqa: F401  (таблицы)
 from app.feed.router import router as feed_router
 from app.moderation.router import router as moderation_router
+from app.parent.router import router as parent_router
+from app.voice.router import router as voice_router
 from app.works.image import pipeline
 from app.works.image.router import router as image_router
+from app.works.remix.router import router as remix_router
 from app.works.upload.router import router as upload_router
 
 
@@ -31,6 +34,9 @@ app.include_router(upload_router)
 app.include_router(feed_router)
 app.include_router(moderation_router)
 app.include_router(assignments_router)
+app.include_router(voice_router)
+app.include_router(remix_router)
+app.include_router(parent_router)
 
 
 @app.get("/api/health")
@@ -44,10 +50,17 @@ MULTIPART_SLACK = 64 * 1024  # поля формы и границы повер�
 @app.middleware("http")
 async def limit_upload_body(request: Request, call_next):
     """Тело загрузки не читаем, если оно заведомо больше лимита: проверка размера до чтения."""
-    if request.method == "POST" and request.url.path == "/api/works/upload":
+    limit, detail = None, ""
+    if request.method == "POST":
+        if request.url.path == "/api/works/upload":
+            limit, detail = get_settings().UPLOAD_MAX_BYTES, "file_too_large"
+        elif request.url.path == "/api/voice/transcribe":
+            limit, detail = get_settings().VOICE_MAX_BYTES, "audio_too_large"
+    if limit is not None:
         length = request.headers.get("content-length")
-        if length is None:
+        # chunked: длины нет или она врёт, лимит не проверить до чтения тела
+        if length is None or "transfer-encoding" in request.headers:
             return JSONResponse({"detail": "length_required"}, status_code=411)
-        if not length.isdigit() or int(length) > get_settings().UPLOAD_MAX_BYTES + MULTIPART_SLACK:
-            return JSONResponse({"detail": "file_too_large"}, status_code=413)
+        if not length.isdigit() or int(length) > limit + MULTIPART_SLACK:
+            return JSONResponse({"detail": detail}, status_code=413)
     return await call_next(request)

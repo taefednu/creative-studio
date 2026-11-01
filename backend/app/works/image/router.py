@@ -18,6 +18,7 @@ from app.moderation import HeldItem, register
 from app.works.image import pipeline
 from app.works.image.models import Work
 from app.works.image.templates import BY_ID, TEMPLATES
+from app.works.remix import source as remix_source
 
 router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
@@ -159,6 +160,9 @@ def _approve(db: Session, item: HeldItem) -> None:
     if w is None or w.status == "support":
         return
     if item.item_type == "image":
+        if w.remix_of_post_id is not None and not remix_source.alive(db, w.remix_of_post_id):
+            pipeline.fail_remix(db, w)  # исходник скрыли, пока ремикс ждал взрослого
+            return
         w.status = "ready"  # монета уже вернулась при задержке; взрослый одобрил показ
         db.commit()
     else:  # prompt: текст одобрен — рисуем заново, новая попытка = новое списание, в фоне
