@@ -5,6 +5,8 @@ from fastapi import FastAPI
 from app.accounts.router import router as accounts_router
 from app.config import get_settings
 from app.db import init_db
+from app.feed import models as _feed_models  # noqa: F401  (таблицы)
+from app.feed.router import router as feed_router
 from app.works.image import pipeline
 from app.works.image.router import router as image_router
 
@@ -20,6 +22,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Mentorium Creative Studio", lifespan=lifespan)
 app.include_router(accounts_router)
 app.include_router(image_router)
+app.include_router(feed_router)
 
 
 @app.get("/api/health")

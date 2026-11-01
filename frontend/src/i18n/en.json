@@ -43,7 +43,14 @@
     "already_in_class": "You are already in a class.",
     "bad_token": "This QR code does not work.",
     "not_enough_coins": "You are out of coins. There will be more tomorrow!",
-    "bad_template": "Could not send that. Please try again."
+    "bad_template": "Could not send that. Please try again.",
+    "work_not_ready": "This picture is not ready yet.",
+    "no_class": "You are not in a class yet: enter a class code first.",
+    "no_parent": "The family feed needs a grown-up on your profile.",
+    "comments_closed": "Only reactions are possible here.",
+    "not_published": "This post is still waiting for a grown-up.",
+    "already_decided": "This is already decided.",
+    "empty": "Write something first."
   },
   "create": {
     "title": "What shall we draw today?",
@@ -81,6 +88,63 @@
     "personal_info": "Please do not write real names, addresses or phone numbers. Invent a hero!",
     "off_platform_contact": "We don't need links or contacts here. Shall we draw a fairy tale?",
     "prompt_injection": "Just describe the picture: who is there and what are they doing?"
+  },
+  "feed": {
+    "title": {
+      "class": "Class feed",
+      "family": "Family feed",
+      "best": "Featured"
+    },
+    "tab": {
+      "class": "My class",
+      "family": "Family",
+      "best": "Featured"
+    },
+    "empty": "Nothing here yet. Share your picture!",
+    "more": "Show more",
+    "close": "Close",
+    "about": "About",
+    "comments": "Comments",
+    "noComments": "No comments yet. Write the first one!",
+    "idea": "Idea",
+    "style": "Style",
+    "audience": {
+      "class": "For the class",
+      "family": "For the family"
+    },
+    "reaction": {
+      "star": "Star",
+      "heart": "Heart",
+      "laugh": "Funny",
+      "wow": "Wow"
+    },
+    "drawSame": "Draw like this",
+    "delete": "Delete my post",
+    "hide": "Hide post",
+    "confirmDelete": "Remove this post from the feed?",
+    "heldMark": "Only you can see this: the post is waiting for a grown-up.",
+    "commentHeld": "Sent to a grown-up to look at. Only you can see it for now.",
+    "commentSentToAdult": "Sent to a grown-up to look at. Once they have, your comment will appear.",
+    "commentPlaceholder": "Write a kind comment",
+    "send": "Send",
+    "kinderTitle": "Say it kinder?",
+    "kinderUse": "Send this",
+    "kinderEdit": "Edit",
+    "kinderCancel": "Cancel",
+    "classFeed": "Class feed",
+    "familyFeed": "Family feed",
+    "back": "Back to the cabinet"
+  },
+  "publish": {
+    "button": "Share",
+    "toClass": "To the class",
+    "toFamily": "To the family",
+    "caption": "Caption (optional)",
+    "send": "Share",
+    "done": "Shared!",
+    "held": "Sent to a grown-up to look at. You will know as soon as they have.",
+    "support": "We are here. You are not alone: tell a grown-up you trust. We have already told your grown-ups.",
+    "noAudience": "To share, join a class or ask a grown-up to set up your profile."
   },
   "templates": {
     "superhero": "I'm a superhero",

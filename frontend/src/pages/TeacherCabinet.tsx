@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { api } from '../api'
 import CabinetHeader from '../components/CabinetHeader'
 import ErrorText, { errorKey } from '../components/ErrorText'
@@ -61,6 +62,13 @@ export default function TeacherCabinet() {
               <p data-testid="class-code" className="text-4xl font-extrabold tracking-widest text-heading">
                 {r.code}
               </p>
+              <Link
+                to={`/teacher/feed/${r.id}`}
+                data-testid={`feed-link-${r.name}`}
+                className="mr-2 mt-2 inline-block rounded-full bg-primary px-4 py-2 text-sm font-extrabold text-primary-fg"
+              >
+                {t('feed.classFeed')}
+              </Link>
               <button
                 type="button"
                 data-testid={`open-${r.name}`}

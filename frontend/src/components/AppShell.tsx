@@ -24,7 +24,13 @@ type Me = {
   has_parent: boolean
 }
 
-export type ShellContext = { reloadMe: () => void; coins: number | null }
+export type ShellContext = {
+  reloadMe: () => void
+  coins: number | null
+  cls: { id: number; name: string } | null
+  hasParent: boolean
+  ready: boolean
+}
 
 const loadMe = () => api<Me>('/api/child/me')
 
@@ -54,7 +60,13 @@ export default function AppShell() {
     navigate('/login')
   }
 
-  const ctx: ShellContext = { reloadMe: load, coins: me ? me.coins : null }
+  const ctx: ShellContext = {
+    reloadMe: load,
+    coins: me ? me.coins : null,
+    cls: me?.class ?? null,
+    hasParent: me?.has_parent ?? false,
+    ready: me !== null,
+  }
 
   return (
     <div className="min-h-screen bg-bg pb-24 md:pb-6">

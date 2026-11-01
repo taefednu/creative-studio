@@ -43,7 +43,14 @@
     "already_in_class": "Sen allaqachon sinfdasan.",
     "bad_token": "Bu QR-kod yaroqsiz.",
     "not_enough_coins": "Tangalaring tugadi. Ertaga yana bo‘ladi!",
-    "bad_template": "Yuborib bo‘lmadi. Yana urinib ko‘r."
+    "bad_template": "Yuborib bo‘lmadi. Yana urinib ko‘r.",
+    "work_not_ready": "Bu rasm hali tayyor emas.",
+    "no_class": "Sen hali sinfda emassan: avval sinf kodini kiritgin.",
+    "no_parent": "Oila lentasi uchun profilingda kattalar bo'lishi kerak.",
+    "comments_closed": "Bu yerda faqat reaksiya bildirish mumkin.",
+    "not_published": "Bu post hali kattalarni kutmoqda.",
+    "already_decided": "Bu allaqachon hal qilingan.",
+    "empty": "Avval biror narsa yoz."
   },
   "create": {
     "title": "Bugun nima chizamiz?",
@@ -81,6 +88,63 @@
     "personal_info": "Haqiqiy ism, manzil va telefon raqamini yozma. O‘z qahramoningni o‘ylab top!",
     "off_platform_contact": "Bu yerda havola va aloqa kerak emas. Ertak chizamizmi?",
     "prompt_injection": "Rasmni oddiygina tasvirla: u yerda kim va nima qilyapti?"
+  },
+  "feed": {
+    "title": {
+      "class": "Sinf lentasi",
+      "family": "Oila lentasi",
+      "best": "Eng yaxshilari"
+    },
+    "tab": {
+      "class": "Mening sinfim",
+      "family": "Oila",
+      "best": "Eng yaxshilari"
+    },
+    "empty": "Hozircha bu yerda hech narsa yo'q. Rasmingni ulash!",
+    "more": "Yana ko'rsatish",
+    "close": "Yopish",
+    "about": "Ish haqida",
+    "comments": "Izohlar",
+    "noComments": "Hozircha izoh yo'q. Birinchisini yoz!",
+    "idea": "G'oya",
+    "style": "Uslub",
+    "audience": {
+      "class": "Sinf uchun",
+      "family": "Oila uchun"
+    },
+    "reaction": {
+      "star": "Yulduz",
+      "heart": "Yurak",
+      "laugh": "Kulgili",
+      "wow": "Voy"
+    },
+    "drawSame": "Xuddi shunday chizish",
+    "delete": "Postimni o'chirish",
+    "hide": "Postni yashirish",
+    "confirmDelete": "Bu postni lentadan olib tashlaymizmi?",
+    "heldMark": "Buni faqat sen ko'rasan: post kattalarni kutmoqda.",
+    "commentHeld": "Kattalarga ko'rsatish uchun yuborildi. Hozircha faqat sen ko'rasan.",
+    "commentSentToAdult": "Kattalarga ko'rsatish uchun yuborildi. U ko'rib chiqqach, izoh paydo bo'ladi.",
+    "commentPlaceholder": "Mehribon izoh yoz",
+    "send": "Yuborish",
+    "kinderTitle": "Mehribonroq aytamizmi?",
+    "kinderUse": "Shunday yuborish",
+    "kinderEdit": "O'zgartirish",
+    "kinderCancel": "Bekor qilish",
+    "classFeed": "Sinf lentasi",
+    "familyFeed": "Oila lentasi",
+    "back": "Kabinetga qaytish"
+  },
+  "publish": {
+    "button": "Ulashish",
+    "toClass": "Sinfga",
+    "toFamily": "Oilaga",
+    "caption": "Izoh (yozmasang ham bo'ladi)",
+    "send": "Ulashish",
+    "done": "Ulashildi!",
+    "held": "Kattalarga ko'rsatish uchun yuborildi. U ko'rishi bilan sen bilib olasan.",
+    "support": "Biz yoningdamiz. Sen yolg'iz emassan: ishongan kattangga ayt. Kattalaringga allaqachon xabar berdik.",
+    "noAudience": "Ulashish uchun sinfga qo'shil yoki kattalardan profil yaratishni so'ra."
   },
   "templates": {
     "superhero": "Men superqahramonman",

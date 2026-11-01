@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { api } from '../api'
 import CabinetHeader from '../components/CabinetHeader'
 import Coin from '../components/Coin'
@@ -95,6 +96,13 @@ export default function ParentCabinet() {
             </div>
           ))}
 
+          <Link
+            to="/parent/feed"
+            data-testid="family-feed-link"
+            className="self-start rounded-full bg-primary px-5 py-2 text-sm font-extrabold text-primary-fg"
+          >
+            {t('feed.familyFeed')}
+          </Link>
           <h2 className="mt-4 text-xl font-extrabold text-heading">{t('parent.notifications')}</h2>
           {notes.length === 0 && <p className="text-muted">{t('parent.noNotifications')}</p>}
           {notes.map((n) => (

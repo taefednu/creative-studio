@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
+import PublishBox from '../components/PublishBox'
 import type { Work } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
@@ -31,6 +32,11 @@ export default function MyWorks() {
               </div>
             )}
             <p className="px-3 py-2 text-sm font-extrabold text-heading">{t(`templates.${w.template_id}`)}</p>
+            {w.status === 'ready' && (
+              <div className="px-3 pb-3">
+                <PublishBox workId={w.id} />
+              </div>
+            )}
           </div>
         ))}
       </div>

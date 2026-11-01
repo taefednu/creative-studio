@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { api } from '../api'
 import type { ShellContext } from '../components/AppShell'
 import Coin from '../components/Coin'
 import ErrorText, { errorKey } from '../components/ErrorText'
+import PublishBox from '../components/PublishBox'
 import TeacherTask from '../components/TeacherTask'
 import { POLLING, hintKey } from '../features/works/works'
 import type { TemplateInfo, Work } from '../features/works/works'
@@ -61,14 +62,16 @@ export default function Create() {
   const [tplData] = useLoad(loadTemplates)
   const templates = tplData?.templates
   const price = tplData?.price
-  const [selected, setSelected] = useState<string | null>(null)
+  const [params] = useSearchParams()
+  const [selected, setSelected] = useState<string | null>(params.get('template'))
   const [text, setText] = useState('')
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' })
   const [sending, setSending] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const requestId = useRef<string | null>(null)
 
-  const tpl = selected ?? templates?.[0]?.id ?? null
+  const known = templates?.some((x) => x.id === selected)
+  const tpl = (known ? selected : null) ?? templates?.[0]?.id ?? null
   const workId = phase.kind === 'work' ? phase.work.id : null
   const workStatus = phase.kind === 'work' ? phase.work.status : null
 
@@ -292,6 +295,7 @@ function WorkView({
             {t('create.checkedByAi')}
           </span>
         </div>
+        <div className="mt-4"><PublishBox workId={work.id} /></div>
         <div className="mt-4 grid grid-cols-2 gap-3">
           <button
             type="button"
