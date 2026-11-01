@@ -440,3 +440,12 @@ def test_comment_on_unpublished_or_foreign(w, fake):
     ok = pub_id(w, work=_work(w.a_id, w.tmp))
     assert comment(w.c, ok, "привет").status_code == 404
     assert comment(w.b, ok, "   ").status_code == 422
+
+
+def test_hidden_post_cannot_be_republished(w):
+    work = _work(w.a_id, w.tmp)
+    pid = pub_id(w, work=work)
+    assert w.teacher.delete(f"/api/posts/{pid}").json()["status"] == "hidden"
+    r = w.a.post("/api/posts", json={"work_id": work, "audience": "class"})
+    assert r.status_code == 409 and r.json()["detail"] == "removed_by_adult"
+    assert w.b.get("/api/feed/class").json()["items"] == []

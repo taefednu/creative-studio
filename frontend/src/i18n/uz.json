@@ -45,6 +45,7 @@
     "not_enough_coins": "Tangalaring tugadi. Ertaga yana bo‘ladi!",
     "bad_template": "Yuborib bo‘lmadi. Yana urinib ko‘r.",
     "work_not_ready": "Bu rasm hali tayyor emas.",
+    "removed_by_adult": "Kattalar bu rasmni lentadan olib tashlashdi. Yangisini chizishing mumkin!",
     "no_class": "Sen hali sinfda emassan: avval sinf kodini kiritgin.",
     "no_parent": "Oila lentasi uchun profilingda kattalar bo'lishi kerak.",
     "comments_closed": "Bu yerda faqat reaksiya bildirish mumkin.",

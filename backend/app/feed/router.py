@@ -15,6 +15,7 @@ from app.db import get_session
 from app.feed import service
 from app.feed.models import REACTIONS, Comment, CommentSuggestion, Post, Reaction
 from app.feed.service import Viewer
+from app.moderation.models import HeldItem
 from app.works.image.models import Work
 
 router = APIRouter(prefix="/api")
@@ -65,6 +66,16 @@ def publish(body: NewPost, c: Annotated[Child, Depends(current_child)], db: Db):
         raise HTTPException(409, "no_class")
     if body.audience == "family" and c.parent_id is None:
         raise HTTPException(409, "no_parent")
+    # Взрослый скрыл или отклонил пост этой работы в этой аудитории — повторно не выложить.
+    removed = db.scalar(
+        select(Post.id).where(
+            Post.work_id == w.id,
+            Post.audience == body.audience,
+            Post.status.in_(("hidden", "rejected")),
+        )
+    )
+    if removed is not None:
+        raise HTTPException(409, "removed_by_adult")
     # двойной клик: живой пост этой работы этой аудитории уже есть — возвращаем его
     dup = db.scalar(
         select(Post).where(
@@ -74,7 +85,12 @@ def publish(body: NewPost, c: Annotated[Child, Depends(current_child)], db: Db):
         )
     )
     if dup is not None:
-        return {"id": dup.id, "status": dup.status, "support": False}
+        urgent = db.scalar(
+            select(HeldItem.id).where(
+                HeldItem.item_type == "post", HeldItem.target_id == str(dup.id), HeldItem.urgent
+            )
+        )
+        return {"id": dup.id, "status": dup.status, "support": urgent is not None}
     caption = (body.caption or "").strip() or None
     post = Post(
         work_id=w.id,

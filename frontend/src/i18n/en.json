@@ -45,6 +45,7 @@
     "not_enough_coins": "You are out of coins. There will be more tomorrow!",
     "bad_template": "Could not send that. Please try again.",
     "work_not_ready": "This picture is not ready yet.",
+    "removed_by_adult": "A grown-up removed this picture from the feed. You can draw a new one!",
     "no_class": "You are not in a class yet: enter a class code first.",
     "no_parent": "The family feed needs a grown-up on your profile.",
     "comments_closed": "Only reactions are possible here.",
