@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 from collections import Counter
 from collections.abc import Iterable, Mapping
@@ -32,6 +33,17 @@ EXPECTED_FIELDS = {
 MIN_EXAMPLES = 30
 MIN_CATEGORY_POSITIVES = 5
 MIN_SAFE_SHARE = 0.4
+MIN_PREFIX_OCCURRENCES = 5
+
+
+def normalize_text(text: str) -> str:
+    """Убирает регистр, пунктуацию и лишние пробелы для поиска дублей."""
+    return " ".join(re.findall(r"\w+", text.casefold(), flags=re.UNICODE))
+
+
+def first_words(text: str, count: int = 3) -> str:
+    """Возвращает нормализованный префикс из первых `count` слов."""
+    return " ".join(normalize_text(text).split()[:count])
 
 
 def expected_action(record_type: str, labels: list[str]) -> str:
@@ -109,6 +121,33 @@ def validate_records(records: Iterable[Mapping[str, Any]]) -> list[str]:
             ids.add(record_id)
         if not record_errors:
             valid_records.append(record)
+
+    text_occurrences: dict[str, list[Mapping[str, Any]]] = {}
+    for record in valid_records:
+        normalized = normalize_text(record["text"])
+        text_occurrences.setdefault(normalized, []).append(record)
+    for occurrences in text_occurrences.values():
+        occurrence_types = {record["type"] for record in occurrences}
+        if len(occurrence_types) > 1:
+            record_ids = ", ".join(record["id"] for record in occurrences)
+            errors.append(f"повтор текста между типами: {record_ids}")
+
+    prefix_classes: dict[str, set[str]] = {}
+    prefix_counts: Counter[str] = Counter()
+    for record in valid_records:
+        prefix = first_words(record["text"])
+        if not prefix:
+            continue
+        prefix_counts[prefix] += 1
+        record_class = "safe" if not record["labels"] else "unsafe"
+        prefix_classes.setdefault(prefix, set()).add(record_class)
+    for prefix, count in sorted(prefix_counts.items()):
+        classes = prefix_classes[prefix]
+        if count >= MIN_PREFIX_OCCURRENCES and len(classes) == 1:
+            only_class = next(iter(classes))
+            errors.append(
+                f"префикс только у {only_class}: {prefix!r} встречается {count} раз"
+            )
 
     for record_type in TYPES:
         for lang in LANGUAGES:

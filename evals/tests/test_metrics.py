@@ -59,7 +59,7 @@ def test_metrics_match_hand_calculation():
         "recall": 0.5,
     }
     assert result["missed_dangerous_rate"] == pytest.approx(1 / 4)
-    assert result["action_accuracy"] == pytest.approx(5 / 6)
+    assert result["action_accuracy_without_errors"] == pytest.approx(4 / 5)
     assert result["error_hold_rate"] == pytest.approx(1 / 6)
 
 
@@ -87,3 +87,37 @@ def test_model_error_is_resolved_to_hold():
     assert resolved["categories"] == []
     assert resolved["model_error"] is True
 
+
+@pytest.mark.parametrize(
+    "prediction",
+    [
+        {"id": "p-1", "categories": "bullying", "action": "hold"},
+        {"id": "p-1", "categories": ["not_a_category"], "action": "hold"},
+        {"id": "p-1", "categories": [], "action": "maybe"},
+    ],
+)
+def test_invalid_model_response_becomes_error_hold(prediction):
+    resolved = resolve_prediction(prediction)
+
+    assert resolved == {
+        "id": "p-1",
+        "categories": [],
+        "action": "hold",
+        "model_error": True,
+    }
+
+
+def test_error_hold_is_excluded_from_action_accuracy():
+    examples = [
+        {"id": "p-1", "lang": "ru", "labels": ["self_harm"], "expected_action": "hold"},
+        {"id": "p-2", "lang": "ru", "labels": [], "expected_action": "allow"},
+    ]
+    predictions = [
+        {"id": "p-1", "action": "error"},
+        {"id": "p-2", "categories": [], "action": "allow"},
+    ]
+
+    result = calculate_metrics(examples, predictions)
+
+    assert result["action_accuracy_without_errors"] == 1.0
+    assert "Точность действия без сбоев: 100.0%" in render_markdown(result)

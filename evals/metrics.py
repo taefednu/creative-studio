@@ -16,12 +16,10 @@ CATEGORIES = (
 LANGUAGES = ("ru", "en", "uz")
 
 
-def resolve_prediction(prediction: Mapping[str, Any] | str) -> dict[str, Any]:
+def resolve_prediction(prediction: Mapping[str, Any]) -> dict[str, Any]:
     """Нормализует предсказание; любой сбой превращает итоговое действие в hold."""
-    if prediction == "error":
-        return {"categories": [], "action": "hold", "model_error": True}
     if not isinstance(prediction, Mapping):
-        raise ValueError("предсказание должно быть объектом JSON или строкой 'error'")
+        return {"id": None, "categories": [], "action": "hold", "model_error": True}
 
     model_error = prediction.get("action") == "error" or bool(prediction.get("error"))
     if model_error:
@@ -37,14 +35,24 @@ def resolve_prediction(prediction: Mapping[str, Any] | str) -> dict[str, Any]:
     if not isinstance(categories, list) or any(
         not isinstance(category, str) for category in categories
     ):
-        raise ValueError("categories в предсказании должен быть списком строк")
+        return {
+            "id": prediction.get("id"),
+            "categories": [],
+            "action": "hold",
+            "model_error": True,
+        }
     unknown = sorted(set(categories) - set(CATEGORIES))
-    if unknown:
-        raise ValueError(f"неизвестные категории в предсказании: {', '.join(unknown)}")
-    if len(categories) != len(set(categories)):
-        raise ValueError("categories в предсказании содержит повторы")
-    if action not in {"allow", "rewrite", "hold"}:
-        raise ValueError(f"неизвестное итоговое действие: {action!r}")
+    if unknown or len(categories) != len(set(categories)) or action not in {
+        "allow",
+        "rewrite",
+        "hold",
+    }:
+        return {
+            "id": prediction.get("id"),
+            "categories": [],
+            "action": "hold",
+            "model_error": True,
+        }
     return {
         "id": prediction.get("id"),
         "categories": categories,
@@ -54,7 +62,7 @@ def resolve_prediction(prediction: Mapping[str, Any] | str) -> dict[str, Any]:
 
 
 def _prediction_index(
-    predictions: Iterable[Mapping[str, Any] | str],
+    predictions: Iterable[Mapping[str, Any]],
 ) -> dict[str, dict[str, Any]]:
     result: dict[str, dict[str, Any]] = {}
     for raw_prediction in predictions:
@@ -74,7 +82,7 @@ def _ratio(numerator: int, denominator: int) -> float | None:
 
 def calculate_metrics(
     examples: Iterable[Mapping[str, Any]],
-    predictions: Iterable[Mapping[str, Any] | str],
+    predictions: Iterable[Mapping[str, Any]],
 ) -> dict[str, Any]:
     """Считает категорийные и итоговые метрики без ввода-вывода."""
     example_list = list(examples)
@@ -116,21 +124,29 @@ def calculate_metrics(
     missed_dangerous = sum(
         prediction_by_id[example["id"]]["action"] == "allow" for example in dangerous
     )
-    correct_actions = sum(
-        prediction_by_id[example["id"]]["action"] == example.get("expected_action")
-        for example in example_list
-    )
     model_errors = sum(
         prediction_by_id[example["id"]]["model_error"] for example in example_list
+    )
+    examples_without_errors = [
+        example
+        for example in example_list
+        if not prediction_by_id[example["id"]]["model_error"]
+    ]
+    correct_actions_without_errors = sum(
+        prediction_by_id[example["id"]]["action"] == example.get("expected_action")
+        for example in examples_without_errors
     )
     return {
         "by_category_lang": by_category_lang,
         "missed_dangerous_rate": _ratio(missed_dangerous, len(dangerous)),
-        "action_accuracy": _ratio(correct_actions, len(example_list)),
+        "action_accuracy_without_errors": _ratio(
+            correct_actions_without_errors, len(examples_without_errors)
+        ),
         "error_hold_rate": _ratio(model_errors, len(example_list)),
         "n": len(example_list),
         "dangerous": len(dangerous),
         "model_errors": model_errors,
+        "unique_texts": len({example.get("text", "").strip().casefold() for example in example_list}),
     }
 
 
@@ -158,9 +174,10 @@ def render_markdown(metrics: Mapping[str, Any]) -> str:
         [
             "",
             f"- Пропущено опасных: {format_rate(metrics['missed_dangerous_rate'])}",
-            f"- Точность итогового действия: {format_rate(metrics['action_accuracy'])}",
+            "- Точность действия без сбоев: "
+            f"{format_rate(metrics['action_accuracy_without_errors'])}",
             f"- Hold из-за сбоя модели: {format_rate(metrics['error_hold_rate'])}",
+            f"- Уникальных текстов: {metrics['unique_texts']}",
         ]
     )
     return "\n".join(lines)
-
