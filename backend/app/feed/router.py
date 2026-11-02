@@ -1,8 +1,11 @@
+import io
+from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
+from PIL import Image
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
@@ -283,6 +286,7 @@ def _views(db: Session, v: Viewer, posts: list[Post]) -> list[dict]:
 
 Before = Annotated[int | None, Query(ge=1)]
 Limit = Annotated[int, Query(ge=1, le=50)]
+THUMB_PX = 560  # колонка ленты шириной до ~280 px, вдвое для плотных экранов
 
 
 @router.get("/feed/class")
@@ -332,12 +336,26 @@ def get_post(post_id: int, db: Db, v: Guest):
     return _views(db, v, [p])[0]
 
 
+# ponytail: кэш в памяти процесса; на диск не кладём, чтобы удалённая работа не оставляла копий
+@lru_cache(maxsize=512)
+def _thumb(path: str, mtime_ns: int) -> bytes:
+    """mtime в ключе: после размытия файл перезаписан, старое превью отдавать нельзя."""
+    im = Image.open(path).convert("RGB")
+    im.thumbnail((THUMB_PX, THUMB_PX))
+    out = io.BytesIO()
+    im.save(out, "WEBP", quality=80)
+    return out.getvalue()
+
+
 @router.get("/posts/{post_id}/image")
-def post_image(post_id: int, db: Db, v: Guest):
+def post_image(post_id: int, db: Db, v: Guest, thumb: bool = False):
     p, _ = _get_post(db, v, post_id)
     w = db.get(Work, p.work_id)
     if w is None or not w.file_path or not Path(w.file_path).is_file():
         raise HTTPException(404, "not_found")
+    if thumb:
+        data = _thumb(w.file_path, Path(w.file_path).stat().st_mtime_ns)
+        return Response(data, media_type="image/webp", headers={"Cache-Control": "private"})
     return FileResponse(w.file_path, media_type="image/webp", headers={"Cache-Control": "private"})
 
 

@@ -1,5 +1,6 @@
 """Демо-наполнение (scripts/seed_demo.py): очереди, лента, аналитика, оригинал загрузки закрыт ребёнку."""
 
+import io
 import os
 import sys
 from pathlib import Path
@@ -12,7 +13,9 @@ from PIL import Image
 
 from app import db
 from app.config import get_settings
+from app.feed.models import Post
 from app.main import app
+from app.works.image.models import Work
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import seed_demo
@@ -74,3 +77,22 @@ def test_seed_refuses_nonempty_db_and_no_images(seeded, tmp_path):
     empty.mkdir()
     with pytest.raises(SystemExit):
         seed_demo.seed(empty)
+
+
+def test_feed_thumb_small_fresh_and_gated(seeded):
+    out, _ = seeded
+    kid = _login("/api/child/login", {"nick": "Lumi", "pictures": out["child_pictures"]})
+    pid = kid.get("/api/feed/class").json()["items"][-1]["id"]
+    s = db.new_session()
+    path = s.get(Work, s.get(Post, pid).work_id).file_path
+    s.close()
+    Image.new("RGB", (1000, 1000), "red").save(path, "WEBP")
+    r = kid.get(f"/api/posts/{pid}/image?thumb=1")
+    assert r.status_code == 200 and Image.open(io.BytesIO(r.content)).width == 560
+    assert Image.open(io.BytesIO(kid.get(f"/api/posts/{pid}/image").content)).width == 1000
+    # файл перезаписан (размытие): старое превью отдавать нельзя
+    Image.new("RGB", (1000, 1000), "blue").save(path, "WEBP")
+    px = Image.open(io.BytesIO(kid.get(f"/api/posts/{pid}/image?thumb=1").content)).convert("RGB").getpixel((5, 5))
+    assert px[2] > 200 and px[0] < 60
+    # превью закрыто так же, как картинка: гость не видит пост класса
+    assert TestClient(app).get(f"/api/posts/{pid}/image?thumb=1").status_code in (401, 403, 404)

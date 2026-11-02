@@ -59,11 +59,24 @@ export function feedUrl(kind: FeedKind, classId?: number, before?: number | null
 }
 
 // как на feed.jpg: больше лежачих, вертикальных мало
-const RATIOS = ['16 / 10', '4 / 3', '3 / 2', '16 / 10', '1 / 1', '4 / 3', '5 / 6'] as const
+const RATIOS = ['16 / 10', '4 / 3', '3 / 4', '3 / 2', '1 / 1', '4 / 5', '5 / 6'] as const
 
 /** Форма карточки по id поста: картинки квадратные, ряды «кирпичной» сетки разной высоты. */
 export function cardRatio(id: number): (typeof RATIOS)[number] {
   return RATIOS[(Math.imul(id, 2654435761) >>> 0) % RATIOS.length]
+}
+
+/** Раскладка по колонкам: каждая карточка в самую короткую. Дозагрузка не двигает уже показанные. */
+export function toColumns(items: Post[], count: number): Post[][] {
+  const cols: Post[][] = Array.from({ length: count }, () => [])
+  const heights = cols.map(() => 0)
+  for (const p of items) {
+    const c = heights.indexOf(Math.min(...heights))
+    const [w, h] = cardRatio(p.id).split(' / ').map(Number)
+    cols[c].push(p)
+    heights[c] += h / w
+  }
+  return cols
 }
 
 /** Фильтр по стилю на клиенте: '' — все. */

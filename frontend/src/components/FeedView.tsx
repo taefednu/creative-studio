@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { api } from '../api'
-import { REACTIONS, byStyle, cardRatio, feedUrl } from '../features/feed/feed'
+import { ApiError, api } from '../api'
+import { REACTIONS, byStyle, cardRatio, feedUrl, toColumns } from '../features/feed/feed'
 import type { FeedKind, FeedPage, Post } from '../features/feed/feed'
 import type { TemplateInfo } from '../features/works/works'
 import Avatar from './Avatar'
@@ -19,12 +19,25 @@ type Props = {
   guest?: boolean
 }
 
-/** Лента (docs/design/feed.jpg): «кирпичная» сетка в CSS-колонках, клик по карточке — работа поверх. */
+// Ширина экрана → число колонок, снизу вверх: как брейкпоинты md, lg, xl
+const COLUMN_STEPS: [number, number][] = [[768, 3], [1024, 5], [1280, 6]]
+const columnCount = () => COLUMN_STEPS.reduce((n, [w, c]) => (window.innerWidth >= w ? c : n), 2)
+
+function useColumnCount() {
+  const [count, setCount] = useState(columnCount)
+  useEffect(() => {
+    const onResize = () => setCount(columnCount())
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+  return count
+}
+
+/** Лента (docs/design/feed.jpg): «кирпичная» сетка, клик по карточке — работа поверх. Новые страницы подгружаются при прокрутке. */
 export default function FeedView({ kinds, classId, title, child, guest }: Props) {
   const { t } = useTranslation()
   const [kind, setKind] = useState<FeedKind>(kinds[0])
   const [page, setPage] = useState<{ key: string; items: Post[]; cursor: number | null } | null>(null)
-  const [tick, setTick] = useState(0)
   const [open, setOpen] = useState<number | null>(null)
   const [style, setStyle] = useState('')
   const key = `${kind}:${classId ?? ''}`
@@ -37,19 +50,50 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
     return () => {
       alive = false
     }
-  }, [kind, classId, key, tick])
+  }, [kind, classId, key])
 
   const loaded = page?.key === key
   const items = loaded ? page.items : []
   const cursor = loaded ? page.cursor : null
   const shown = byStyle(items, style)
 
-  async function more() {
-    const p = await api<FeedPage>(feedUrl(kind, classId, cursor))
-    setPage((x) => x && { ...x, items: [...x.items, ...p.items], cursor: p.next_cursor })
-  }
+  const count = useColumnCount()
+  const loading = useRef(false)
+  const moreRef = useRef<HTMLButtonElement>(null)
+
+  const more = useCallback(async () => {
+    if (loading.current) return
+    loading.current = true
+    try {
+      const p = await api<FeedPage>(feedUrl(kind, classId, cursor))
+      setPage((x) => (x?.key === key ? { ...x, items: [...x.items, ...p.items], cursor: p.next_cursor } : x))
+    } catch {
+      // кнопка остаётся: ребёнок может нажать ещё раз
+    } finally {
+      loading.current = false
+    }
+  }, [kind, classId, cursor, key])
+
+  useEffect(() => {
+    const el = moreRef.current
+    if (!el) return
+    const io = new IntersectionObserver((e) => e[0].isIntersecting && void more(), { rootMargin: '800px' })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [more])
 
   const close = useCallback(() => setOpen(null), [])
+
+  // Обновляем только изменённый пост: перезагрузка ленты вернула бы её к первой странице и сбила прокрутку
+  async function refreshPost(id: number) {
+    const drop = (x: typeof page) => x && { ...x, items: x.items.filter((p) => p.id !== id) }
+    try {
+      const fresh = await api<Post>(`/api/posts/${id}`)
+      setPage((x) => x && { ...x, items: x.items.map((p) => (p.id === id ? fresh : p)) })
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) setPage(drop)
+    }
+  }
 
   return (
     <div className={child ? 'pb-[110px] md:pb-[125px] lg:pb-[150px]' : ''}>
@@ -110,17 +154,20 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
           {t('panel.noStyleMatch')}
         </p>
       )}
-      <div data-testid="feed-grid" className="mt-3 columns-2 gap-3 md:columns-3 lg:columns-5">
-        {shown.map((p) =>
+      <div data-testid="feed-grid" className="mt-3 flex items-start gap-2">
+        {toColumns(shown, count).map((col, c) => (
+        <div key={c} className="flex min-w-0 flex-1 flex-col gap-2">
+        {col.map((p) =>
           !child ? (
             <button
               key={p.id}
               type="button"
               data-testid="post-card"
+              data-post-id={p.id}
               onClick={() => setOpen(p.id)}
-              className="mb-3 block w-full break-inside-avoid overflow-hidden rounded-card border border-border bg-surface text-left shadow-card"
+              className="feed-card block w-full overflow-hidden rounded-card border border-border bg-primary-soft text-left shadow-card"
             >
-              <img src={p.image_url} alt={p.caption ?? ''} className="w-full object-cover" loading="lazy" />
+              <img src={`${p.image_url}?thumb=1`} alt={p.caption ?? ''} className="w-full object-cover" loading="lazy" />
               <div className="px-3 py-2">
                 <p className="truncate text-sm font-extrabold text-heading">{p.nick}</p>
                 {p.caption && <p className="text-sm text-text">{p.caption}</p>}
@@ -138,13 +185,14 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
             key={p.id}
             type="button"
             data-testid="post-card"
+              data-post-id={p.id}
             aria-label={p.caption ? `${p.nick}: ${p.caption}` : p.nick}
             title={p.nick}
             onClick={() => setOpen(p.id)}
             style={{ aspectRatio: cardRatio(p.id) }}
-            className="relative mb-3 block w-full break-inside-avoid overflow-hidden rounded-[22px] bg-surface text-left shadow-card"
+            className="feed-card group relative block w-full overflow-hidden rounded-[22px] bg-primary-soft text-left shadow-card"
           >
-            <img src={p.image_url} alt={p.caption ?? ''} className="h-full w-full object-cover" loading="lazy" />
+            <img src={`${p.image_url}?thumb=1`} alt={p.caption ?? ''} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none" loading="lazy" />
             {p.status === 'held' && !p.support && (
               <span className="absolute inset-x-2 top-2 rounded-xl bg-scrim px-3 py-1.5 text-xs font-bold text-primary-fg">
                 {t('feed.heldMark')}
@@ -164,9 +212,12 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
           </button>
           ),
         )}
+        </div>
+        ))}
       </div>
       {cursor !== null && (
         <button
+          ref={moreRef}
           type="button"
           data-testid="feed-more"
           onClick={() => void more()}
@@ -175,7 +226,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
           {t('feed.more')}
         </button>
       )}
-      {open !== null && <PostModal postId={open} isChild={!!child} guest={guest} onClose={close} onChanged={() => setTick((n) => n + 1)} />}
+      {open !== null && <PostModal postId={open} isChild={!!child} guest={guest} onClose={close} onChanged={() => void refreshPost(open)} />}
     </div>
   )
 }

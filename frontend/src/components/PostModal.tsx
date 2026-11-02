@@ -128,14 +128,16 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
   useEffect(() => {
     let alive = true
     api<Post>(`/api/posts/${postId}`)
-      .then((p) => alive && setPost(p))
+      .then((p) => {
+        if (!alive) return
+        setPost(p)
+        // гостю (401) и у постов «Лучшего» (403) комментарии закрыты: не спрашиваем
+        if (guest || p.best) return
+        api<PostComment[]>(`/api/posts/${postId}/comments`)
+          .then((c) => alive && setComments(c))
+          .catch(() => {})
+      })
       .catch(() => alive && onClose())
-    // гостю комментарии закрыты (401): не спрашиваем
-    if (!guest) {
-      api<PostComment[]>(`/api/posts/${postId}/comments`)
-        .then((c) => alive && setComments(c))
-        .catch(() => {})
-    }
     return () => {
       alive = false
     }

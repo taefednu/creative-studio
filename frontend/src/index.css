@@ -46,6 +46,21 @@ body {
   }
 }
 
+.feed-card {
+  animation: feed-card-in 0.35s ease-out;
+}
+@keyframes feed-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feed-card {
+    animation: none;
+  }
+}
+
 .chip-pop {
   animation: chip-pop-in 0.16s ease-out;
 }

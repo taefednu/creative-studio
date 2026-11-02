@@ -16,7 +16,7 @@ const openPost = async (page, match) => {
   const { items } = await (await page.request.get(`${BASE}/api/feed/class`)).json()
   await page.goto(BASE + '/')
   await page.getByTestId('post-card').first().waitFor({ timeout: 15000 })
-  await page.getByTestId('post-card').nth(Math.max(0, items.findIndex(match))).click()
+  await page.locator(`[data-post-id="${items[Math.max(0, items.findIndex(match))].id}"]`).click()
   await page.getByTestId('modal-image').waitFor({ timeout: 15000 })
   await page.waitForLoadState('networkidle')
 }

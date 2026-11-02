@@ -167,7 +167,7 @@ const text = (p, id) => T(p, id).first().innerText()
     mode = { status, code }
     const seen = []
     for (const l of LANGS) {
-      await T(t, `lang-${l}`).click()
+      await T(t, "lang-toggle").click(); await T(t, `lang-${l}`).click()
       await T(t, 'task-title').fill('Плохое задание')
       await T(t, 'task-create').click()
       await T(t, 'error').waitFor({ timeout: 5000 })
@@ -216,7 +216,7 @@ const text = (p, id) => T(p, id).first().innerText()
     showCode = code
     const seen = []
     for (const l of LANGS) {
-      await T(t, `lang-${l}`).click()
+      await T(t, "lang-toggle").click(); await T(t, `lang-${l}`).click()
       await T(t, 'show-in-feed').click()
       const e = T(t, 'submission').getByTestId('error')
       await e.waitFor({ timeout: 5000 })
@@ -282,7 +282,7 @@ const text = (p, id) => T(p, id).first().innerText()
     })
     const openResult = async (lang) => {
       await c.goto(url)
-      if (lang) await T(c, `lang-${lang}`).click()
+      if (lang) { await T(c, "lang-toggle").click(); await T(c, `lang-${lang}`).click() }
       await T(c, 'submit-task').waitFor({ timeout: 15000 })
     }
     reply = { status: 200, json: { id: 1, status: 'accepted', support: false } }

@@ -120,6 +120,990 @@
   "idea_en": "a red rocket flying to the stars"
  },
  {
+  "slug": "more_superhero_0",
+  "template_id": "superhero",
+  "idea_ru": "Котик-пожарный спасает воздушный шар",
+  "idea_en": "a kitten firefighter rescuing a balloon from a tree"
+ },
+ {
+  "slug": "more_superhero_1",
+  "template_id": "superhero",
+  "idea_ru": "Хомяк-супергерой на велосипеде",
+  "idea_en": "a hamster superhero riding a tiny bicycle"
+ },
+ {
+  "slug": "more_superhero_2",
+  "template_id": "superhero",
+  "idea_ru": "Пингвин в красном плаще",
+  "idea_en": "a penguin superhero with a red cape over an icy city"
+ },
+ {
+  "slug": "more_superhero_3",
+  "template_id": "superhero",
+  "idea_ru": "Утёнок останавливает дождь",
+  "idea_en": "a duckling hero holding a giant umbrella over a town"
+ },
+ {
+  "slug": "more_superhero_4",
+  "template_id": "superhero",
+  "idea_ru": "Лисёнок летит на ракетном рюкзаке",
+  "idea_en": "a fox cub flying with a rocket backpack"
+ },
+ {
+  "slug": "more_superhero_5",
+  "template_id": "superhero",
+  "idea_ru": "Ёжик-защитник леса",
+  "idea_en": "a brave hedgehog guarding a forest with a glowing shield"
+ },
+ {
+  "slug": "more_superhero_6",
+  "template_id": "superhero",
+  "idea_ru": "Слонёнок с суперсилой",
+  "idea_en": "a baby elephant superhero lifting a toy bus"
+ },
+ {
+  "slug": "more_superhero_7",
+  "template_id": "superhero",
+  "idea_ru": "Сова-детектив ночью",
+  "idea_en": "an owl detective with a magnifying glass over a night city"
+ },
+ {
+  "slug": "more_space_pet_0",
+  "template_id": "space_pet",
+  "idea_ru": "Хомяк на Сатурне",
+  "idea_en": "a hamster astronaut sliding on the rings of Saturn"
+ },
+ {
+  "slug": "more_space_pet_1",
+  "template_id": "space_pet",
+  "idea_ru": "Черепаха-космонавт",
+  "idea_en": "a turtle astronaut floating near the moon"
+ },
+ {
+  "slug": "more_space_pet_2",
+  "template_id": "space_pet",
+  "idea_ru": "Щенок на Марсе",
+  "idea_en": "a puppy astronaut planting a flower on Mars"
+ },
+ {
+  "slug": "more_space_pet_3",
+  "template_id": "space_pet",
+  "idea_ru": "Пингвин на ледяной планете",
+  "idea_en": "a penguin astronaut on an ice planet"
+ },
+ {
+  "slug": "more_space_pet_4",
+  "template_id": "space_pet",
+  "idea_ru": "Кролик и морковная ракета",
+  "idea_en": "a bunny astronaut in a carrot shaped rocket"
+ },
+ {
+  "slug": "more_space_pet_5",
+  "template_id": "space_pet",
+  "idea_ru": "Ленивец на Луне",
+  "idea_en": "a sloth astronaut napping on a crescent moon"
+ },
+ {
+  "slug": "more_space_pet_6",
+  "template_id": "space_pet",
+  "idea_ru": "Панда строит базу на Луне",
+  "idea_en": "a panda astronaut building a small moon base"
+ },
+ {
+  "slug": "more_space_pet_7",
+  "template_id": "space_pet",
+  "idea_ru": "Лисёнок считает звёзды",
+  "idea_en": "a fox cub astronaut counting stars with a telescope"
+ },
+ {
+  "slug": "more_clay_0",
+  "template_id": "clay",
+  "idea_ru": "Пластилиновый аквариум",
+  "idea_en": "a plasticine aquarium with funny fish"
+ },
+ {
+  "slug": "more_clay_1",
+  "template_id": "clay",
+  "idea_ru": "Улитка с домиком-тортом",
+  "idea_en": "a clay snail with a cake for a shell"
+ },
+ {
+  "slug": "more_clay_2",
+  "template_id": "clay",
+  "idea_ru": "Паровозик в горах",
+  "idea_en": "a clay toy train going through mountains"
+ },
+ {
+  "slug": "more_clay_3",
+  "template_id": "clay",
+  "idea_ru": "Пластилиновая ферма",
+  "idea_en": "a tiny plasticine farm with cows and sheep"
+ },
+ {
+  "slug": "more_clay_4",
+  "template_id": "clay",
+  "idea_ru": "Осьминог-повар",
+  "idea_en": "a clay octopus chef cooking soup"
+ },
+ {
+  "slug": "more_clay_5",
+  "template_id": "clay",
+  "idea_ru": "Город грибов",
+  "idea_en": "a little clay town of mushroom houses"
+ },
+ {
+  "slug": "more_clay_6",
+  "template_id": "clay",
+  "idea_ru": "Жираф в шарфе",
+  "idea_en": "a clay giraffe wearing a very long scarf"
+ },
+ {
+  "slug": "more_clay_7",
+  "template_id": "clay",
+  "idea_ru": "Лягушки играют в оркестре",
+  "idea_en": "clay frogs playing in a small orchestra"
+ },
+ {
+  "slug": "more_anime_0",
+  "template_id": "anime",
+  "idea_ru": "Девятихвостая лисичка у озера",
+  "idea_en": "a nine tailed fox cub by a shining lake"
+ },
+ {
+  "slug": "more_anime_1",
+  "template_id": "anime",
+  "idea_ru": "Котёнок-волшебник",
+  "idea_en": "a kitten wizard casting sparkling stars"
+ },
+ {
+  "slug": "more_anime_2",
+  "template_id": "anime",
+  "idea_ru": "Летающий кит над городом",
+  "idea_en": "a huge friendly whale flying above a small town"
+ },
+ {
+  "slug": "more_anime_3",
+  "template_id": "anime",
+  "idea_ru": "Светлячки в бамбуковом лесу",
+  "idea_en": "fireflies in a bamboo forest with a tiny red panda"
+ },
+ {
+  "slug": "more_anime_4",
+  "template_id": "anime",
+  "idea_ru": "Хаски на поезде",
+  "idea_en": "a husky puppy looking out of a train window at mountains"
+ },
+ {
+  "slug": "more_anime_5",
+  "template_id": "anime",
+  "idea_ru": "Дракончик и чайная церемония",
+  "idea_en": "a little dragon having tea with a rabbit"
+ },
+ {
+  "slug": "more_anime_6",
+  "template_id": "anime",
+  "idea_ru": "Сова-почтальон",
+  "idea_en": "an owl mail carrier flying over rooftops at sunset"
+ },
+ {
+  "slug": "more_anime_7",
+  "template_id": "anime",
+  "idea_ru": "Сад на крыше",
+  "idea_en": "a cat in a rooftop garden at golden hour"
+ },
+ {
+  "slug": "more_pixel_0",
+  "template_id": "pixel",
+  "idea_ru": "Пиксельная ферма",
+  "idea_en": "a pixel art farm with chickens and a red barn"
+ },
+ {
+  "slug": "more_pixel_1",
+  "template_id": "pixel",
+  "idea_ru": "Подводный замок",
+  "idea_en": "a pixel art underwater castle with fish"
+ },
+ {
+  "slug": "more_pixel_2",
+  "template_id": "pixel",
+  "idea_ru": "Пиксельный дракон",
+  "idea_en": "a small friendly pixel art dragon on a hill"
+ },
+ {
+  "slug": "more_pixel_3",
+  "template_id": "pixel",
+  "idea_ru": "Космическая станция",
+  "idea_en": "a pixel art space station with little robots"
+ },
+ {
+  "slug": "more_pixel_4",
+  "template_id": "pixel",
+  "idea_ru": "Вулкан и динозавры",
+  "idea_en": "a pixel art valley with friendly dinosaurs and a far volcano"
+ },
+ {
+  "slug": "more_pixel_5",
+  "template_id": "pixel",
+  "idea_ru": "Магазин мороженого",
+  "idea_en": "a pixel art ice cream shop on a sunny street"
+ },
+ {
+  "slug": "more_pixel_6",
+  "template_id": "pixel",
+  "idea_ru": "Рыцарь-котик",
+  "idea_en": "a pixel art cat knight in front of a castle"
+ },
+ {
+  "slug": "more_pixel_7",
+  "template_id": "pixel",
+  "idea_ru": "Зимняя деревня",
+  "idea_en": "a pixel art snowy village at night"
+ },
+ {
+  "slug": "more_watercolor_0",
+  "template_id": "watercolor",
+  "idea_ru": "Лебеди на озере",
+  "idea_en": "two swans on a calm lake at sunrise"
+ },
+ {
+  "slug": "more_watercolor_1",
+  "template_id": "watercolor",
+  "idea_ru": "Бабочки над лавандой",
+  "idea_en": "butterflies over a lavender field"
+ },
+ {
+  "slug": "more_watercolor_2",
+  "template_id": "watercolor",
+  "idea_ru": "Маленький маяк",
+  "idea_en": "a small lighthouse by the sea"
+ },
+ {
+  "slug": "more_watercolor_3",
+  "template_id": "watercolor",
+  "idea_ru": "Ёжик под грибом",
+  "idea_en": "a hedgehog sheltering under a mushroom in the rain"
+ },
+ {
+  "slug": "more_watercolor_4",
+  "template_id": "watercolor",
+  "idea_ru": "Олень в зимнем лесу",
+  "idea_en": "a young deer in a snowy forest"
+ },
+ {
+  "slug": "more_watercolor_5",
+  "template_id": "watercolor",
+  "idea_ru": "Морские коньки",
+  "idea_en": "seahorses among soft sea plants"
+ },
+ {
+  "slug": "more_watercolor_6",
+  "template_id": "watercolor",
+  "idea_ru": "Воздушные шары над долиной",
+  "idea_en": "hot air balloons over a green valley"
+ },
+ {
+  "slug": "more_watercolor_7",
+  "template_id": "watercolor",
+  "idea_ru": "Лисичка и осенние листья",
+  "idea_en": "a fox cub playing in autumn leaves"
+ },
+ {
+  "slug": "more_paper_0",
+  "template_id": "paper",
+  "idea_ru": "Бумажный океан",
+  "idea_en": "a paper cut-out ocean with a sailing ship and a whale"
+ },
+ {
+  "slug": "more_paper_1",
+  "template_id": "paper",
+  "idea_ru": "Бумажные джунгли",
+  "idea_en": "paper cut-out jungle with a tiger cub and parrots"
+ },
+ {
+  "slug": "more_paper_2",
+  "template_id": "paper",
+  "idea_ru": "Город на холмах",
+  "idea_en": "a paper cut-out town on green hills"
+ },
+ {
+  "slug": "more_paper_3",
+  "template_id": "paper",
+  "idea_ru": "Подводный сад",
+  "idea_en": "paper cut-out coral garden with colorful fish"
+ },
+ {
+  "slug": "more_paper_4",
+  "template_id": "paper",
+  "idea_ru": "Цирковой шатёр",
+  "idea_en": "a paper cut-out circus tent with balloons, animals only"
+ },
+ {
+  "slug": "more_paper_5",
+  "template_id": "paper",
+  "idea_ru": "Ночной лес",
+  "idea_en": "paper cut-out night forest with owls and a big moon"
+ },
+ {
+  "slug": "more_paper_6",
+  "template_id": "paper",
+  "idea_ru": "Сказочный поезд",
+  "idea_en": "a paper cut-out train crossing a bridge in the clouds"
+ },
+ {
+  "slug": "more_paper_7",
+  "template_id": "paper",
+  "idea_ru": "Пустыня и верблюды",
+  "idea_en": "paper cut-out desert with camels and an old city, Samarkand style domes"
+ },
+ {
+  "slug": "more_castle_0",
+  "template_id": "castle",
+  "idea_ru": "Замок из ракушек",
+  "idea_en": "a fairy tale castle made of sea shells on a beach"
+ },
+ {
+  "slug": "more_castle_1",
+  "template_id": "castle",
+  "idea_ru": "Ледяной дворец",
+  "idea_en": "a shining ice palace under the northern lights"
+ },
+ {
+  "slug": "more_castle_2",
+  "template_id": "castle",
+  "idea_ru": "Самаркандские купола",
+  "idea_en": "a magical palace with blue domes like Samarkand at sunset"
+ },
+ {
+  "slug": "more_castle_3",
+  "template_id": "castle",
+  "idea_ru": "Замок на спине дракона",
+  "idea_en": "a small castle on the back of a sleeping friendly dragon"
+ },
+ {
+  "slug": "more_castle_4",
+  "template_id": "castle",
+  "idea_ru": "Лесной замок",
+  "idea_en": "a castle grown out of giant old trees"
+ },
+ {
+  "slug": "more_castle_5",
+  "template_id": "castle",
+  "idea_ru": "Замок в бутылке",
+  "idea_en": "a tiny fairy tale castle inside a glass bottle"
+ },
+ {
+  "slug": "more_castle_6",
+  "template_id": "castle",
+  "idea_ru": "Радужный мост",
+  "idea_en": "a rainbow bridge leading to a castle in the sky"
+ },
+ {
+  "slug": "more_castle_7",
+  "template_id": "castle",
+  "idea_ru": "Замок из книг",
+  "idea_en": "a castle built from huge colorful books"
+ },
+ {
+  "slug": "extra_0_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Лягушка в короне",
+  "idea_en": "a tiny frog wearing a golden crown"
+ },
+ {
+  "slug": "extra_0_clay",
+  "template_id": "clay",
+  "idea_ru": "Лягушка в короне",
+  "idea_en": "a tiny frog wearing a golden crown"
+ },
+ {
+  "slug": "extra_0_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Лягушка в короне",
+  "idea_en": "a tiny frog wearing a golden crown"
+ },
+ {
+  "slug": "extra_0_castle",
+  "template_id": "castle",
+  "idea_ru": "Лягушка в короне",
+  "idea_en": "a tiny frog wearing a golden crown"
+ },
+ {
+  "slug": "extra_1_anime",
+  "template_id": "anime",
+  "idea_ru": "Кот-пекарь и булочки",
+  "idea_en": "a cat baker with fresh buns"
+ },
+ {
+  "slug": "extra_1_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Кот-пекарь и булочки",
+  "idea_en": "a cat baker with fresh buns"
+ },
+ {
+  "slug": "extra_1_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Кот-пекарь и булочки",
+  "idea_en": "a cat baker with fresh buns"
+ },
+ {
+  "slug": "extra_1_clay",
+  "template_id": "clay",
+  "idea_ru": "Кот-пекарь и булочки",
+  "idea_en": "a cat baker with fresh buns"
+ },
+ {
+  "slug": "extra_2_paper",
+  "template_id": "paper",
+  "idea_ru": "Собака на скейтборде",
+  "idea_en": "a puppy riding a skateboard"
+ },
+ {
+  "slug": "extra_2_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Собака на скейтборде",
+  "idea_en": "a puppy riding a skateboard"
+ },
+ {
+  "slug": "extra_2_anime",
+  "template_id": "anime",
+  "idea_ru": "Собака на скейтборде",
+  "idea_en": "a puppy riding a skateboard"
+ },
+ {
+  "slug": "extra_2_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Собака на скейтборде",
+  "idea_en": "a puppy riding a skateboard"
+ },
+ {
+  "slug": "extra_3_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Енот-художник",
+  "idea_en": "a raccoon painter at an easel"
+ },
+ {
+  "slug": "extra_3_anime",
+  "template_id": "anime",
+  "idea_ru": "Енот-художник",
+  "idea_en": "a raccoon painter at an easel"
+ },
+ {
+  "slug": "extra_3_paper",
+  "template_id": "paper",
+  "idea_ru": "Енот-художник",
+  "idea_en": "a raccoon painter at an easel"
+ },
+ {
+  "slug": "extra_3_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Енот-художник",
+  "idea_en": "a raccoon painter at an easel"
+ },
+ {
+  "slug": "extra_4_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Белка на воздушном шаре",
+  "idea_en": "a squirrel in a hot air balloon"
+ },
+ {
+  "slug": "extra_4_paper",
+  "template_id": "paper",
+  "idea_ru": "Белка на воздушном шаре",
+  "idea_en": "a squirrel in a hot air balloon"
+ },
+ {
+  "slug": "extra_4_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Белка на воздушном шаре",
+  "idea_en": "a squirrel in a hot air balloon"
+ },
+ {
+  "slug": "extra_4_anime",
+  "template_id": "anime",
+  "idea_ru": "Белка на воздушном шаре",
+  "idea_en": "a squirrel in a hot air balloon"
+ },
+ {
+  "slug": "extra_5_castle",
+  "template_id": "castle",
+  "idea_ru": "Медвежонок и мёд",
+  "idea_en": "a bear cub with a honey pot in a meadow"
+ },
+ {
+  "slug": "extra_5_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Медвежонок и мёд",
+  "idea_en": "a bear cub with a honey pot in a meadow"
+ },
+ {
+  "slug": "extra_5_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Медвежонок и мёд",
+  "idea_en": "a bear cub with a honey pot in a meadow"
+ },
+ {
+  "slug": "extra_5_paper",
+  "template_id": "paper",
+  "idea_ru": "Медвежонок и мёд",
+  "idea_en": "a bear cub with a honey pot in a meadow"
+ },
+ {
+  "slug": "extra_6_clay",
+  "template_id": "clay",
+  "idea_ru": "Дельфины в радуге",
+  "idea_en": "dolphins jumping through a rainbow"
+ },
+ {
+  "slug": "extra_6_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Дельфины в радуге",
+  "idea_en": "dolphins jumping through a rainbow"
+ },
+ {
+  "slug": "extra_6_castle",
+  "template_id": "castle",
+  "idea_ru": "Дельфины в радуге",
+  "idea_en": "dolphins jumping through a rainbow"
+ },
+ {
+  "slug": "extra_6_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Дельфины в радуге",
+  "idea_en": "dolphins jumping through a rainbow"
+ },
+ {
+  "slug": "extra_7_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Попугай-пират",
+  "idea_en": "a parrot pirate on a treasure island"
+ },
+ {
+  "slug": "extra_7_castle",
+  "template_id": "castle",
+  "idea_ru": "Попугай-пират",
+  "idea_en": "a parrot pirate on a treasure island"
+ },
+ {
+  "slug": "extra_7_clay",
+  "template_id": "clay",
+  "idea_ru": "Попугай-пират",
+  "idea_en": "a parrot pirate on a treasure island"
+ },
+ {
+  "slug": "extra_7_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Попугай-пират",
+  "idea_en": "a parrot pirate on a treasure island"
+ },
+ {
+  "slug": "extra_8_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Единорог в саду",
+  "idea_en": "a baby unicorn in a flower garden"
+ },
+ {
+  "slug": "extra_8_clay",
+  "template_id": "clay",
+  "idea_ru": "Единорог в саду",
+  "idea_en": "a baby unicorn in a flower garden"
+ },
+ {
+  "slug": "extra_8_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Единорог в саду",
+  "idea_en": "a baby unicorn in a flower garden"
+ },
+ {
+  "slug": "extra_8_castle",
+  "template_id": "castle",
+  "idea_ru": "Единорог в саду",
+  "idea_en": "a baby unicorn in a flower garden"
+ },
+ {
+  "slug": "extra_9_anime",
+  "template_id": "anime",
+  "idea_ru": "Робот поливает цветы",
+  "idea_en": "a small robot watering flowers"
+ },
+ {
+  "slug": "extra_9_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Робот поливает цветы",
+  "idea_en": "a small robot watering flowers"
+ },
+ {
+  "slug": "extra_9_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Робот поливает цветы",
+  "idea_en": "a small robot watering flowers"
+ },
+ {
+  "slug": "extra_9_clay",
+  "template_id": "clay",
+  "idea_ru": "Робот поливает цветы",
+  "idea_en": "a small robot watering flowers"
+ },
+ {
+  "slug": "extra_10_paper",
+  "template_id": "paper",
+  "idea_ru": "Краб строит замок",
+  "idea_en": "a crab building a sand castle"
+ },
+ {
+  "slug": "extra_10_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Краб строит замок",
+  "idea_en": "a crab building a sand castle"
+ },
+ {
+  "slug": "extra_10_anime",
+  "template_id": "anime",
+  "idea_ru": "Краб строит замок",
+  "idea_en": "a crab building a sand castle"
+ },
+ {
+  "slug": "extra_10_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Краб строит замок",
+  "idea_en": "a crab building a sand castle"
+ },
+ {
+  "slug": "extra_11_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Мышка в библиотеке",
+  "idea_en": "a mouse reading a huge book in a library"
+ },
+ {
+  "slug": "extra_11_anime",
+  "template_id": "anime",
+  "idea_ru": "Мышка в библиотеке",
+  "idea_en": "a mouse reading a huge book in a library"
+ },
+ {
+  "slug": "extra_11_paper",
+  "template_id": "paper",
+  "idea_ru": "Мышка в библиотеке",
+  "idea_en": "a mouse reading a huge book in a library"
+ },
+ {
+  "slug": "extra_11_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Мышка в библиотеке",
+  "idea_en": "a mouse reading a huge book in a library"
+ },
+ {
+  "slug": "extra_12_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Пчёлы и цветочный город",
+  "idea_en": "bees flying around a town of flowers"
+ },
+ {
+  "slug": "extra_12_paper",
+  "template_id": "paper",
+  "idea_ru": "Пчёлы и цветочный город",
+  "idea_en": "bees flying around a town of flowers"
+ },
+ {
+  "slug": "extra_12_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Пчёлы и цветочный город",
+  "idea_en": "bees flying around a town of flowers"
+ },
+ {
+  "slug": "extra_12_anime",
+  "template_id": "anime",
+  "idea_ru": "Пчёлы и цветочный город",
+  "idea_en": "bees flying around a town of flowers"
+ },
+ {
+  "slug": "extra_13_castle",
+  "template_id": "castle",
+  "idea_ru": "Лама в горах",
+  "idea_en": "a fluffy llama on a mountain path"
+ },
+ {
+  "slug": "extra_13_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Лама в горах",
+  "idea_en": "a fluffy llama on a mountain path"
+ },
+ {
+  "slug": "extra_13_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Лама в горах",
+  "idea_en": "a fluffy llama on a mountain path"
+ },
+ {
+  "slug": "extra_13_paper",
+  "template_id": "paper",
+  "idea_ru": "Лама в горах",
+  "idea_en": "a fluffy llama on a mountain path"
+ },
+ {
+  "slug": "extra_14_clay",
+  "template_id": "clay",
+  "idea_ru": "Страна сладостей",
+  "idea_en": "a land of cookies and ice cream hills"
+ },
+ {
+  "slug": "extra_14_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Страна сладостей",
+  "idea_en": "a land of cookies and ice cream hills"
+ },
+ {
+  "slug": "extra_14_castle",
+  "template_id": "castle",
+  "idea_ru": "Страна сладостей",
+  "idea_en": "a land of cookies and ice cream hills"
+ },
+ {
+  "slug": "extra_14_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Страна сладостей",
+  "idea_en": "a land of cookies and ice cream hills"
+ },
+ {
+  "slug": "extra_15_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Поезд в космосе",
+  "idea_en": "a steam train flying among the stars"
+ },
+ {
+  "slug": "extra_15_castle",
+  "template_id": "castle",
+  "idea_ru": "Поезд в космосе",
+  "idea_en": "a steam train flying among the stars"
+ },
+ {
+  "slug": "extra_15_clay",
+  "template_id": "clay",
+  "idea_ru": "Поезд в космосе",
+  "idea_en": "a steam train flying among the stars"
+ },
+ {
+  "slug": "extra_15_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Поезд в космосе",
+  "idea_en": "a steam train flying among the stars"
+ },
+ {
+  "slug": "extra_16_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Домик в тыкве",
+  "idea_en": "a cozy house inside a giant pumpkin"
+ },
+ {
+  "slug": "extra_16_clay",
+  "template_id": "clay",
+  "idea_ru": "Домик в тыкве",
+  "idea_en": "a cozy house inside a giant pumpkin"
+ },
+ {
+  "slug": "extra_16_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Домик в тыкве",
+  "idea_en": "a cozy house inside a giant pumpkin"
+ },
+ {
+  "slug": "extra_16_castle",
+  "template_id": "castle",
+  "idea_ru": "Домик в тыкве",
+  "idea_en": "a cozy house inside a giant pumpkin"
+ },
+ {
+  "slug": "extra_17_anime",
+  "template_id": "anime",
+  "idea_ru": "Корабль в небе",
+  "idea_en": "a wooden flying ship above the clouds"
+ },
+ {
+  "slug": "extra_17_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Корабль в небе",
+  "idea_en": "a wooden flying ship above the clouds"
+ },
+ {
+  "slug": "extra_17_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Корабль в небе",
+  "idea_en": "a wooden flying ship above the clouds"
+ },
+ {
+  "slug": "extra_17_clay",
+  "template_id": "clay",
+  "idea_ru": "Корабль в небе",
+  "idea_en": "a wooden flying ship above the clouds"
+ },
+ {
+  "slug": "extra_18_paper",
+  "template_id": "paper",
+  "idea_ru": "Снеговик и друзья-звери",
+  "idea_en": "a snowman with forest animals"
+ },
+ {
+  "slug": "extra_18_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Снеговик и друзья-звери",
+  "idea_en": "a snowman with forest animals"
+ },
+ {
+  "slug": "extra_18_anime",
+  "template_id": "anime",
+  "idea_ru": "Снеговик и друзья-звери",
+  "idea_en": "a snowman with forest animals"
+ },
+ {
+  "slug": "extra_18_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Снеговик и друзья-звери",
+  "idea_en": "a snowman with forest animals"
+ },
+ {
+  "slug": "extra_19_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Подводный город",
+  "idea_en": "a glowing underwater city with fish"
+ },
+ {
+  "slug": "extra_19_anime",
+  "template_id": "anime",
+  "idea_ru": "Подводный город",
+  "idea_en": "a glowing underwater city with fish"
+ },
+ {
+  "slug": "extra_19_paper",
+  "template_id": "paper",
+  "idea_ru": "Подводный город",
+  "idea_en": "a glowing underwater city with fish"
+ },
+ {
+  "slug": "extra_19_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Подводный город",
+  "idea_en": "a glowing underwater city with fish"
+ },
+ {
+  "slug": "extra_20_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Динозавр на пикнике",
+  "idea_en": "a friendly dinosaur at a picnic"
+ },
+ {
+  "slug": "extra_20_paper",
+  "template_id": "paper",
+  "idea_ru": "Динозавр на пикнике",
+  "idea_en": "a friendly dinosaur at a picnic"
+ },
+ {
+  "slug": "extra_20_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Динозавр на пикнике",
+  "idea_en": "a friendly dinosaur at a picnic"
+ },
+ {
+  "slug": "extra_20_anime",
+  "template_id": "anime",
+  "idea_ru": "Динозавр на пикнике",
+  "idea_en": "a friendly dinosaur at a picnic"
+ },
+ {
+  "slug": "extra_21_castle",
+  "template_id": "castle",
+  "idea_ru": "Хлопковое поле и аист",
+  "idea_en": "a stork over a white cotton field at sunrise"
+ },
+ {
+  "slug": "extra_21_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Хлопковое поле и аист",
+  "idea_en": "a stork over a white cotton field at sunrise"
+ },
+ {
+  "slug": "extra_21_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Хлопковое поле и аист",
+  "idea_en": "a stork over a white cotton field at sunrise"
+ },
+ {
+  "slug": "extra_21_paper",
+  "template_id": "paper",
+  "idea_ru": "Хлопковое поле и аист",
+  "idea_en": "a stork over a white cotton field at sunrise"
+ },
+ {
+  "slug": "extra_22_clay",
+  "template_id": "clay",
+  "idea_ru": "Дыня-планета",
+  "idea_en": "a giant melon planet with tiny animals"
+ },
+ {
+  "slug": "extra_22_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Дыня-планета",
+  "idea_en": "a giant melon planet with tiny animals"
+ },
+ {
+  "slug": "extra_22_castle",
+  "template_id": "castle",
+  "idea_ru": "Дыня-планета",
+  "idea_en": "a giant melon planet with tiny animals"
+ },
+ {
+  "slug": "extra_22_space_pet",
+  "template_id": "space_pet",
+  "idea_ru": "Дыня-планета",
+  "idea_en": "a giant melon planet with tiny animals"
+ },
+ {
+  "slug": "extra_23_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Чайный домик у реки",
+  "idea_en": "a little tea house by a river with blue tiles"
+ },
+ {
+  "slug": "extra_23_castle",
+  "template_id": "castle",
+  "idea_ru": "Чайный домик у реки",
+  "idea_en": "a little tea house by a river with blue tiles"
+ },
+ {
+  "slug": "extra_23_clay",
+  "template_id": "clay",
+  "idea_ru": "Чайный домик у реки",
+  "idea_en": "a little tea house by a river with blue tiles"
+ },
+ {
+  "slug": "extra_23_pixel",
+  "template_id": "pixel",
+  "idea_ru": "Чайный домик у реки",
+  "idea_en": "a little tea house by a river with blue tiles"
+ },
+ {
+  "slug": "extra_24_superhero",
+  "template_id": "superhero",
+  "idea_ru": "Огромный гранат-дом",
+  "idea_en": "a tiny house inside a giant pomegranate"
+ },
+ {
+  "slug": "extra_24_clay",
+  "template_id": "clay",
+  "idea_ru": "Огромный гранат-дом",
+  "idea_en": "a tiny house inside a giant pomegranate"
+ },
+ {
+  "slug": "extra_24_watercolor",
+  "template_id": "watercolor",
+  "idea_ru": "Огромный гранат-дом",
+  "idea_en": "a tiny house inside a giant pomegranate"
+ },
+ {
+  "slug": "extra_24_castle",
+  "template_id": "castle",
+  "idea_ru": "Огромный гранат-дом",
+  "idea_en": "a tiny house inside a giant pomegranate"
+ },
+ {
   "slug": "show_mermaid_cat",
   "template_id": "anime",
   "idea_ru": "Кошка-русалка в коралловом замке",

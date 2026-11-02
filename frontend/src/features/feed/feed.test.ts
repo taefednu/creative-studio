@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { byStyle, cardRatio, createdLabel, drawSameKind } from './feed'
+import { byStyle, cardRatio, createdLabel, drawSameKind, toColumns } from './feed'
 import type { Post } from './feed'
 
 const post = (id: number, template_id: string | null) => ({ id, template_id }) as Post
@@ -11,9 +11,18 @@ describe('feed', () => {
     expect(byStyle(l, 'clay').map((p) => p.id)).toEqual([1, 4])
     expect(byStyle(l, 'paper')).toEqual([])
   })
+  it('toColumns: дозагрузка не двигает показанные, все карточки на месте', () => {
+    const items = Array.from({ length: 40 }, (_, i) => post(i + 1, null))
+    const before = toColumns(items.slice(0, 20), 6)
+    const after = toColumns(items, 6)
+    before.forEach((col, c) => expect(after[c].slice(0, col.length)).toEqual(col))
+    expect(after.flat().length).toBe(40)
+    const lens = after.map((col) => col.length)
+    expect(Math.max(...lens) - Math.min(...lens)).toBeLessThanOrEqual(3)
+  })
   it('cardRatio: стабилен и даёт разные формы', () => {
     const set = new Set(Array.from({ length: 50 }, (_, i) => cardRatio(i + 1)))
-    expect(set.size).toBe(5)
+    expect(set.size).toBe(7)
     expect(cardRatio(7)).toBe(cardRatio(7))
   })
   it('createdLabel: сегодня, вчера, иначе дата; наивное UTC читается как UTC', () => {

@@ -7,6 +7,7 @@
 
 import argparse
 import json
+import random
 import sys
 from datetime import timedelta
 from pathlib import Path
@@ -58,6 +59,8 @@ def seed(images_dir: Path) -> dict:
     imgs = load_images(images_dir)
     if not imgs:
         raise SystemExit(f"нет картинок в {images_dir}: запусти scripts/gen_demo_images.py")
+    # манифест идёт сюжетами: без перемешивания в ряду ленты стоят четыре одинаковых енота; первые 20 заняты подписями
+    imgs[20:] = random.Random(7).sample(imgs[20:], len(imgs[20:]))
     dbmod.init_db()
     s = dbmod.new_session()
     if any(s.scalar(select(func.count()).select_from(m)) for m in (Parent, Teacher, Child)):
@@ -116,9 +119,11 @@ def seed(images_dir: Path) -> dict:
         coins.add_entry(s, c.id, get_settings().COIN_DAILY, "daily", ref)
         s.execute(update(CoinLedger).where(CoinLedger.ref_id == ref).values(created_at=d))
 
-    # ---- 20 постов класса ----
-    posts: list[Post] = []
-    for i in range(20):
+    # ---- 100 постов класса: лента не кончается за пару экранов ----
+    # лента идёт от новых к старым: постановочные 0–19 (подписи, комментарии, ремикс) создаём последними,
+    # иначе они уходят за первую страницу
+    posts: list[Post] = [None] * 100  # type: ignore[list-item]
+    for i in [*range(20, 100), *range(20)]:
         author = kids[i % len(kids)]
         extra = {"remix_of_post_id": posts[3].id} if i == 9 else {}
         when = ago(hours=i * 8 + 1)
@@ -128,7 +133,7 @@ def seed(images_dir: Path) -> dict:
                  status="published", best=i in (2, 5), remix_allowed=i != 8, created_at=when)
         s.add(p)
         s.flush()
-        posts.append(p)
+        posts[i] = p
     for i, p in enumerate(posts):
         pool = [k for k in kids if k.id != p.child_id]
         for k in range(1 + (i * 5) % 9):
@@ -137,12 +142,12 @@ def seed(images_dir: Path) -> dict:
     show = [child(n, "9-12", "ru", in_class=False) for n in SHOWCASE]
     for c in show:
         s.add(ClassMembership(child_id=c.id, class_id=comets.id))
-    for i in range(16):
+    for i in range(100):
         author = show[i % len(show)]
         when = ago(hours=i * 11 + 2)
-        w = work(author, 20 + i, when)
+        w = work(author, 100 + i, when)
         p = Post(work_id=w.id, child_id=author.id, audience="class", class_id=comets.id,
-                 caption=imgs[(20 + i) % n_img]["idea"], status="published", best=True, created_at=when)
+                 caption=imgs[(100 + i) % n_img]["idea"], status="published", best=True, created_at=when)
         s.add(p)
         s.flush()
         for k in range(1 + (i * 3) % len(show)):

@@ -29,7 +29,7 @@ async function openCard(p, match) {
   const i = items.findIndex(match)
   if (i < 0) return null
   await p.goto(BASE + '/'); await T(p, 'post-card').first().waitFor()
-  await T(p, 'post-card').nth(i).click(); await T(p, 'modal-image').waitFor()
+  await p.locator(`[data-post-id=\"${items[i].id}\"]`).click(); await T(p, 'modal-image').waitFor()
   return items[i]
 }
 const noScroll = (p) => p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
@@ -208,9 +208,9 @@ const proposed = { id: 777, kind: 'image', template_id: 'anime', status: 'propos
         await r.fulfill(json([...j, { id: 9001, nick: 'StarFox', text: 'мой текст', status: 'held', mine: true, support: sup }]))
       })
       await p.goto(BASE + '/'); await T(p, 'post-card').first().waitFor()
-      const idx = items.findIndex((x) => x.id === target.id)
-      const cardTxt = await T(p, 'post-card').nth(idx).innerText()
-      await T(p, 'post-card').nth(idx).click(); await T(p, 'modal-image').waitFor()
+      const card = p.locator(`[data-post-id="${target.id}"]`)
+      const cardTxt = await card.innerText()
+      await card.click(); await T(p, 'modal-image').waitFor()
       await T(p, 'tab-comments').click(); await T(p, 'comment').first().waitFor()
       const heldPost = await T(p, 'post-held').count(), heldCom = await T(p, 'comment-held').count()
       ok(`support=${sup}: пометки поста, карточки и комментария ${sup ? 'нет' : 'есть'}`, sup ? heldPost === 0 && heldCom === 0 && !/ждёт взрослого/.test(cardTxt) : heldPost === 1 && heldCom === 1 && /ждёт взрослого/.test(cardTxt), `${heldPost} ${heldCom} ${cardTxt.slice(0, 40)}`)
