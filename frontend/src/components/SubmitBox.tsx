@@ -22,7 +22,7 @@ export default function SubmitBox({ workId, assignment, onSupport, onDone, big }
   const [comment, setComment] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
-  const [res, setRes] = useState<'accepted' | 'held' | null>(null)
+  const [res, setRes] = useState<'accepted' | 'held' | 'rejected' | null>(null)
   const lock = useRef(false)
   const wrap = big ? 'col-span-2 md:col-span-3' : ''
 
@@ -40,7 +40,7 @@ export default function SubmitBox({ workId, assignment, onSupport, onDone, big }
       if (o === 'support') onSupport()
       else {
         setRes(o)
-        onDone?.()
+        if (o !== 'rejected') onDone?.() // не принятая работа задание не закрывает
       }
     } catch (x) {
       setErr(submitErrorCode(errorKey(x)))
@@ -53,10 +53,10 @@ export default function SubmitBox({ workId, assignment, onSupport, onDone, big }
   if (res) {
     return (
       <p
-        data-testid={res === 'accepted' ? 'submit-done' : 'submit-held'}
+        data-testid={`submit-${res === 'accepted' ? 'done' : res}`}
         className={`${wrap} rounded-2xl bg-primary-soft px-4 py-3 text-base font-extrabold text-heading`}
       >
-        {t(res === 'accepted' ? 'task.submitDone' : 'task.submitHeld')}
+        {t({ accepted: 'task.submitDone', held: 'task.submitHeld', rejected: 'task.submitRejected' }[res])}
       </p>
     )
   }

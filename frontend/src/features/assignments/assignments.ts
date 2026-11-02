@@ -1,6 +1,7 @@
 import { api } from '../../api'
 
-export type Submitted = { work_id: number; status: string }
+/** support: срочная сдача — ребёнок видит такое задание как обычное, без пометок о проверке. */
+export type Submitted = { work_id: number; status: string; support?: boolean }
 
 /** Ответ /api/child/assignments. */
 export type Assignment = {
@@ -13,8 +14,15 @@ export type Assignment = {
 
 export const loadAssignments = () => api<Assignment[]>('/api/child/assignments')
 
+/** Сдача, которую ребёнок видит: не отклонённая и не срочная (срочную показываем как будто её нет). */
+export const visibleSent = (a: Pick<Assignment, 'submissions'>) => a.submissions.filter((s) => s.status !== 'rejected' && !s.support)
+
 /** Задание открыто, пока у ребёнка нет сдачи (принятой или ушедшей к учителю); отклонённую можно переделать. */
-export const isOpen = (a: Pick<Assignment, 'submissions'>) => !a.submissions.some((s) => s.status !== 'rejected')
+export const isOpen = (a: Pick<Assignment, 'submissions'>) => visibleSent(a).length === 0
+
+/** Задание в строке «Создать»: заданный id не подменяем другим, без id — первое открытое. */
+export const shownTask = (list: Assignment[] | null | undefined, id: number | null): Assignment | null =>
+  (id ? list?.find((x) => x.id === id && isOpen(x)) : list?.find(isOpen)) ?? null
 
 /** Для какого задания показывать «Сдать»: id из ссылки должен быть среди открытых заданий, иначе кнопки нет. */
 export function submitTarget(list: Assignment[] | null, id: number | null): Assignment | null {
@@ -34,8 +42,9 @@ export function dueIso(day: string): string | null {
 export type SubmitResult = { id: number; status: string; support: boolean }
 
 /** Что показать после сдачи. support — только тёплый ответ, раньше остального. */
-export function outcome(r: SubmitResult): 'support' | 'held' | 'accepted' {
+export function outcome(r: SubmitResult): 'support' | 'held' | 'accepted' | 'rejected' {
   if (r.support) return 'support'
+  if (r.status === 'rejected') return 'rejected'
   return r.status === 'accepted' ? 'accepted' : 'held'
 }
 

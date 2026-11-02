@@ -39,6 +39,7 @@
     "asr_failed": "The voice helper is resting. Type your idea or pick a style.",
     "asr_timeout": "The voice helper is taking a long time. Try again or type your idea.",
     "mic_denied": "The microphone is off. Allow it in the browser or type your idea.",
+    "mic_missing": "No microphone found. Plug one in or type your idea.",
     "voice_unsupported": "This browser cannot record voice. Type your idea instead.",
     "file_too_large": "The file is too big. Pick a smaller drawing, up to 5 MB.",
     "image_too_large": "The picture is too big. Pick a smaller one.",
@@ -95,13 +96,13 @@
       "face": "We hid a face to keep it safe.",
       "school_uniform": "We hid a uniform to keep it safe.",
       "house_number": "We hid a number to keep it safe.",
-      "handwritten_name": "We hid a name to keep it safe."
+      "handwritten_name": "We hid a name to keep it safe.",
+      "written_word": "We hid some writing to keep it safe."
     },
     "title": "What shall we draw today?",
     "sub": "Not sure? Pick a style below",
     "chooseStyle": "Choose a style",
     "placeholder": "What shall we draw today?",
-    "voiceSoon": "Voice is coming soon",
     "draw": "Create",
     "checking": "Checking…",
     "generating": "Drawing…",
@@ -208,8 +209,8 @@
     "showClass": "Share with class"
   },
   "shell": { "coinsUnknown": "Coins are not available right now", "nav": "Main menu", "account": "Profile" },
-  "task": { "start": "Start", "overdue": "deadline passed", "today": "due today", "left_one": "{{count}} day left", "left_few": "{{count}} days left", "left_many": "{{count}} days left", "left_other": "{{count}} days left", "draw": "Draw", "noClass": "Tasks show up once you join a class: enter the class code from your teacher.", "empty": "No tasks yet. Check back later: your teacher will think of something soon!", "sentMark": "Handed in, your teacher will see it", "heldMark": "Sent to your teacher to look at", "submit": "Hand in", "submitFor": "Handing in to:", "submitComment": "Caption (optional)", "submitDone": "Handed in! Your teacher will see your picture.", "submitHeld": "Sent to your teacher to look at. They will answer once they have.", "pick": "Which task to hand in to" },
-  "panel": { "voiceStart": "Speak your idea", "voiceStop": "Stop recording", "voiceListening": "Listening…", "uploadTitle": "Upload a drawing", "uploadHint": "PNG or JPG", "uploadSending": "Sending…", "uploadClose": "Close", "model": "Muse Image", "format": "1:1", "style": "Style", "uploadSoon": "Picture upload is coming soon", "allStyles": "All styles", "styleFilter": "Filter by style", "noStyleMatch": "No pictures in this style yet" },
+  "task": { "start": "Start", "overdue": "deadline passed", "today": "due today", "left_one": "{{count}} day left", "left_few": "{{count}} days left", "left_many": "{{count}} days left", "left_other": "{{count}} days left", "draw": "Draw", "noClass": "Tasks show up once you join a class: enter the class code from your teacher.", "empty": "No tasks yet. Check back later: your teacher will think of something soon!", "sentMark": "Handed in, your teacher will see it", "heldMark": "Sent to your teacher to look at", "submit": "Hand in", "submitFor": "Handing in to:", "submitComment": "Caption (optional)", "submitDone": "Handed in! Your teacher will see your picture.", "submitRejected": "Your teacher did not accept this picture. Pick another one.", "submitHeld": "Sent to your teacher to look at. They will answer once they have.", "pick": "Which task to hand in to" },
+  "panel": { "voiceStart": "Speak your idea", "voiceStop": "Stop recording", "voiceListening": "Listening…", "uploadTitle": "Upload a drawing", "uploadHint": "PNG or JPG", "uploadSending": "Sending…", "uploadClose": "Close", "model": "Muse Image", "format": "1:1", "style": "Style", "allStyles": "All styles", "styleFilter": "Filter by style", "noStyleMatch": "No pictures in this style yet" },
   "templates": {
     "superhero": "I'm a superhero",
     "space_pet": "Pet in space",
@@ -523,7 +524,7 @@
     "word_many": "coins",
     "word_other": "coins",
     "lessonsTitle": "Coins earned in lessons",
-    "lessonsText": "Kids can earn coins by completing Mentorium lessons and creative activities."
+    "lessonsText": "A child who signs in with Mentorium draws with platform coins, which they earn in Mentorium lessons."
   },
   "cal": {
     "date": "{{wd}}, {{d}} {{m}}",

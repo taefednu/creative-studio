@@ -256,8 +256,8 @@ const adult = (p, who) =>
   ok('классов два — фильтр есть', (await T(t, 'class-filter').count()) === 1)
   await T(t, 'tab-tasks').click()
   await t.waitForURL('**/teacher/tasks')
-  await T(t, 'tasks-empty').waitFor()
-  ok('вкладка заданий: пустая страница с текстом', (await T(t, 'tasks-empty').count()) === 1)
+  await T(t, 'task-form').waitFor()
+  ok('вкладка заданий: форма нового задания (страница больше не пустая)', (await T(t, 'task-form').count()) === 1)
   await T(t, 'tab-classes').click()
   await t.waitForURL('**/teacher/classes')
   await T(t, 'class-code').first().waitFor()
@@ -270,6 +270,7 @@ const adult = (p, who) =>
   await T(t, 'class-create').click()
   await T(t, 'error').waitFor()
   ok('создание класса на /teacher/classes доходит до сервера (стенд без модели отказывает названию, ошибка показана)', (await T(t, 'room-5Z' + rnd).count()) === 0)
+  await T(t, 'class-modal-close').click() // окно создания остаётся после ошибки и закрывает вкладки
   await T(t, 'tab-classfeed').click()
   await t.waitForURL('**/teacher/feed/*')
   ok('«Лента класса» ведёт на ленту первого класса', true, t.url())

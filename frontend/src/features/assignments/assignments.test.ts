@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
-import { dueIso, isOpen, outcome, submitTarget } from './assignments'
+import { dueIso, isOpen, outcome, shownTask, submitTarget, visibleSent } from './assignments'
 import type { Assignment } from './assignments'
 
 vi.stubEnv('TZ', 'Asia/Tashkent')
 process.env.TZ = 'Asia/Tashkent'
 
-const a = (id: number, subs: { work_id: number; status: string }[] = []): Assignment => ({
+const a = (id: number, subs: Assignment['submissions'] = []): Assignment => ({
   id,
   title: 't',
   description: null,
@@ -43,5 +43,29 @@ describe('outcome', () => {
     expect(outcome({ id: 1, status: 'held', support: true })).toBe('support')
     expect(outcome({ id: 1, status: 'held', support: false })).toBe('held')
     expect(outcome({ id: 1, status: 'accepted', support: false })).toBe('accepted')
+  })
+})
+
+describe('срочная и отклонённая сдача', () => {
+  const urgent = a(7, [{ work_id: 1, status: 'held', support: true }])
+  it('срочная сдача не видна и не закрывает задание', () => {
+    expect(visibleSent(urgent)).toEqual([])
+    expect(isOpen(urgent)).toBe(true)
+  })
+  it('обычная сдача на проверке по-прежнему видна', () => {
+    expect(visibleSent(a(8, [{ work_id: 1, status: 'held', support: false }]))).toHaveLength(1)
+  })
+  it('rejected в ответе сдачи — отдельный исход', () => {
+    expect(outcome({ id: 1, status: 'rejected', support: false })).toBe('rejected')
+  })
+})
+
+describe('строка задания', () => {
+  const list = [a(1, [{ work_id: 9, status: 'accepted' }]), a(2), a(3)]
+  it('без id — первое открытое; с id — именно оно, без подмены', () => {
+    expect(shownTask(list, null)?.id).toBe(2)
+    expect(shownTask(list, 3)?.id).toBe(3)
+    expect(shownTask(list, 1)).toBeNull()
+    expect(shownTask(null, null)).toBeNull()
   })
 })

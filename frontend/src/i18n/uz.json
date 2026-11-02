@@ -39,6 +39,7 @@
     "asr_failed": "Ovoz yordamchisi hozir ishlamayapti. Fikrni yozib qo‘y yoki uslub tanla.",
     "asr_timeout": "Ovoz yordamchisi uzoq o‘ylayapti. Yana urinib ko‘r yoki yozib qo‘y.",
     "mic_denied": "Mikrofon o‘chiq. Brauzerda ruxsat ber yoki yozib qo‘y.",
+    "mic_missing": "Mikrofon topilmadi. Ulab qo‘y yoki yozib qo‘y.",
     "voice_unsupported": "Bu brauzerda ovoz yozib bo‘lmaydi. Yozib qo‘y.",
     "file_too_large": "Fayl juda katta. 5 MB gacha kichikroq rasm tanla.",
     "image_too_large": "Rasm juda katta. Kichikroq rasm tanla.",
@@ -95,13 +96,13 @@
       "face": "Xavfsiz bo‘lishi uchun yuzni yashirdik.",
       "school_uniform": "Xavfsiz bo‘lishi uchun formani yashirdik.",
       "house_number": "Xavfsiz bo‘lishi uchun raqamni yashirdik.",
-      "handwritten_name": "Xavfsiz bo‘lishi uchun ismni yashirdik."
+      "handwritten_name": "Xavfsiz bo‘lishi uchun ismni yashirdik.",
+      "written_word": "Yozuvni xavfsizlik uchun yashirdik."
     },
     "title": "Bugun nima chizamiz?",
     "sub": "Bilmayapsanmi? Pastdan uslubni tanla",
     "chooseStyle": "Uslubni tanla",
     "placeholder": "Bugun nima chizamiz?",
-    "voiceSoon": "Ovoz tez orada",
     "draw": "Chizish",
     "checking": "Tekshiryapmiz…",
     "generating": "Chizyapmiz…",
@@ -208,8 +209,8 @@
     "showClass": "Sinfga ko‘rsatish"
   },
   "shell": { "coinsUnknown": "Tangalar hozircha mavjud emas", "nav": "Asosiy menyu", "account": "Profil" },
-  "task": { "start": "Boshlash", "overdue": "muddat tugagan", "today": "muddat bugun", "left_one": "{{count}} kun qoldi", "left_few": "{{count}} kun qoldi", "left_many": "{{count}} kun qoldi", "left_other": "{{count}} kun qoldi", "draw": "Chizish", "noClass": "Sinfga qo‘shilganingdan keyin topshiriqlar shu yerda chiqadi: o‘qituvchidan sinf kodini kiritgin.", "empty": "Hozircha topshiriq yo‘q. Keyinroq qara: o‘qituvchi tez orada nimadir o‘ylab topadi!", "sentMark": "Topshirildi, o‘qituvchi ko‘radi", "heldMark": "O‘qituvchiga ko‘rish uchun yuborildi", "submit": "Topshiriqqa topshirish", "submitFor": "Topshiryapman:", "submitComment": "Rasm izohi (shart emas)", "submitDone": "Topshirildi! O‘qituvchi rasmingni ko‘radi.", "submitHeld": "O‘qituvchiga ko‘rish uchun yuborildi. Tekshirgach, u javob beradi.", "pick": "Qaysi topshiriqqa topshirish" },
-  "panel": { "voiceStart": "Ovozda ayt", "voiceStop": "Yozishni to‘xtat", "voiceListening": "Tinglayapman…", "uploadTitle": "Rasm yuklash", "uploadHint": "PNG yoki JPG", "uploadSending": "Yuborilmoqda…", "uploadClose": "Yopish", "model": "Muse Image", "format": "1:1", "style": "Uslub", "uploadSoon": "Rasm yuklash tez orada qo'shiladi", "allStyles": "Barcha uslublar", "styleFilter": "Uslub bo'yicha filtr", "noStyleMatch": "Bu uslubda hali rasm yo'q" },
+  "task": { "start": "Boshlash", "overdue": "muddat tugagan", "today": "muddat bugun", "left_one": "{{count}} kun qoldi", "left_few": "{{count}} kun qoldi", "left_many": "{{count}} kun qoldi", "left_other": "{{count}} kun qoldi", "draw": "Chizish", "noClass": "Sinfga qo‘shilganingdan keyin topshiriqlar shu yerda chiqadi: o‘qituvchidan sinf kodini kiritgin.", "empty": "Hozircha topshiriq yo‘q. Keyinroq qara: o‘qituvchi tez orada nimadir o‘ylab topadi!", "sentMark": "Topshirildi, o‘qituvchi ko‘radi", "heldMark": "O‘qituvchiga ko‘rish uchun yuborildi", "submit": "Topshiriqqa topshirish", "submitFor": "Topshiryapman:", "submitComment": "Rasm izohi (shart emas)", "submitDone": "Topshirildi! O‘qituvchi rasmingni ko‘radi.", "submitRejected": "O‘qituvchi bu rasmni qabul qilmadi. Boshqasini tanla.", "submitHeld": "O‘qituvchiga ko‘rish uchun yuborildi. Tekshirgach, u javob beradi.", "pick": "Qaysi topshiriqqa topshirish" },
+  "panel": { "voiceStart": "Ovozda ayt", "voiceStop": "Yozishni to‘xtat", "voiceListening": "Tinglayapman…", "uploadTitle": "Rasm yuklash", "uploadHint": "PNG yoki JPG", "uploadSending": "Yuborilmoqda…", "uploadClose": "Yopish", "model": "Muse Image", "format": "1:1", "style": "Uslub", "allStyles": "Barcha uslublar", "styleFilter": "Uslub bo'yicha filtr", "noStyleMatch": "Bu uslubda hali rasm yo'q" },
   "templates": {
     "superhero": "Men superqahramonman",
     "space_pet": "Kosmosdagi uy hayvoni",
@@ -523,7 +524,7 @@
     "word_many": "tanga",
     "word_other": "tanga",
     "lessonsTitle": "Darslardan tangalar",
-    "lessonsText": "Bolalar Mentorium darslari va ijodiy mashg‘ulotlarni bajarib tanga topadi."
+    "lessonsText": "Mentorium orqali kirgan bola platforma tangalari bilan chizadi: ular Mentorium darslari uchun beriladi."
   },
   "cal": {
     "date": "{{wd}}, {{d}} {{m}}",

@@ -51,7 +51,10 @@ const noScroll = (p) => p.evaluate(() => document.documentElement.scrollWidth - 
     const shared = await T(p, 'work-card').count()
     await T(p, 'works-waiting').click()
     const waiting = await T(p, 'work-card').count()
-    ok('фильтры: все > показанные (2) и ждущие (2)', all > 2 && shared === 2 && waiting === 2, `${all}/${shared}/${waiting}`)
+    // «Ждут»: пост ждёт взрослого или сама работа на проверке (held)
+    const mine = await p.evaluate(() => fetch('/api/works/mine').then((r) => r.json())) // через route: с подменённым shared
+    const wantWait = mine.filter((w) => w.status === 'held' || (w.shared ?? []).some((x) => x.status === 'waiting')).length
+    ok('фильтры: все > показанные (2) и ждущие (посты + held)', all > 2 && shared === 2 && waiting === wantWait && wantWait >= 2, `${all}/${shared}/${waiting} want ${wantWait}`)
     ok('чипы: «Ждёт взрослого» (лавандовый) на ждущих работах', (await p.locator('[data-testid=work-chip][data-status=waiting]').evaluateAll((e) => e.length >= 2 && e.every((x) => x.innerText === 'Ждёт взрослого'))))
     await T(p, 'works-all').click()
     ok('«Все» возвращает все карточки', (await T(p, 'work-card').count()) === all)

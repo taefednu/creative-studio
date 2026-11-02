@@ -8,10 +8,10 @@ import ErrorText, { errorKey } from './ErrorText'
 /** Как UPLOAD_MAX_BYTES на бэкенде (backend/app/config.py): большой файл не гоним по сети зря. */
 const UPLOAD_MAX_BYTES = 5_000_000
 
-type Props = { guest?: boolean; className: string }
+type Props = { guest?: boolean; className: string; assignmentId?: number | null }
 
 /** Кнопка «+» и попап загрузки (menus.jpg): файл уходит только на POST /api/works/upload, дальше /create?work=<id>. */
-export default function UploadPopup({ guest, className }: Props) {
+export default function UploadPopup({ guest, className, assignmentId }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -20,7 +20,14 @@ export default function UploadPopup({ guest, className }: Props) {
   const [err, setErr] = useState<string | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const box = useRef<HTMLDivElement>(null)
-  const sent = useRef<{ file: File; id: string } | null>(null)
+  const sent = useRef<{ key: string; id: string } | null>(null)
+  const alive = useRef(true)
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -48,14 +55,17 @@ export default function UploadPopup({ guest, className }: Props) {
     setBusy(true)
     setPreview(URL.createObjectURL(file)) // только на этом экране, никуда не уходит
     // тот же файл — тот же request_id (двойной клик, сеть); другой файл или 4xx — новый
-    if (sent.current?.file !== file) sent.current = { file, id: crypto.randomUUID() }
+    // файл узнаём по имени, размеру и дате: тот же файл, выбранный снова, — тот же запрос
+    const key = `${file.name}|${file.size}|${file.lastModified}`
+    if (sent.current?.key !== key) sent.current = { key, id: crypto.randomUUID() }
     const form = new FormData()
     form.append('file', file)
     form.append('request_id', sent.current.id)
     try {
       const r = await api<{ id: number }>('/api/works/upload', 'POST', form)
+      if (!alive.current) return // экран уже закрыт: не уводим ребёнка со страницы, куда он перешёл
       setOpen(false)
-      navigate(`/create?work=${r.id}`)
+      navigate(`/create?work=${r.id}${assignmentId ? `&assignment=${assignmentId}` : ''}`)
     } catch (x) {
       setErr(x instanceof ApiError && x.status === 503 ? 'upload_busy' : errorKey(x))
       if (x instanceof ApiError && x.status >= 400 && x.status < 500) sent.current = null

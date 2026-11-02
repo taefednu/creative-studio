@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { Link, useOutletContext } from 'react-router-dom'
+import ErrorText from '../components/ErrorText'
 import Icon from '../components/Icon'
 import type { ShellContext } from '../components/AppShell'
-import { isOpen, loadAssignments } from '../features/assignments/assignments'
+import { isOpen, loadAssignments, visibleSent } from '../features/assignments/assignments'
 import type { Assignment } from '../features/assignments/assignments'
 import { sampleFor } from '../features/assignments/calendar'
 import { dueLabel } from '../features/assignments/due'
@@ -13,7 +14,7 @@ import { useLoad } from '../useLoad'
 export default function Tasks() {
   const { t } = useTranslation()
   const { cls, ready } = useOutletContext<ShellContext>()
-  const [list] = useLoad(loadAssignments)
+  const [list, reload, failed] = useLoad(loadAssignments)
   const [tpl] = useLoad(loadTemplates)
   if (!ready) return null
   const open = list?.filter(isOpen).length ?? 0
@@ -26,6 +27,14 @@ export default function Tasks() {
         <p data-testid="tasks-no-class" className="mt-4 rounded-card border border-border bg-primary-soft p-4 font-bold text-heading">
           {t('task.noClass')}
         </p>
+      )}
+      {cls && failed && !list && (
+        <div data-testid="tasks-load-error" className="mt-4 flex flex-col items-start gap-2">
+          <ErrorText code="generic" />
+          <button type="button" data-testid="tasks-retry" onClick={reload} className="h-10 rounded-full bg-primary px-6 font-extrabold text-primary-fg">
+            {t('create.retry')}
+          </button>
+        </div>
       )}
       {cls && list && list.length === 0 && (
         <p data-testid="tasks-empty" className="mt-4 text-text">
@@ -50,7 +59,7 @@ export default function Tasks() {
 function TaskCard({ a, sample }: { a: Assignment; sample: string | null }) {
   const { t } = useTranslation()
   const due = dueLabel(a.due_at)
-  const sent = a.submissions.filter((s) => s.status !== 'rejected')
+  const sent = visibleSent(a) // срочная сдача здесь как будто её нет: ни «на проверке», ни «отправили учителю»
   const done = sent.some((s) => s.status === 'accepted')
   const img = sent.length ? `/api/works/${sent[0].work_id}/image` : sample
   return (

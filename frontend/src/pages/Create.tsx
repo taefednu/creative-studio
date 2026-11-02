@@ -10,8 +10,8 @@ import PublishBox from '../components/PublishBox'
 import SubmitBox from '../components/SubmitBox'
 import SupportCard from '../components/SupportCard'
 import TeacherTask from '../components/TeacherTask'
-import { loadAssignments, submitTarget } from '../features/assignments/assignments'
-import { POLLING, hintKey, loadTemplates } from '../features/works/works'
+import { loadAssignments, shownTask, submitTarget } from '../features/assignments/assignments'
+import { BLURRED, POLLING, hintKey, loadTemplates } from '../features/works/works'
 import type { TemplateInfo, Work } from '../features/works/works'
 import { useSession } from '../features/auth/session'
 import { useLoad } from '../useLoad'
@@ -66,7 +66,10 @@ export default function Create() {
   const [params] = useSearchParams()
   const [selected, setSelected] = useState<string | null>(params.get('template'))
   const workParam = Number(params.get('work')) || null
-  const assignmentId = Number(params.get('assignment')) || null
+  const paramTask = Number(params.get('assignment')) || null
+  const [tasks] = useLoad(loadAssignments)
+  // без параметра работает то задание, которое строка учителя показывает ребёнку: «Сдать» относится к нему
+  const assignmentId = paramTask ?? shownTask(tasks, null)?.id ?? null
   const [loaded, setLoaded] = useState<Work | null>(null)
   const [retry, setRetry] = useState(0)
   const [loadErr, setLoadErr] = useState<string | null>(null)
@@ -141,7 +144,7 @@ export default function Create() {
     return (
       <WorkView
         work={work}
-        onAgain={() => navigate('/create')}
+        onAgain={() => navigate(paramTask ? `/create?assignment=${paramTask}` : '/create')}
         onMine={() => navigate('/my-works')}
         onChoose={setLoaded}
         templates={templates}
@@ -276,7 +279,7 @@ function WorkView({
   const s = work.status
   const upload = work.kind === 'upload'
   // что SAM спрятал на загрузке: коды blurred_<что>, текст из i18n по коду; оригинал ребёнку не показывается
-  const blurred = work.reason_codes.filter((c) => c.startsWith('blurred_')).map((c) => c.slice(8))
+  const blurred = work.reason_codes.filter((c) => c.startsWith('blurred_')).map((c) => c.slice(8)).filter((c) => BLURRED.includes(c))
   const tpl = templates?.find((x) => x.id === work.template_id)
   const wrap = 'mx-auto max-w-[1672px]'
   const grid = 'mt-3 grid gap-3 lg:mt-[22px] lg:grid-cols-[minmax(0,1155fr)_minmax(0,434fr)] lg:gap-[13px]'

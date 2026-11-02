@@ -107,7 +107,7 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
               setText(v.slice(0, 200))
             }}
           />
-          <UploadPopup guest={guest} className={roundOn} />
+          <UploadPopup guest={guest} className={roundOn} assignmentId={assignmentId} />
           <span className={chip}>{t('panel.model')}</span>
           <ChipSelect
             testid="panel-style"

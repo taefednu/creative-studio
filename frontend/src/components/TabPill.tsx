@@ -15,8 +15,8 @@ export default function TabPill({ to, icon, label, testid, end, badge, className
         } ${className}`
       }
     >
-      <img src={icon.includes('.') ? `/art/${icon}` : `/art/tab-${icon}.webp`} alt="" className="h-8 w-8 shrink-0 lg:h-7 lg:w-7 2xl:h-10 2xl:w-10" />
-      <span className="max-w-full truncate">{label}</span>
+      <img src={icon.includes('.') ? `/art/${icon}` : `/art/tab-${icon}.webp`} alt="" className="h-8 w-8 shrink-0 lg:h-6 lg:w-6 2xl:h-10 2xl:w-10" />
+      <span className="line-clamp-2 max-w-full break-words text-center leading-tight 2xl:line-clamp-1">{label}</span>
       {!!badge && (
         <span
           data-testid={`${testid}-badge`}

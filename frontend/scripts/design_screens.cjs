@@ -26,7 +26,8 @@ module.exports = {
   // Lumi: класс без родителя, вкладок две, как на макете; вкладка «Семья» у StarFox сдвигает вторую
   feed: async (p) => { await child(p, 'Lumi'); await go(p, '/', 'post-card') },
   create: async (p) => { await child(p); await go(p, '/create', 'templates') },
-  result: async (p) => { await child(p); await go(p, `/create?work=${await firstReady(p)}`, 'result-image') },
+  result: async (p) => { await child(p); await p.route('**/api/child/assignments', (r) => r.fulfill({ json: [] })); // макет без «Сдать»: задание ребёнка в строке и кнопка — отдельный сценарий
+    await go(p, `/create?work=${await firstReady(p)}`, 'result-image') },
   // «Давай так» без живой модели: подмена только статуса работы
   proposed: async (p) => {
     await child(p)

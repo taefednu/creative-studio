@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
@@ -27,13 +27,14 @@ const SHOWN = 4 // аватаров сдавших в строке задани�
 /** Задания учителя (#13): создать, список класса со сдачами и прогрессом, галерея сдач и «показать в ленте класса». */
 export default function TeacherTasks() {
   const { t, i18n } = useTranslation()
-  const [rooms] = useLoad(loadRooms)
+  const [rooms, reloadRooms, roomsFailed] = useLoad(loadRooms)
   const [tpl] = useLoad(loadTemplates)
   const [picked, setPicked] = useState<number | null>(null)
   const classId = picked ?? rooms?.[0]?.id ?? null
   const [tasks, setTasks] = useState<{ cls: number; items: Task[]; subs: Record<number, Sub[]> } | null>(null)
   const [kids, setKids] = useState<{ cls: number; n: number } | null>(null)
   const [tick, setTick] = useState(0)
+  const [failed, setFailed] = useState(false)
   const [open, setOpen] = useState<Task | null>(null)
   const [title, setTitle] = useState('')
   const [desc, setDesc] = useState('')
@@ -46,11 +47,13 @@ export default function TeacherTasks() {
     if (classId === null) return
     let alive = true
     api<Task[]>(`/api/teacher/classes/${classId}/assignments`)
-      .catch(() => [] as Task[])
       .then(async (items) => {
-        const lists = await Promise.all(items.map((a) => api<Sub[]>(`/api/teacher/assignments/${a.id}/submissions`).catch(() => [] as Sub[])))
-        if (alive) setTasks({ cls: classId, items, subs: Object.fromEntries(items.map((a, i) => [a.id, lists[i]])) })
+        const lists = await Promise.all(items.map((a) => api<Sub[]>(`/api/teacher/assignments/${a.id}/submissions`)))
+        if (!alive) return
+        setTasks({ cls: classId, items, subs: Object.fromEntries(items.map((a, i) => [a.id, lists[i]])) })
+        setFailed(false)
       })
+      .catch(() => alive && setFailed(true)) // сбой — видимая ошибка и повтор, а не «заданий нет»
     return () => {
       alive = false
     }
@@ -67,7 +70,7 @@ export default function TeacherTasks() {
   }, [classId])
   const items = tasks?.cls === classId ? tasks.items : null
   const total = kids?.cls === classId ? kids.n : 0
-  const presets = useMemo(() => duePresets(new Date(), t), [t])
+  const presets = duePresets(new Date(), t) // при рендере: после полуночи «сегодня» уже другой день; выбранное хранит день
   const recent = items && tasks ? items.flatMap((a) => tasks.subs[a.id] ?? []).sort((x, y) => y.id - x.id).slice(0, 4) : []
 
   async function create(e: FormEvent) {
@@ -117,6 +120,19 @@ export default function TeacherTasks() {
             />
           )}
         </div>
+        {(roomsFailed || (failed && classId !== null)) && (
+          <div data-testid="tasks-load-error" className="mt-3 flex flex-col items-start gap-2">
+            <ErrorText code="generic" />
+            <button
+              type="button"
+              data-testid="tasks-retry"
+              onClick={() => (roomsFailed ? reloadRooms() : setTick((n) => n + 1))}
+              className="h-10 rounded-full bg-primary px-6 font-extrabold text-primary-fg"
+            >
+              {t('create.retry')}
+            </button>
+          </div>
+        )}
         {rooms && rooms.length === 0 && (
           <p data-testid="tasks-empty" className="mt-3 text-muted">
             {t('cab.tasks.noClasses')}
@@ -289,17 +305,22 @@ function Gallery({ subs, onShown, reload, cols }: { subs: Sub[]; onShown: () => 
   const { t } = useTranslation()
   const [err, setErr] = useState<{ id: number; code: string } | null>(null)
   const [note, setNote] = useState<number | null>(null)
+  const lock = useRef(false)
 
   async function show(s: Sub) {
-    setErr(null)
+    if (lock.current) return // двойной клик не шлёт второй запрос
+    lock.current = true
     try {
       const r = await api<{ shown_in_feed: boolean }>(`/api/teacher/submissions/${s.id}/show-in-feed`, 'POST')
+      setErr(null)
       // false — пост задержан проверкой и ещё никому не виден: говорим как есть
       setNote(r.shown_in_feed ? null : s.id)
       await reload?.()
       onShown()
     } catch (x) {
       setErr({ id: s.id, code: showErrorCode(errorKey(x)) })
+    } finally {
+      lock.current = false
     }
   }
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -49,6 +49,9 @@ export default function TeacherClasses() {
   const [kids, setKids] = useState<Record<number, Kid[]>>({})
   const [open, setOpen] = useState<Room | null>(null)
   const [creating, setCreating] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const lock = useRef(false)
+  const [qrErr, setQrErr] = useState<string | null>(null)
   const [qr, setQr] = useState<{ id: number; nick: string; token: string } | null>(null)
   const [name, setName] = useState('')
   const [err, setErr] = useState<string | null>(null)
@@ -68,6 +71,9 @@ export default function TeacherClasses() {
 
   async function create(e: FormEvent) {
     e.preventDefault()
+    if (lock.current) return // двойной клик не создаёт два класса
+    lock.current = true
+    setBusy(true)
     setErr(null)
     try {
       await api('/api/teacher/classes', 'POST', { name })
@@ -77,12 +83,20 @@ export default function TeacherClasses() {
       notifyCabinet()
     } catch (x) {
       setErr(errorKey(x))
+    } finally {
+      lock.current = false
+      setBusy(false)
     }
   }
 
   async function showQr(classId: number, k: Kid) {
-    const r = await api<{ token: string }>(`/api/teacher/classes/${classId}/children/${k.id}/qr`, 'POST')
-    setQr({ id: k.id, nick: k.nick, token: r.token })
+    setQrErr(null)
+    try {
+      const r = await api<{ token: string }>(`/api/teacher/classes/${classId}/children/${k.id}/qr`, 'POST')
+      setQr({ id: k.id, nick: k.nick, token: r.token })
+    } catch (x) {
+      setQrErr(errorKey(x))
+    }
   }
 
   return (
@@ -109,7 +123,7 @@ export default function TeacherClasses() {
         {rooms && rooms.length === 0 && <p className="mt-4 text-muted">{t('teacher.noClasses')}</p>}
         <section data-testid="rooms" className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:mt-6 2xl:gap-[22px]">
           {rooms?.map((r) => (
-            <RoomCard key={r.id} r={r} kids={kids[r.id]} banner={sampleFor(r.id, tpl?.templates ?? [])} onKids={() => { setQr(null); setOpen(r) }} />
+            <RoomCard key={r.id} r={r} kids={kids[r.id]} banner={sampleFor(r.id, tpl?.templates ?? [])} onKids={() => { setQr(null); setQrErr(null); setOpen(r) }} />
           ))}
         </section>
       </main>
@@ -131,7 +145,7 @@ export default function TeacherClasses() {
               />
             </div>
             <ErrorText code={err} />
-            <button type="submit" data-testid="class-create" disabled={!name.trim()} className="h-12 rounded-full bg-primary px-6 font-extrabold uppercase text-primary-fg disabled:opacity-50">
+            <button type="submit" data-testid="class-create" disabled={busy || !name.trim()} className="h-12 rounded-full bg-primary px-6 font-extrabold uppercase text-primary-fg disabled:opacity-50">
               {t('teacher.create')}
             </button>
           </form>
@@ -140,6 +154,7 @@ export default function TeacherClasses() {
       {open && (
         <Modal title={`${open.name}: ${t('teacher.children')}`} onClose={() => setOpen(null)} testid="kids-modal">
           <div className="flex flex-col gap-2">
+            <ErrorText code={qrErr} />
             {(kids[open.id] ?? []).length === 0 && <p className="text-sm text-muted">{t('teacher.noChildren')}</p>}
             {(kids[open.id] ?? []).map((k) => (
               <div key={k.id}>

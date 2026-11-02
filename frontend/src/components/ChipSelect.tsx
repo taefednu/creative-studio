@@ -15,6 +15,7 @@ type Props = {
 
 const GAP = 8
 const EDGE = 8
+const MAX_W = 340 // на десктопе; на телефоне — экран минус поля
 
 type Pos = { left: number; top: number; width: number; maxHeight: number; up: boolean }
 
@@ -34,12 +35,16 @@ export default function ChipSelect({ value, onChange, options, testid, label, cl
   const [pos, setPos] = useState<Pos | null>(null)
   const btn = useRef<HTMLButtonElement>(null)
   const pop = useRef<HTMLDivElement>(null)
+  const natW = useRef(0) // ширина попапа по содержимому, замеряется один раз при открытии
+  const seen = useRef<number | null>(null) // для какого active уже прокрутили список
   const listId = useId()
   const sel = options.find((o) => o.value === value)
 
   const close = useCallback((refocus: boolean) => {
     setOpen(false)
     setPos(null)
+    natW.current = 0
+    seen.current = null
     if (refocus) btn.current?.focus()
   }, [])
 
@@ -55,7 +60,8 @@ export default function ChipSelect({ value, onChange, options, testid, label, cl
     const above = r.top - GAP - EDGE
     const up = below < natural && above > below
     const space = Math.max(up ? above : below, 96)
-    const width = Math.min(Math.max(r.width, 200), vw - EDGE * 2)
+    if (!natW.current) natW.current = p.offsetWidth // попап ещё без явной ширины: width max-content
+    const width = Math.min(Math.max(r.width, natW.current), vw >= 768 ? Math.min(MAX_W, vw - EDGE * 2) : vw - EDGE * 2)
     const left = Math.min(Math.max(r.left, EDGE), vw - width - EDGE)
     const h = Math.min(natural, space)
     setPos({ left, width, maxHeight: space, up, top: up ? r.top - GAP - h : r.bottom + GAP })
@@ -72,22 +78,28 @@ export default function ChipSelect({ value, onChange, options, testid, label, cl
       if (!btn.current?.contains(n) && !pop.current?.contains(n)) close(false)
     }
     window.addEventListener('resize', place)
-    window.addEventListener('scroll', place, true)
+    // прокрутка самого списка не двигает попап: иначе он возвращал бы выбранный пункт на место
+    const onScroll = (e: Event) => !pop.current?.contains(e.target as Node) && place()
+    window.addEventListener('scroll', onScroll, true)
     document.addEventListener('pointerdown', down)
     return () => {
       window.removeEventListener('resize', place)
-      window.removeEventListener('scroll', place, true)
+      window.removeEventListener('scroll', onScroll, true)
       document.removeEventListener('pointerdown', down)
     }
   }, [open, place, close])
 
   useEffect(() => {
-    if (open) pop.current?.querySelector(`[data-idx="${active}"]`)?.scrollIntoView({ block: 'nearest' })
+    // только когда сменился active (и попап уже размещён), не при каждом пересчёте позиции
+    if (!open || !pos || seen.current === active) return
+    seen.current = active
+    pop.current?.querySelector(`[data-idx="${active}"]`)?.scrollIntoView({ block: 'nearest' })
   }, [open, active, pos])
 
   function openList() {
     setActive(Math.max(0, options.findIndex((o) => o.value === value)))
     setOpen(true)
+    btn.current?.focus()
   }
 
   function choose(i: number) {
@@ -161,11 +173,13 @@ export default function ChipSelect({ value, onChange, options, testid, label, cl
             aria-label={label}
             data-testid={`${testid}-list`}
             data-up={pos?.up ? 'true' : 'false'}
+            onPointerDown={(e) => e.preventDefault()}
+            onMouseDown={(e) => e.preventDefault()} // фокус остаётся на кнопке
             className="chip-pop fixed z-[60] overflow-y-auto overscroll-contain rounded-[20px] border border-border bg-surface p-1.5 shadow-pop"
             style={
               pos
                 ? { left: pos.left, top: pos.top, width: pos.width, maxHeight: pos.maxHeight, transformOrigin: pos.up ? 'bottom' : 'top' }
-                : { left: 0, top: 0, visibility: 'hidden' }
+                : { left: 0, top: 0, width: 'max-content', maxWidth: 'min(340px, calc(100vw - 16px))', visibility: 'hidden' }
             }
           >
             {options.map((o, i) => {
@@ -179,13 +193,17 @@ export default function ChipSelect({ value, onChange, options, testid, label, cl
                   aria-selected={on}
                   data-testid={`${testid}-opt-${o.value}`}
                   onClick={() => choose(i)}
-                  onMouseMove={() => active !== i && setActive(i)}
+                  onMouseMove={() => {
+                    if (active === i) return
+                    seen.current = i // наведение не прокручивает список
+                    setActive(i)
+                  }}
                   className={`flex cursor-pointer items-center gap-3 rounded-2xl px-2 text-base font-extrabold text-heading ${
                     o.thumb ? 'min-h-[56px] py-1.5' : 'min-h-[44px] py-1.5'
                   } ${on ? 'bg-primary-soft' : i === active ? 'bg-bg' : ''}`}
                 >
                   <Lead o={o} size="h-11 w-11" />
-                  <span className="min-w-0 flex-1 truncate px-1">{o.label}</span>
+                  <span className="min-w-0 flex-1 break-words px-1 leading-tight">{o.label}</span>
                   {on && (
                     <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-primary" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M5 12.5l4.5 4.5L19 7.5" />

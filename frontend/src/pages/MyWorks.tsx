@@ -97,7 +97,9 @@ function WorkCard({ w, open, onSubmitted, onClosed }: { w: Work; open: Assignmen
   const [modal, setModal] = useState(false)
   // выбранное задание запоминаем: после сдачи оно уходит из открытых, а итог на карточке остаётся
   const [task, setTask] = useState<Pick<Assignment, 'id' | 'title'> | null>(null)
-  const cur = task ?? open[0]
+  const [sentTo, setSentTo] = useState<number | null>(null)
+  // задания, которого уже нет среди открытых, не держим (иначе 404 на сдаче); только что сданное оставляем ради итога
+  const cur = task && (task.id === sentTo || open.some((x) => x.id === task.id)) ? task : open[0]
   useEffect(() => {
     if (!modal) return
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && close()
@@ -203,7 +205,10 @@ function WorkCard({ w, open, onSubmitted, onClosed }: { w: Work; open: Assignmen
                         options={open.map((x) => ({ value: String(x.id), label: x.title }))}
                       />
                     )}
-                    <SubmitBox key={cur.id} workId={w.id} assignment={cur} onSupport={() => setSupport(true)} onDone={onSubmitted} />
+                    <SubmitBox key={cur.id} workId={w.id} assignment={cur} onSupport={() => setSupport(true)} onDone={() => {
+                      setSentTo(cur.id)
+                      onSubmitted()
+                    }} />
                   </>
                 )}
               </div>

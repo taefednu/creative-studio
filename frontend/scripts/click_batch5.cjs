@@ -66,6 +66,9 @@ const png = (p) => p.evaluate(async () => {
   const r = await Promise.all([list.boundingBox(), T(c, 'panel-style').boundingBox()])
   ok('открыт вверх или целиком над кнопкой/под ней, не перекрывает её', r[0].y + r[0].height <= r[1].y + 1 || r[0].y >= r[1].y + r[1].height - 1, JSON.stringify(r[0]))
   ok('попап в окне', await inView(c, 'panel-style-list'))
+  const clipped = (pg) => T(pg, 'panel-style-list').locator('[role=option] > span.flex-1').evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).length)
+  ok('1672: подписи стилей не обрезаны, попап не шире 340', (await clipped(c)) === 0 && r[0].width <= 340.5, `${r[0].width}`)
+  ok('фокус на кнопке при открытии', (await c.evaluate(() => document.activeElement?.dataset.testid)) === 'panel-style')
   await c.waitForTimeout(250)
   await c.screenshot({ path: `${OVERLAY}/menus-1672.jpg`, type: 'jpeg', quality: 85 })
   await c.keyboard.press('Escape')
@@ -96,6 +99,16 @@ const png = (p) => p.evaluate(async () => {
   await m.goto(BASE + '/create'); await T(m, 'panel-style').waitFor({ timeout: 20000 })
   await T(m, 'panel-style').click(); await T(m, 'panel-style-list').waitFor(); await m.waitForTimeout(250)
   ok('телефон: список влезает, скролл внутри', (await inView(m, 'panel-style-list')) && (await noScroll(m)))
+  ok('телефон: подписи не обрезаны, попап не шире экрана-16', (await clipped(m)) === 0 && (await T(m, 'panel-style-list').boundingBox()).width <= 390 - 16 + 0.5)
+  await m.keyboard.press('Escape')
+  await m.setViewportSize({ width: 390, height: 440 }) // низкий экран: 8 стилей не помещаются, список скроллится
+  await T(m, 'panel-style').click(); await T(m, 'panel-style-list').waitFor(); await m.waitForTimeout(250)
+  const lb = await T(m, 'panel-style-list').boundingBox()
+  await m.mouse.move(lb.x + lb.width / 2, lb.y + lb.height / 2)
+  await m.mouse.wheel(0, 3000)
+  await m.waitForTimeout(500)
+  const st = await T(m, 'panel-style-list').evaluate((e) => ({ top: e.scrollTop, max: e.scrollHeight - e.clientHeight }))
+  ok('телефон: колесо прокручивает список вниз и он не отскакивает', st.max > 0 && st.top >= st.max - 2, JSON.stringify(st))
   await m.screenshot({ path: `${OVERLAY}/menus-390.jpg`, type: 'jpeg', quality: 85 })
   await m.context().close()
 
@@ -125,8 +138,10 @@ const png = (p) => p.evaluate(async () => {
   await v.screenshot({ path: `${OUT}/voice-rec-1672.png` })
   await v.screenshot({ path: `${OVERLAY}/voice-rec-1672.jpg`, type: 'jpeg', quality: 85 })
   const resp = v.waitForResponse((x) => x.url().endsWith('/api/voice/transcribe'), { timeout: 60000 })
+  const busyP = v.waitForSelector('[data-testid=voice][data-state=busy]', { state: 'attached', timeout: 5000 })
   await T(v, 'voice').click()
-  ok('после стопа — «слушаю…»', (await T(v, 'voice').getAttribute('data-state')) === 'busy')
+  const busySeen = await busyP.then(() => true, () => false) // состояние busy коротко: ждём его с подпиской до клика
+  ok('после стопа — «слушаю…»', busySeen)
   const rr = await resp
   const body = await rr.json().catch(() => ({}))
   ok(`настоящая ручка: ${rr.status()} ${body.detail} (ждём 502 asr_failed или 504, не 400)`, [502, 504].includes(rr.status()), `${rr.status()} ${JSON.stringify(body)}`)

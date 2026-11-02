@@ -25,6 +25,7 @@ export default function VoiceButton({ guest, onText, onError, className }: Props
   const mr = useRef<MediaRecorder | null>(null)
   const timer = useRef<number | undefined>(undefined)
   const alive = useRef(true)
+  const starting = useRef(false)
 
   const release = useCallback(() => {
     clearInterval(timer.current)
@@ -47,8 +48,17 @@ export default function VoiceButton({ guest, onText, onError, className }: Props
 
   async function transcribe(chunks: Blob[], type: string) {
     try {
+      const blob = new Blob(chunks, { type })
+      let wav: Blob
+      try {
+        if (blob.size === 0) throw new Error('empty')
+        wav = await recordingToWav(blob)
+      } catch {
+        if (alive.current) onError('bad_audio') // пустая или нечитаемая запись
+        return
+      }
       const form = new FormData()
-      form.append('audio', await recordingToWav(new Blob(chunks, { type })), 'voice.wav')
+      form.append('audio', wav, 'voice.wav')
       const r = await api<{ text: string }>('/api/voice/transcribe', 'POST', form)
       if (alive.current) onText(r.text)
     } catch (x) {
@@ -66,33 +76,50 @@ export default function VoiceButton({ guest, onText, onError, className }: Props
   async function start() {
     if (guest) return navigate('/login')
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') return onError('voice_unsupported')
-    onError(null)
-    let stream: MediaStream
+    if (starting.current || mr.current) return // второй клик, пока микрофон запрашивается или идёт запись
+    starting.current = true
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    } catch {
-      return onError('mic_denied')
+      onError(null)
+      let stream: MediaStream
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      } catch (x) {
+        const name = x instanceof DOMException ? x.name : ''
+        return onError(name === 'NotAllowedError' ? 'mic_denied' : name === 'NotFoundError' ? 'mic_missing' : 'generic')
+      }
+      if (!alive.current) return stream.getTracks().forEach((x) => x.stop())
+      const chunks: Blob[] = []
+      let r: MediaRecorder
+      try {
+        r = new MediaRecorder(stream)
+        mr.current = r
+        r.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data)
+        const t0 = Date.now()
+        const id = window.setInterval(() => {
+          const s = Math.floor((Date.now() - t0) / 1000)
+          setSecs(s)
+          if (s >= VOICE_MAX_SECONDS && r.state !== 'inactive') r.stop() // свой рекордер: на новую запись не влияет
+        }, 250)
+        timer.current = id
+        r.onstop = () => {
+          clearInterval(id)
+          stream.getTracks().forEach((x) => x.stop())
+          if (mr.current === r) mr.current = null
+          setState('busy')
+          void transcribe(chunks, r.mimeType)
+        }
+        r.start()
+      } catch {
+        clearInterval(timer.current)
+        mr.current = null
+        stream.getTracks().forEach((x) => x.stop()) // микрофон не держим
+        return onError('voice_unsupported')
+      }
+      setSecs(0)
+      setState('rec')
+    } finally {
+      starting.current = false
     }
-    if (!alive.current) return stream.getTracks().forEach((x) => x.stop())
-    const chunks: Blob[] = []
-    const r = new MediaRecorder(stream)
-    mr.current = r
-    r.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data)
-    r.onstop = () => {
-      stream.getTracks().forEach((x) => x.stop())
-      mr.current = null
-      setState('busy')
-      void transcribe(chunks, r.mimeType)
-    }
-    r.start()
-    const t0 = Date.now()
-    setSecs(0)
-    setState('rec')
-    timer.current = window.setInterval(() => {
-      const s = Math.floor((Date.now() - t0) / 1000)
-      setSecs(s)
-      if (s >= VOICE_MAX_SECONDS) stop()
-    }, 250)
   }
 
   const rec = state === 'rec'

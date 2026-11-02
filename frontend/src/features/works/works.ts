@@ -27,11 +27,14 @@ export type Work = {
 export type Shared = { audience: 'class' | 'family'; status: 'published' | 'waiting' }
 export type WorkFilter = 'all' | 'shared' | 'waiting'
 
-/** Фильтры «Моих работ»: «Показанные» — есть опубликованный пост, «Ждут» — есть пост, ожидающий взрослого. */
+/** Что SAM прячет на загрузке: коды blurred_<что> (backend/app/works/upload/sam.py ENTITIES), текст в create.blurred.<что>. */
+export const BLURRED = ['face', 'school_uniform', 'house_number', 'handwritten_name', 'written_word']
+
+/** Фильтры «Моих работ»: «Показанные» — есть опубликованный пост, «Ждут» — пост ждёт взрослого или сама работа на проверке. */
 export function filterWorks(list: Work[], f: WorkFilter): Work[] {
   if (f === 'all') return list
-  const want = f === 'shared' ? 'published' : 'waiting'
-  return list.filter((w) => (w.shared ?? []).some((s) => s.status === want))
+  if (f === 'waiting') return list.filter((w) => w.status === 'held' || (w.shared ?? []).some((s) => s.status === 'waiting'))
+  return list.filter((w) => (w.shared ?? []).some((s) => s.status === 'published'))
 }
 
 export type TemplateInfo = { id: string; image_url: string }

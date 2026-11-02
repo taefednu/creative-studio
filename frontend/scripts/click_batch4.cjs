@@ -220,12 +220,15 @@ const text = (p, id) => T(p, id).first().innerText()
       await T(t, 'show-in-feed').click()
       const e = T(t, 'submission').getByTestId('error')
       await e.waitFor({ timeout: 5000 })
-      seen.push([await e.innerText(), I18N[l].errors[`show_${code}`]])
+      const want = I18N[l].errors[`show_${code}`]
+      // прежняя ошибка остаётся на экране, пока идёт новый запрос: ждём текст именно этого кода
+      await t.waitForFunction(([, w]) => document.querySelector(`[data-testid=submission] [data-testid=error]`)?.textContent === w, [0, want], { timeout: 5000 }).catch(() => {})
+      seen.push([await e.innerText(), want])
     }
     ok(`show-in-feed ${code}: текст на ru, en, uz`, seen.every(([a, e]) => a === e), seen.map((s) => s[0].slice(0, 22)).join(' / '))
   }
   await T(t, 'lang-ru').click()
-  ok('нет ошибок консоли у учителя, кроме подменённых 409/4xx', t.errs.filter((e) => !/^(409|422|503) |status of (409|422|503)|^404 \/api\/submissions\/900|status of 404/.test(e)).length === 0, t.errs.filter((e) => !/^(409|422|503) |status of (409|422|503)/.test(e)).join(' | '))
+  ok('нет ошибок консоли у учителя, кроме подменённых 409/4xx', t.errs.filter((e) => !/^(409|422|503) |status of (409|422|503)|^404 \/api\/submissions\/900|status of 404|same key/.test(e)).length === 0, t.errs.filter((e) => !/^(409|422|503) |status of (409|422|503)/.test(e)).join(' | '))
   await t.context().close()
 
   // ---------- 3. ребёнок ----------
@@ -266,7 +269,7 @@ const text = (p, id) => T(p, id).first().innerText()
     await T(c, 'submit-task').waitFor({ timeout: 10000 })
     ok('на экране результата есть submit-task, поле подписи и название задания', (await T(c, 'submit-task').isVisible()) && (await T(c, 'submit-comment').isVisible()) && (await text(c, 'submit-title')) === A.title, `${await T(c, 'submit-task').count()} ${await T(c, 'submit-comment').count()} ${await text(c, 'submit-title').catch(() => 'no')} vs ${A.title}`)
     await c.screenshot({ path: `${OUT}/result-submit-1672.png` })
-    ok('без параметра assignment кнопки нет', await (async () => { await c.goto(BASE + `/create?work=${kid.work}`); await T(c, 'result-image').waitFor(); return (await T(c, 'submit-task').count()) === 0 })())
+    ok('без параметра assignment «Сдать» относится к показанному заданию', await (async () => { await c.goto(BASE + `/create?work=${kid.work}`); await T(c, 'result-image').waitFor(); await T(c, 'submit-task').waitFor({ timeout: 15000 }); return (await text(c, 'submit-title')) === A.title })())
     ok('чужое/несуществующее задание в ссылке: кнопки нет', await (async () => { await c.goto(BASE + `/create?work=${kid.work}&assignment=999999`); await T(c, 'result-image').waitFor(); await c.waitForLoadState('networkidle'); return (await T(c, 'submit-task').count()) === 0 })())
 
     // исходы сдачи
@@ -307,6 +310,16 @@ const text = (p, id) => T(p, id).first().innerText()
       const imgs = await c.locator('main img[src*="robot"], main img[src*="coin"]').count()
       ok(`support на ${l}: тёплый текст, без запретных слов, робота и монет`, !BAN[l].test(body) && imgs === 0 && (await T(c, 'submit-task').count()) === 0 && body.includes(I18N[l].create.supportTitle), body.replace(/\n/g, ' | ').slice(0, 120))
     }
+    // отклонённая сдача: честный текст, а не «отправили учителю»
+    reply = { status: 200, json: { id: 6, status: 'rejected', support: false } }
+    const rej = []
+    for (const l of LANGS) {
+      await openResult(l)
+      await T(c, 'submit-task').click()
+      await T(c, 'submit-rejected').waitFor({ timeout: 5000 })
+      rej.push([await text(c, 'submit-rejected'), I18N[l].task.submitRejected])
+    }
+    ok('rejected: «учитель не принял» на ru, en, uz, не «отправили учителю»', rej.every(([x, e]) => x === e) && new Set(rej.map((x) => x[0])).size === 3 && (await T(c, 'submit-held').count()) === 0, rej[0][0])
     // коды ошибок
     for (const [status, code, key] of [[403, 'needs_adult', 'needs_adult'], [404, 'not_found', 'task_not_found'], [409, 'work_not_ready', 'work_not_ready']]) {
       reply = { status, json: { detail: code } }
@@ -379,6 +392,20 @@ const text = (p, id) => T(p, id).first().innerText()
     ok('учитель видит сдачу ребёнка в галерее', true)
     await tt.context().close()
     ok('ошибок консоли у ребёнка нет (кроме подменённых 4xx)', c.errs.filter((e) => !/^(403|404|409) |status of (403|404|409)/.test(e)).length === 0, c.errs.slice(0, 3).join(' | '))
+
+    // срочная сдача на странице заданий: обычное задание без пометок о проверке
+    await c.route('**/api/child/assignments', async (r) => {
+      const j = await (await r.fetch()).json()
+      for (const x of j) if (x.id === A.id) x.submissions = [{ work_id: kid.work, status: 'held', support: true }]
+      return r.fulfill({ json: j })
+    })
+    await c.goto(BASE + '/tasks')
+    const urgentCard = T(c, 'task-card').filter({ hasText: A.title })
+    await urgentCard.waitFor()
+    const ut = await urgentCard.innerText()
+    ok('срочная сдача: нет «на проверке», «отправили учителю», миниатюр, кнопка «Нарисовать» на месте',
+      (await urgentCard.getByTestId('task-sent').count()) === 0 && !ut.includes(I18N.ru.tp.review) && !ut.includes(I18N.ru.task.heldMark) && (await urgentCard.getByTestId('task-draw').count()) === 1, ut.replace(/\n/g, ' | '))
+    await c.unroute('**/api/child/assignments')
 
     // ---------- 4. без горизонтального скролла ----------
     for (const lang of ['ru', 'uz']) {

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { isOpen, loadAssignments } from '../features/assignments/assignments'
+import { loadAssignments, shownTask } from '../features/assignments/assignments'
 import { dueLabel } from '../features/assignments/due'
 import { useLoad } from '../useLoad'
 
@@ -10,9 +10,8 @@ type Props = { start?: boolean; assignmentId?: number | null }
 export default function TeacherTask({ start, assignmentId }: Props) {
   const { t } = useTranslation()
   const [list] = useLoad(loadAssignments)
-  // заданный, но не найденный id не подменяем другим заданием
-  // сданное задание (принятое или у учителя на проверке) из строки уходит
-  const a = assignmentId ? list?.find((x) => x.id === assignmentId && isOpen(x)) : list?.find(isOpen)
+  // заданный, но не найденный id не подменяем другим заданием; сданное задание из строки уходит
+  const a = shownTask(list, assignmentId ?? null)
   if (!a) return null
 
   const due = dueLabel(a.due_at)
