@@ -25,8 +25,8 @@ export default function SiteFooter({ guest }: { guest?: boolean }) {
   const external = { target: '_blank', rel: 'noopener noreferrer' }
   return (
     <footer data-testid="site-footer" className="relative overflow-hidden bg-footer pt-12 text-footer-text lg:pt-[70px]">
-      <div className="relative mx-auto grid max-w-[1264px] gap-8 px-5 sm:grid-cols-2 lg:grid-cols-[1.45fr_1fr_1fr_1fr] lg:px-8">
-        <div>
+      <div className="relative grid grid-cols-2 gap-x-2 gap-y-8 px-4 md:px-8 lg:grid-cols-5 lg:gap-x-3 xl:grid-cols-6">
+        <div className="col-span-2 xl:col-span-3">
           <img src="/art/logo-on-dark.webp" alt="Mentorium" className="h-[30px] w-auto" />
           <p className="mt-4 max-w-[320px] text-[15px] leading-relaxed">{t('footer.brand')}</p>
           <p className="mt-2 text-[13px] text-footer-muted">{t('footer.city')}</p>
@@ -52,9 +52,9 @@ export default function SiteFooter({ guest }: { guest?: boolean }) {
           ))}
         </Col>
       </div>
-      <div className="relative mx-auto mt-10 flex max-w-[1264px] flex-col items-start justify-between gap-4 border-t border-footer-line px-5 pt-6 sm:flex-row sm:items-center lg:px-8">
+      <div className="relative mx-4 mt-10 flex flex-col items-start justify-between gap-4 border-t border-footer-line pt-6 sm:flex-row sm:items-center md:mx-8">
         <p className="text-[13px] text-footer-muted">{t('footer.copyright', { year: new Date().getFullYear() })}</p>
-        <div className="flex items-center gap-4">
+        <div className="flex w-full items-center justify-between gap-4 sm:w-auto">
           <p className="text-[13px] text-footer-muted">{t('footer.models')}</p>
           <button
             type="button"
@@ -69,9 +69,9 @@ export default function SiteFooter({ guest }: { guest?: boolean }) {
           </button>
         </div>
       </div>
-      <div aria-hidden="true" className="relative mt-6 flex h-[156px] justify-center overflow-hidden sm:h-[200px] lg:h-[176px]">
-        <img src="/art/logo-on-dark.webp" alt="" className="h-[150px] w-auto max-w-none opacity-[0.07] sm:h-[220px] lg:h-[244px]" />
-        <img src="/art/robot-wave.webp" alt="" className="absolute bottom-2 right-[7%] hidden h-[156px] w-auto lg:block" />
+      <div aria-hidden="true" className="relative mx-4 mt-8 pb-[84px] md:mx-8 lg:pb-6">
+        <img src="/art/logo-on-dark.webp" alt="" className="w-full opacity-[0.07]" />
+        <img src="/art/robot-wave.webp" alt="" className="absolute bottom-6 right-0 hidden h-[156px] w-auto lg:block" />
       </div>
     </footer>
   )

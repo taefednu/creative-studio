@@ -114,10 +114,10 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
   }
 
   return (
-    <div className={child ? 'mt-4' : ''}>
+    <div className={child ? 'mt-6' : ''}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:flex-nowrap">
         <div className="order-1 mt-1 md:mt-0">
-          <Title data-testid="feed-title" className={`w-fit font-extrabold text-heading ${child ? 'text-2xl md:text-[32px] md:leading-[38px]' : 'text-3xl leading-9 md:text-[44px] md:leading-[42px]'}`}>
+          <Title data-testid="feed-title" className={`w-fit font-extrabold text-heading ${child ? 'text-2xl md:text-[28px] md:leading-[34px]' : 'text-3xl leading-9 md:text-[44px] md:leading-[42px]'}`}>
             {title ?? t(`feed.title.${kind}`)}
           </Title>
         </div>
@@ -172,9 +172,9 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
           {t('panel.noStyleMatch')}
         </p>
       )}
-      <div data-testid="feed-grid" className="mt-3 flex items-start gap-2">
+      <div data-testid="feed-grid" className="mt-2 flex items-start gap-2 lg:gap-3">
         {toColumns(shown, count).map((col, c) => (
-        <div key={c} className="flex min-w-0 flex-1 flex-col gap-2">
+        <div key={c} className="flex min-w-0 flex-1 flex-col gap-2 lg:gap-3">
         {col.map((p, row) =>
           !child ? (
             <button
@@ -208,7 +208,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
             title={p.nick}
             onClick={() => setOpen(p.id)}
             style={{ aspectRatio: cardRatio(p.id), animationDelay: row < 2 ? `${(row * count + c) * 40}ms` : undefined }}
-            className="feed-card group relative block w-full overflow-hidden rounded-[22px] bg-primary-soft text-left shadow-card"
+            className="feed-card group relative block w-full overflow-hidden rounded-card bg-primary-soft text-left shadow-card"
           >
             <CardImage src={`${p.image_url}?thumb=1`} alt={captionOf(p, i18n.language) ?? ''} eager={row < 3} className="h-full w-full object-cover group-hover:scale-105" />
             {p.status === 'held' && !p.support && (

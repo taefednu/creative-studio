@@ -3,36 +3,36 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import type { TemplateInfo } from '../features/works/works'
 
-const MENTORIUM_URL = 'https://mentorium.uz/'
+const sideCls = 'relative flex min-h-[148px] flex-col items-start overflow-hidden rounded-card p-3 lg:col-span-2 lg:min-h-0 lg:px-5 lg:py-3'
 
-type Side = { key: 'coins' | 'safe' | 'tasks'; art: string; tint: string; link: ReactNode }
-
-function SideBanner({ title, text, art, tint, link, testid }: { title: string; text: string; art: string; tint: string; link: ReactNode; testid: string }) {
+function SideBody({ title, text, cta, art }: { title: string; text: string; cta: string; art: string }) {
   return (
-    <article data-testid={testid} className={`relative flex min-h-[168px] flex-col items-start overflow-hidden rounded-[24px] p-3 sm:p-4 lg:min-h-0 lg:rounded-[28px] lg:p-5 ${tint}`}>
-      <h2 className="relative text-base font-extrabold leading-tight text-heading sm:max-w-[78%] sm:text-lg lg:text-[22px]">{title}</h2>
-      <p className="relative mt-1.5 hidden max-w-[66%] text-sm font-semibold leading-snug text-text sm:block lg:max-w-[72%]">{text}</p>
-      <div className="relative mt-auto pt-3">{link}</div>
-      <img src={art} alt="" className="pointer-events-none absolute -bottom-2 -right-2 h-[64px] w-auto sm:h-[100px] lg:h-[116px]" />
-    </article>
+    <>
+      <span className="relative block text-base font-extrabold leading-tight text-heading lg:max-w-[72%] lg:text-xl">{title}</span>
+      <span className="relative mt-1 hidden text-sm font-semibold leading-snug text-text lg:block lg:max-w-[72%]">{text}</span>
+      <span className="relative mt-1.5 text-sm font-extrabold text-primary lg:mt-auto">{cta} →</span>
+      <img src={art} alt="" className="pointer-events-none absolute bottom-1 right-1 h-[60px] w-auto lg:bottom-auto lg:right-3 lg:top-1/2 lg:h-[92px] lg:-translate-y-1/2" />
+    </>
   )
 }
 
-const sideLink = 'inline-flex h-9 items-center rounded-full bg-surface px-3 text-[13px] font-extrabold text-primary shadow-card sm:px-3.5 sm:text-sm'
+/** Подпись и карточка стиля в одну колонку ленты; что не влезло в ряд, ведёт в «Все стили». */
+const styleVisible = (i: number) => (i < 4 ? '' : i === 4 ? 'lg:hidden xl:block' : 'lg:hidden')
 
-/** Верх главной: что это за продукт (главная фишка, монеты Mentorium, безопасность или задания) и ряд стилей. Ведут в настоящие экраны. */
+/** Верх главной на сетке ленты: что это за продукт и ряд стилей. Края блоков совпадают с краями колонок ленты. */
 export default function HomeBanners({ guest, templates }: { guest?: boolean; templates?: TemplateInfo[] }) {
   const { t } = useTranslation()
-  const third: Side = guest
-    ? { key: 'safe', art: '/art/shield.webp', tint: 'bg-banner-sky', link: <Link to="/login" className={sideLink}>{t('home.safe.cta')}</Link> }
-    : { key: 'tasks', art: '/art/clipboard.webp', tint: 'bg-banner-sky', link: <Link to="/tasks" className={sideLink}>{t('home.tasks.cta')}</Link> }
+  const third = guest ? 'safe' : 'tasks'
+  const side = (key: string): ReactNode => (
+    <SideBody title={t(`home.${key}.title`)} text={t(`home.${key}.text`)} cta={t(`home.${key}.cta`)} art={key === 'coins' ? '/art/coins-big.webp' : key === 'safe' ? '/art/shield.webp' : '/art/clipboard.webp'} />
+  )
   return (
     <>
-      <section data-testid="home-banners" className="mt-1 grid grid-cols-2 gap-2 lg:h-[288px] lg:grid-cols-[2fr_1fr_1fr] lg:gap-3">
-        <article data-testid="home-hero" className="relative flex min-h-[224px] flex-col items-start overflow-hidden rounded-[28px] bg-primary-grad p-5 col-span-2 lg:col-span-1 lg:min-h-0 lg:p-6">
+      <section data-testid="home-banners" className="grid grid-cols-2 gap-2 lg:h-[256px] lg:grid-cols-5 lg:grid-rows-2 lg:gap-3 xl:grid-cols-6">
+        <article data-testid="home-hero" className="relative col-span-2 flex min-h-[224px] flex-col items-start overflow-hidden rounded-card bg-primary-grad p-4 lg:col-span-3 lg:row-span-2 lg:min-h-0 lg:p-6 xl:col-span-4">
           <p className="relative text-xs font-extrabold uppercase tracking-wider text-primary-fg lg:text-sm">{t('home.hero.kicker')}</p>
-          <h1 className="relative mt-1.5 max-w-[62%] text-[28px] font-black leading-[1.05] text-primary-fg lg:text-[42px]">{t('home.hero.title')}</h1>
-          <p className="relative mt-2 max-w-[58%] text-sm font-semibold leading-snug text-primary-fg lg:max-w-[54%] lg:text-base">{t('home.hero.text')}</p>
+          <h1 className="relative mt-1 max-w-[64%] text-[28px] font-black leading-[1.05] text-primary-fg lg:max-w-[60%] lg:text-[40px]">{t('home.hero.title')}</h1>
+          <p className="relative mb-3 mt-2 max-w-[58%] text-sm font-semibold leading-snug text-primary-fg lg:text-base">{t('home.hero.text')}</p>
           <Link
             to={guest ? '/login' : '/create'}
             data-testid="home-hero-cta"
@@ -40,33 +40,38 @@ export default function HomeBanners({ guest, templates }: { guest?: boolean; tem
           >
             {t('home.hero.cta')}
           </Link>
-          <img src="/art/banner-alive.webp" alt="" className="pointer-events-none absolute -right-4 bottom-1 w-[44%] max-w-[420px] lg:-right-3 lg:bottom-4 lg:w-[46%]" />
+          <img src="/art/banner-alive.webp" alt="" className="pointer-events-none absolute bottom-1 right-1 w-[42%] lg:bottom-auto lg:right-2 lg:top-1/2 lg:-translate-y-1/2" />
         </article>
-        <SideBanner
-          testid="home-coins"
-          title={t('home.coins.title')}
-          text={t('home.coins.text')}
-          art="/art/coins-big.webp"
-          tint="bg-banner-sun"
-          link={<a href={MENTORIUM_URL} target="_blank" rel="noopener noreferrer" className={sideLink}>{t('home.coins.cta')}</a>}
-        />
-        <SideBanner testid={`home-${third.key}`} title={t(`home.${third.key}.title`)} text={t(`home.${third.key}.text`)} art={third.art} tint={third.tint} link={third.link} />
+        <a href="https://mentorium.uz/" target="_blank" rel="noopener noreferrer" data-testid="home-coins" className={`${sideCls} bg-banner-sun`}>
+          {side('coins')}
+        </a>
+        <Link to={guest ? '/login' : '/tasks'} data-testid={`home-${third}`} className={`${sideCls} bg-banner-sky`}>
+          {side(third)}
+        </Link>
       </section>
       {templates && templates.length > 0 && (
-        <section data-testid="home-styles" className="mt-4">
-          <h2 className="text-2xl font-extrabold text-heading md:text-[32px] md:leading-[38px]">{t('home.styles')}</h2>
-          <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1 md:-mx-8 md:px-8 lg:mx-0 lg:grid lg:grid-cols-8 lg:overflow-visible lg:px-0">
-            {templates.map((x) => (
+        <section data-testid="home-styles" className="mt-6">
+          <h2 className="text-2xl font-extrabold text-heading md:text-[28px] md:leading-[34px]">{t('home.styles')}</h2>
+          <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:-mx-8 md:px-8 lg:mx-0 lg:grid lg:grid-cols-5 lg:gap-3 lg:overflow-visible lg:px-0 lg:pb-0 xl:grid-cols-6">
+            {templates.map((x, i) => (
               <Link
                 key={x.id}
                 to={guest ? '/login' : `/create?template=${x.id}`}
                 data-testid={`home-style-${x.id}`}
-                className="w-[132px] shrink-0 overflow-hidden rounded-2xl border border-border bg-surface shadow-card lg:w-auto"
+                className={`w-[132px] shrink-0 overflow-hidden rounded-card border border-border bg-surface shadow-card lg:w-auto ${styleVisible(i)}`}
               >
                 <img src={x.image_url} alt="" loading="lazy" className="aspect-video w-full object-cover" />
-                <span className="block truncate px-2.5 py-1.5 text-[13px] font-extrabold text-heading">{t(`templates.${x.id}`)}</span>
+                <span className="block truncate px-3 py-1.5 text-[13px] font-extrabold text-heading">{t(`templates.${x.id}`)}</span>
               </Link>
             ))}
+            <Link
+              to={guest ? '/login' : '/create'}
+              data-testid="home-style-all"
+              className="hidden flex-col items-center justify-center gap-1 rounded-card bg-primary-soft text-[15px] font-extrabold text-primary lg:flex"
+            >
+              <img src="/art/tab-create.webp" alt="" className="h-12 w-12" />
+              {t('panel.allStyles')}
+            </Link>
           </div>
         </section>
       )}
