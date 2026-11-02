@@ -82,7 +82,8 @@ function AddKidModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =>
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-scrim p-4 backdrop-blur-sm" data-testid="add-kid-modal">
-      <form onSubmit={(e) => void addKid(e)} className={`${card} my-auto flex w-full max-w-lg flex-col gap-4`} data-testid="add-kid" role="dialog" aria-modal="true">
+      <div className="my-auto flex w-full max-w-lg flex-col gap-3">
+      <form onSubmit={(e) => void addKid(e)} className={`${card} flex flex-col gap-4`} data-testid="add-kid" role="dialog" aria-modal="true">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-extrabold text-heading">{t('parent.addChild')}</h2>
           <button type="button" data-testid="add-kid-close" onClick={onClose} className="text-sm font-bold text-muted underline">
@@ -141,6 +142,8 @@ function AddKidModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =>
           {t('parent.create')}
         </button>
       </form>
+      <LinkCard onLinked={onAdded} />
+      </div>
     </div>
   )
 }
@@ -190,12 +193,12 @@ export default function ParentCabinet() {
   return (
     <div className="min-h-screen bg-bg pb-24 lg:pb-6">
       <CabinetHeader role="parent" />
-      <main className="px-4 pb-4 pt-3 md:px-7 lg:pt-[18px]">
-        <h1 data-testid="page-title" className="mb-3 lg:mb-[17px] w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-[54px] lg:leading-[50px]">
+      <main className="px-4 py-4 md:px-8">
+        <h1 data-testid="page-title" className="mb-3 w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-4xl lg:leading-10">
           {t('cab.myKids')}
         </h1>
         <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 xl:grid-cols-[494fr_593fr_500fr]">
-          <section className="grid grid-cols-[minmax(0,1fr)] gap-4 min-[520px]:grid-cols-[repeat(2,minmax(0,1fr))]" data-testid="kids">
+          <section className="grid grid-cols-[minmax(0,1fr)] gap-4 s520:grid-cols-[repeat(2,minmax(0,1fr))]" data-testid="kids">
             {kids && kids.length === 0 && <p className="col-span-full text-muted">{t('parent.noChildren')}</p>}
             {kids?.map((k) => {
               const lessons = stats[k.id]?.coins_earned_lessons
@@ -203,15 +206,15 @@ export default function ParentCabinet() {
                 <div key={k.id} data-testid={`kid-${k.nick}`}>
                   <div
                     data-testid="kid-card"
-                    className={`flex h-full flex-col items-center gap-2 xl:min-h-[484px] rounded-card border bg-surface p-4 shadow-card ${sel?.id === k.id ? 'border-primary' : 'border-border'}`}
+                    className={`flex h-full flex-col items-center gap-2 rounded-card border bg-surface p-4 shadow-card ${sel?.id === k.id ? 'border-primary' : 'border-border'}`}
                   >
-                    <Avatar nick={k.nick} className="h-auto w-full max-w-[170px] aspect-square" />
-                    <p className="text-3xl font-extrabold text-heading">{k.nick}</p>
+                    <Avatar nick={k.nick} className="h-auto w-full max-w-[170px] aspect-square short:max-w-[84px]" />
+                    <p className="text-3xl font-extrabold text-heading short:text-xl">{k.nick}</p>
                     <p className="text-center text-muted">
                       {k.class_name ? t('cab.kid.ageClass', { age: k.age_group, name: k.class_name }) : t('cab.kid.age', { age: k.age_group })}
                     </p>
-                    <p className="flex items-center gap-2 rounded-full bg-primary-soft px-6 py-1 text-3xl font-extrabold text-heading" data-testid="kid-coins">
-                      <img src="/art/coin.webp" alt="" className="h-10 w-10" />
+                    <p className="flex items-center gap-2 rounded-full bg-primary-soft px-6 py-1 text-3xl font-extrabold text-heading short:px-4 short:py-0 short:text-xl" data-testid="kid-coins">
+                      <img src="/art/coin.webp" alt="" className="h-10 w-10 short:h-7 short:w-7" />
                       {k.coins ?? '—'}
                     </p>
                     {lessons != null && (
@@ -226,7 +229,7 @@ export default function ParentCabinet() {
                         type="button"
                         data-testid={`kid-open-${k.nick}`}
                         onClick={() => setPick(k.id)}
-                        className="h-[55px] flex-1 rounded-full bg-primary px-3 text-lg font-extrabold uppercase text-primary-fg"
+                        className="h-[55px] short:h-11 flex-1 rounded-full bg-primary px-3 text-lg short:text-base font-extrabold uppercase text-primary-fg"
                       >
                         {t('cab.kid.open')}
                       </button>
@@ -234,7 +237,7 @@ export default function ParentCabinet() {
                         type="button"
                         disabled
                         data-testid={`add-coins-${k.nick}`}
-                        className="relative h-[55px] flex-1 rounded-full border border-border bg-surface px-2 text-sm font-bold text-heading opacity-70"
+                        className="relative h-[55px] short:h-11 flex-1 rounded-full border border-border bg-surface px-2 text-sm font-bold text-heading opacity-70"
                       >
                         {t('cab.kid.addCoins')}
                         <span className="absolute -top-2 right-1 rounded-full bg-primary-soft px-2 text-[10px] font-extrabold text-primary">{t('auth.soon')}</span>
@@ -252,18 +255,18 @@ export default function ParentCabinet() {
               type="button"
               data-testid="add-child-tile"
               onClick={() => setAdding(true)}
-              className="col-span-full flex h-[120px] flex-col items-center justify-center gap-1 rounded-card border-2 border-dashed border-border bg-surface p-2 text-xl font-extrabold text-primary xl:h-[236px]"
+              className="col-span-full flex h-[120px] short:h-14 short:flex-row short:gap-2 flex-col items-center justify-center gap-1 rounded-card border-2 border-dashed border-border bg-surface p-2 text-xl font-extrabold text-primary xl:h-[236px] short:!h-14 short:text-base"
             >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-4xl leading-none xl:h-16 xl:w-16 xl:text-5xl">+</span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-4xl leading-none xl:h-16 xl:w-16 xl:text-5xl short:!h-8 short:!w-8 short:!text-2xl">+</span>
               {t('cab.kid.addChild')}
             </button>
           </section>
 
           <section className="flex flex-col gap-4">
-            <div data-testid="week" className={`${card} flex flex-col gap-3 p-5`}>
+            <div data-testid="week" className={`${card} flex flex-col gap-3 p-5 short:gap-2 short:p-4`}>
               {sel ? (
                 <>
-                  <h2 className="text-3xl font-extrabold text-heading">{t('cab.week.title', { nick: sel.nick })}</h2>
+                  <h2 className="text-3xl font-extrabold text-heading short:text-2xl">{t('cab.week.title', { nick: sel.nick })}</h2>
                   {st && !st.has_data ? (
                     <p data-testid="week-empty" className="rounded-2xl bg-primary-soft p-4 text-heading">
                       {t('cab.week.noData', { nick: sel.nick })}
@@ -302,7 +305,7 @@ export default function ParentCabinet() {
                 <p className="text-sm font-bold uppercase text-primary">{t('cab.week.latest')}</p>
                 <Link to="/parent/feed" data-testid="latest-link" className="grid grid-cols-5 gap-2">
                   {latest.map((p) => (
-                    <img key={p.id} src={p.image_url} alt="" className="aspect-[3/4] w-full rounded-xl object-cover" />
+                    <img key={p.id} src={p.image_url} alt="" className="aspect-[3/4] short:aspect-square w-full rounded-xl object-cover" />
                   ))}
                 </Link>
                 <Link to="/parent/feed" data-testid="family-feed-link" className="self-start rounded-full bg-primary px-5 py-2 text-sm font-extrabold text-primary-fg">
@@ -318,16 +321,11 @@ export default function ParentCabinet() {
           </section>
 
           <section className="flex flex-col gap-4">
-            <div data-testid="ok-card" className={`${card} flex flex-col gap-3 p-5 xl:min-h-[408px]`}>
+            <div data-testid="ok-card" className={`${card} flex flex-col gap-3 p-5 big:min-h-[408px]`}>
               <h2 className="text-3xl font-extrabold text-heading">{t('review.okTitle')}</h2>
               <div className="min-h-0 overflow-y-auto"><ReviewQueue compact /></div>
             </div>
-            <LinkCard
-              onLinked={() => {
-                load()
-                notifyCabinet()
-              }}
-            />
+            
           </section>
         </div>
       </main>

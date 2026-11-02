@@ -40,7 +40,7 @@ function Fan({ templates }: { templates: TemplateInfo[] }) {
   return (
     <div
       data-testid="fan"
-      className="relative mx-auto flex h-[140px] max-w-[835px] items-center justify-center sm:h-[200px] lg:h-[245px]"
+      className="relative mx-auto flex h-[140px] max-w-[835px] items-center justify-center sm:h-[200px] lg:h-[245px] short:hidden"
     >
       <Spark className="left-[8%] top-[20%] h-6 w-6 text-star md:left-[22%] md:h-8 md:w-8" />
       <Spark className="right-[8%] top-[28%] h-5 w-5 text-primary md:right-[22%] md:h-7 md:w-7" />
@@ -156,12 +156,12 @@ export default function Create() {
   }
 
   return (
-    <div className="mx-auto max-w-[1672px] md:mt-[6px]">
+    <div className="mx-auto max-w-[1672px] ">
       {templates && <Fan templates={templates} />}
       <div className="mt-1 text-center md:mt-0">
         <h1
           data-testid="create-title"
-          className="inline-block text-2xl font-extrabold leading-[34px] text-heading md:h-[48px] md:text-[44px] md:leading-[48px]"
+          className="inline-block text-2xl font-extrabold leading-[34px] text-heading md:text-[36px] md:leading-10"
         >
           {t('create.title')}
         </h1>
@@ -188,7 +188,7 @@ export default function Create() {
             data-testid={`tpl-${x.id}`}
             aria-pressed={tpl === x.id}
             onClick={() => setSelected(x.id)}
-            className={`flex flex-col items-center gap-1 rounded-2xl border-4 bg-surface p-1.5 text-center shadow-card h-[137px] md:h-[225px] ${
+            className={`flex flex-col items-center gap-1 rounded-2xl border-4 bg-surface p-1.5 text-center shadow-card h-[137px] md:h-[225px] short:h-[clamp(150px,calc(100dvh-430px),225px)] ${
               tpl === x.id ? 'border-primary' : 'border-transparent'
             }`}
           >
@@ -207,7 +207,7 @@ export default function Create() {
 const ICON = 'h-6 w-6 shrink-0 lg:h-9 lg:w-9'
 const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
 const btnOutline =
-  'flex h-[52px] items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-3 text-base font-extrabold text-heading shadow-card lg:h-[85px] lg:gap-3 lg:text-2xl whitespace-nowrap'
+  'flex h-[52px] items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-3 text-base font-extrabold text-heading shadow-card lg:h-11 lg:text-sm whitespace-nowrap'
 
 /** Правая колонка: робот, подпись, заголовок, текст. Одна на готовую работу, «Давай так», отказ, задержку и сбой. */
 function Side({ children }: { children: ReactNode }) {
@@ -304,7 +304,7 @@ function WorkView({
     }
     return (
       <div data-testid="work-proposed" className={wrap}>
-        <h1 className="mt-1 text-[28px] font-extrabold leading-9 text-heading lg:mt-[15px] lg:w-fit lg:text-[52px] lg:leading-[55px]">{t('create.proposedTitle')}</h1>
+        <h1 className="mt-1 text-[28px] font-extrabold leading-9 text-heading lg:mt-[15px] lg:w-fit lg:text-4xl lg:leading-10">{t('create.proposedTitle')}</h1>
         <div className={tpl ? grid : 'mx-auto mt-3 max-w-[434px]'}>
           {tpl && (
             <div data-testid="result-card" className="flex items-center justify-center rounded-[28px] border border-border bg-surface p-5 shadow-card lg:p-[26px]">
@@ -349,58 +349,25 @@ function WorkView({
 
   if (s === 'ready' && work.image_url) {
     return (
-      <div data-testid="work-ready" className={wrap}>
-        <h1 data-testid="result-title" className="mt-1 text-[28px] font-extrabold leading-9 text-heading lg:mt-[15px] lg:w-fit lg:text-[52px] lg:leading-[55px]">
-          {t(upload ? 'create.uploadReadyTitle' : 'create.readyTitle')}
-        </h1>
-        <div className={grid}>
-          <div
-            data-testid="result-card"
-            className="grid grid-cols-2 gap-3 rounded-[28px] border border-border bg-surface p-3 shadow-card md:grid-cols-[480fr_277fr_310fr] md:gap-x-[17px] lg:p-[22px] lg:pb-[29px]"
-          >
-            <div className={`col-span-2 grid gap-3 md:col-span-3 lg:mb-[17px] ${tpl ? 'md:grid-cols-[543fr_532fr] md:gap-[26px]' : 'md:mx-auto md:w-full md:max-w-[543px]'}`}>
-              <div data-testid="result-image" className="relative overflow-hidden rounded-3xl border-4 border-primary bg-surface">
-                <img data-testid="result-img" src={work.image_url} alt="" className={`aspect-square w-full object-cover md:aspect-[543/532] ${sawDrawing ? 'gen-reveal' : ''}`} />
-                <span className="absolute left-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-fg lg:left-auto lg:right-2">
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke} strokeWidth={3} aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-                </span>
-                <span className="absolute bottom-3 left-3 rounded-full bg-success-soft px-3 py-1 text-sm font-extrabold text-success lg:bottom-4 lg:left-4 lg:text-xl">
-                  {t('create.checkedByAi')}
-                </span>
-              </div>
-              <StyleSample tpl={tpl} fill>
-                {work.rewrite_text && <p className="mt-2 text-sm text-muted lg:text-lg">{t('create.rewrite', { text: work.rewrite_text })}</p>}
-              </StyleSample>
-            </div>
-            {task && <SubmitBox big workId={work.id} assignment={task} onSupport={() => setSupportFor(work.id)} />}
-            <PublishBox workId={work.id} grid onSupport={() => setSupportFor(work.id)} />
-            <button type="button" data-testid="draw-more" onClick={onAgain} className={btnOutline}>
-              <svg viewBox="0 0 24 24" className={`${ICON} text-primary`} {...stroke} aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.5-5.8" /><path d="M20 4v5h-5" /></svg>
-              {t('create.drawMore')}
-            </button>
-            <button type="button" data-testid="to-mine" onClick={onMine} className={btnOutline}>
-              <svg viewBox="0 0 24 24" className={`${ICON} text-primary`} {...stroke} aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z" /></svg>
-              {t('create.toMine')}
-            </button>
-          </div>
-          <Side>
-            {work.rewrite_text ? (
-              <>
-                <Label>{t('create.friendly')}</Label>
-                <SideTitle>{t('create.refusedTitle')}</SideTitle>
-                <SideText>{t('create.rewrite', { text: work.rewrite_text })}</SideText>
-              </>
-            ) : (
-              <>
-                <SideTitle>{t('create.sideReadyTitle')}</SideTitle>
-                {blurred.map((c) => (
-                  <SideText key={c} testid={`blurred-${c}`}>{t(`create.blurred.${c}`)}</SideText>
-                ))}
-                <SideText>{t('create.sideReadyText')}</SideText>
-              </>
-            )}
-          </Side>
+      <div data-testid="work-ready" className="mx-auto max-w-[1672px] lg:flex lg:justify-center lg:gap-5">
+        <div data-testid="result-image" className="relative mt-3 overflow-hidden rounded-3xl border-4 border-primary bg-surface lg:mt-0 lg:aspect-square lg:h-[calc(100dvh-112px)] lg:max-h-[700px] lg:shrink-0">
+          <img data-testid="result-img" src={work.image_url} alt="" className={`aspect-square w-full object-cover lg:h-full ${sawDrawing ? 'gen-reveal' : ''}`} />
+          <span className="absolute bottom-3 left-3 rounded-full bg-success-soft px-3 py-1 text-sm font-extrabold text-success lg:text-base">{t('create.checkedByAi')}</span>
         </div>
+        <aside data-testid="result-side" className="mt-3 flex min-w-0 flex-col gap-2.5 rounded-[28px] border border-border bg-surface p-4 shadow-card lg:mt-0 lg:w-[420px] lg:p-5">
+          <img src="/art/robot-brush.webp" alt="" className="mx-auto hidden h-[clamp(64px,12vh,160px)] object-contain lg:block" />
+          <h1 data-testid="result-title" className="text-[28px] font-extrabold leading-9 text-heading">{t(upload ? 'create.uploadReadyTitle' : 'create.readyTitle')}</h1>
+          {tpl && <p data-testid="style-chip" className="text-sm font-bold text-muted">{t('create.styleLabel')}: {t(`templates.${tpl.id}`)}</p>}
+          {work.rewrite_text && <SideText>{t('create.rewrite', { text: work.rewrite_text })}</SideText>}
+          {blurred.map((c) => <SideText key={c} testid={`blurred-${c}`}>{t(`create.blurred.${c}`)}</SideText>)}
+          <div className="flex-1" />
+          {task && <SubmitBox workId={work.id} assignment={task} onSupport={() => setSupportFor(work.id)} />}
+          <PublishBox workId={work.id} onSupport={() => setSupportFor(work.id)} />
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" data-testid="draw-more" onClick={onAgain} className={btnOutline}>{t('create.drawMore')}</button>
+            <button type="button" data-testid="to-mine" onClick={onMine} className={btnOutline}>{t('create.toMine')}</button>
+          </div>
+        </aside>
       </div>
     )
   }

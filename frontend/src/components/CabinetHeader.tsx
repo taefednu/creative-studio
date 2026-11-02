@@ -77,12 +77,12 @@ export default function CabinetHeader({ role }: { role: Exclude<Role, 'child'> }
   return (
     <header
       data-testid="cabinet-header"
-      className="flex h-[60px] items-center gap-1.5 border-b border-border bg-surface px-2 min-[380px]:gap-2 min-[380px]:px-3 lg:grid lg:h-[87px] lg:grid-cols-[1fr_auto_1fr] lg:gap-3 lg:px-8"
+      className="flex h-[60px] items-center gap-1.5 border-b border-border bg-surface px-2 s380:gap-2 s380:px-3 lg:sticky lg:top-0 lg:z-30 lg:grid lg:h-16 lg:grid-cols-[1fr_auto_1fr] lg:gap-3 lg:px-8"
     >
       <Logo />
       <nav
         aria-label={t('cab.nav')}
-        className="fixed inset-x-0 bottom-0 z-30 flex h-[72px] items-stretch gap-1 border-t border-border bg-surface px-1 py-1 lg:static lg:z-auto lg:h-auto lg:justify-center lg:gap-3 lg:border-0 lg:bg-transparent lg:p-0 2xl:gap-4"
+        className="fixed inset-x-0 bottom-0 z-30 flex h-[72px] items-stretch gap-1 border-t border-border bg-surface px-1 py-1 lg:static lg:z-auto lg:h-auto lg:justify-center lg:gap-1 lg:border-0 lg:rounded-full lg:bg-primary-soft lg:p-1 lg:justify-self-center"
       >
         {tabs.map((tab) => (
           <TabPill
@@ -93,11 +93,10 @@ export default function CabinetHeader({ role }: { role: Exclude<Role, 'child'> }
             testid={`tab-${tab.key}`}
             label={t(`cab.tabs.${tab.key}`)}
             badge={tab.review ? count : null}
-            className={`2xl:h-[60px] ${role === 'parent' ? '2xl:min-w-[163px] 2xl:px-7' : `2xl:px-5 ${tab.review ? '2xl:min-w-[178px]' : ''}`}`}
-          />
+                      />
         ))}
       </nav>
-      <div className="ml-auto flex shrink-0 items-center gap-1.5 min-[380px]:gap-2 lg:justify-self-end 2xl:gap-4">
+      <div className="ml-auto flex shrink-0 items-center gap-1.5 s380:gap-2 lg:justify-self-end big:gap-4">
         <LangSwitch />
         <div ref={menuRef} className="relative shrink-0">
           <button
@@ -107,12 +106,12 @@ export default function CabinetHeader({ role }: { role: Exclude<Role, 'child'> }
             aria-expanded={menu}
             aria-label={t('cab.account')}
             onClick={() => setMenu((v) => !v)}
-            className={`flex items-center gap-2 rounded-full lg:h-[58px] 2xl:h-[75px] 2xl:gap-4 ${role === 'parent' ? '2xl:min-w-[250px]' : '2xl:min-w-[200px]'}`}
+            className="flex items-center gap-2 rounded-full lg:h-11"
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-lg font-extrabold text-primary-fg lg:h-[54px] lg:w-[54px] lg:text-2xl">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-lg font-extrabold text-primary lg:h-11 lg:w-11 lg:text-lg">
               {[...name][0]}
             </span>
-            <span className="hidden text-lg font-extrabold text-heading 2xl:inline">{name}</span>
+            <span className="hidden text-base font-extrabold text-heading big:inline">{name}</span>
           </button>
           {menu && (
             <div

@@ -27,7 +27,7 @@ export default function MyWorks() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 data-testid="works-title" className="w-fit text-3xl font-extrabold leading-9 text-heading md:text-[54px] md:leading-[50px]">
+        <h1 data-testid="works-title" className="w-fit text-3xl font-extrabold leading-9 text-heading md:text-4xl md:leading-10">
           {t('myWorks.title')}
         </h1>
         {works && works.length > 0 && (
@@ -39,7 +39,7 @@ export default function MyWorks() {
                 data-testid={`works-${f}`}
                 aria-pressed={filter === f}
                 onClick={() => setFilter(f)}
-                className={`h-10 min-w-0 flex-1 rounded-full px-2 text-sm font-extrabold md:h-[42px] md:flex-none md:px-5 2xl:min-w-[123px] 2xl:text-xl ${
+                className={`h-10 min-w-0 flex-1 rounded-full px-2 text-sm font-extrabold md:h-[42px] md:flex-none md:px-5 big:min-w-[123px] big:text-xl ${
                   filter === f ? 'bg-primary text-primary-fg' : 'border border-border bg-surface text-heading'
                 }`}
               >
@@ -70,7 +70,7 @@ export default function MyWorks() {
           {t('mw.none')}
         </p>
       )}
-      <div data-testid="works-grid" className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+      <div data-testid="works-grid" className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 big:grid-cols-5">
         {shown.map((w) => (
           <WorkCard key={w.id} w={w} open={open} onSubmitted={reloadTasks} onClosed={reloadWorks} />
         ))}
@@ -137,21 +137,21 @@ function WorkCard({ w, open, onSubmitted, onClosed }: { w: Work; open: Assignmen
         <div className="flex min-w-0 flex-col items-start gap-1">
           {cta ? (
             w.status === 'held' ? (
-              <span className="text-base font-extrabold leading-5 text-heading 2xl:text-xl">{cta}</span>
+              <span className="text-base font-extrabold leading-5 text-heading big:text-xl">{cta}</span>
             ) : (
-              <Link to="/create" className="text-base font-extrabold leading-5 text-heading underline decoration-primary 2xl:text-xl">
+              <Link to="/create" className="text-base font-extrabold leading-5 text-heading underline decoration-primary big:text-xl">
                 {cta}
               </Link>
             )
           ) : (
-            <span className="max-w-full truncate text-base font-extrabold leading-5 text-heading 2xl:text-xl">{style}</span>
+            <span className="max-w-full truncate text-base font-extrabold leading-5 text-heading big:text-xl">{style}</span>
           )}
           {chips.map((s) => (
             <span
               key={`${s.audience}-${s.status}`}
               data-testid="work-chip"
               data-status={s.status}
-              className={`rounded-full px-3 py-0.5 text-xs font-extrabold 2xl:text-base ${s.status === 'waiting' ? 'bg-primary-soft text-primary' : 'bg-success-soft text-success'}`}
+              className={`rounded-full px-3 py-0.5 text-xs font-extrabold big:text-base ${s.status === 'waiting' ? 'bg-primary-soft text-primary' : 'bg-success-soft text-success'}`}
             >
               {s.status === 'waiting' ? t('mw.waitingAdult') : t(s.audience === 'family' ? 'mw.inFamily' : 'mw.inClass')}
             </span>
@@ -163,7 +163,7 @@ function WorkCard({ w, open, onSubmitted, onClosed }: { w: Work; open: Assignmen
             data-testid="work-share"
             aria-label={t('mw.share')}
             onClick={() => setModal(true)}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary shadow-card 2xl:h-11 2xl:w-11"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary shadow-card big:h-11 big:w-11"
           >
             <Icon name="share" className="h-5 w-5" />
           </button>

@@ -102,9 +102,9 @@ export default function TeacherClasses() {
   return (
     <div className="min-h-screen bg-bg pb-24 lg:pb-6">
       <CabinetHeader role="teacher" />
-      <main className="px-4 py-4 md:px-9">
-        <div className="flex items-center justify-between gap-3 2xl:mt-6">
-          <h1 data-testid="page-title" className="w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-[54px] lg:leading-[50px]">
+      <main className="px-4 py-4 md:px-8">
+        <div className="flex items-center justify-between gap-3 big:mt-6">
+          <h1 data-testid="page-title" className="w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-4xl lg:leading-10">
             {t('cab.tabs.classes')}
           </h1>
           <button
@@ -114,14 +114,14 @@ export default function TeacherClasses() {
               setErr(null)
               setCreating(true)
             }}
-            className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-4 text-base font-extrabold text-primary-fg lg:h-[60px] lg:px-7 2xl:h-[72px] 2xl:min-w-[240px] 2xl:justify-center 2xl:text-[26px]"
+            className="flex h-11 items-center gap-2 rounded-2xl bg-primary px-4 text-base font-extrabold text-primary-fg lg:h-11 lg:px-5 big:h-[72px] big:min-w-[240px] big:justify-center big:text-[26px]"
           >
-            <Icon name="plus" className="h-6 w-6 2xl:h-9 2xl:w-9" />
+            <Icon name="plus" className="h-6 w-6 big:h-9 big:w-9" />
             {t('cl2.new')}
           </button>
         </div>
         {rooms && rooms.length === 0 && <p className="mt-4 text-muted">{t('teacher.noClasses')}</p>}
-        <section data-testid="rooms" className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:mt-6 2xl:gap-[22px]">
+        <section data-testid="rooms" className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3 big:mt-6 big:gap-[22px]">
           {rooms?.map((r) => (
             <RoomCard key={r.id} r={r} kids={kids[r.id]} banner={sampleFor(r.id, tpl?.templates ?? [])} onKids={() => { setQr(null); setQrErr(null); setOpen(r) }} />
           ))}
@@ -192,18 +192,18 @@ function RoomCard({ r, kids, banner, onKids }: { r: Room; kids: Kid[] | undefine
     }
   }
   return (
-    <div data-testid={`room-${r.name}`} className="flex flex-col rounded-card border border-border bg-surface p-3 shadow-card 2xl:p-[13px]">
+    <div data-testid={`room-${r.name}`} className="flex flex-col rounded-card border border-border bg-surface p-3 shadow-card big:p-[13px]">
       <div className="aspect-[2.4] overflow-hidden rounded-2xl bg-primary-soft">
         {banner && <img data-testid="class-banner" src={banner} alt="" className="h-full w-full object-cover" />}
       </div>
-      <h2 className="mt-3 px-1 text-2xl font-extrabold leading-8 text-heading 2xl:mt-5 2xl:text-[44px] 2xl:leading-[52px]">{r.name}</h2>
-      <div data-testid="code-panel" className="mt-3 rounded-2xl bg-bg p-3 2xl:mx-2 2xl:mt-5 2xl:p-3">
-        <p className="text-xs font-extrabold uppercase tracking-wide text-muted 2xl:text-lg 2xl:leading-5">{t('cl.joinCode')}</p>
+      <h2 className="mt-3 px-1 text-2xl font-extrabold leading-8 text-heading big:mt-5 big:text-[44px] big:leading-[52px]">{r.name}</h2>
+      <div data-testid="code-panel" className="mt-3 rounded-2xl bg-bg p-3 big:mx-2 big:mt-5 big:p-3">
+        <p className="text-xs font-extrabold uppercase tracking-wide text-muted big:text-lg big:leading-5">{t('cl.joinCode')}</p>
         <div className="mt-1 flex items-center justify-between gap-2">
           {/* буквы подряд без пробелов между элементами: тест и скринридер читают код целиком */}
           <p data-testid="class-code" aria-label={r.code} className="min-w-0 whitespace-nowrap">
             {[...r.code].map((c, i) => (
-              <span key={i} aria-hidden="true" className="mr-1 inline-block h-10 w-7 rounded-xl bg-primary-soft text-center text-2xl font-extrabold leading-10 text-heading min-[360px]:w-8 min-[400px]:w-9 2xl:mr-1 2xl:h-[70px] 2xl:w-[58px] 2xl:text-[44px] 2xl:leading-[70px]">
+              <span key={i} aria-hidden="true" className="mr-1 inline-block h-10 w-7 rounded-xl bg-primary-soft text-center text-2xl font-extrabold leading-10 text-heading s360:w-8 s400:w-9 big:mr-1 big:h-[70px] big:w-[58px] big:text-[44px] big:leading-[70px]">
                 {c}
               </span>
             ))}
@@ -214,9 +214,9 @@ function RoomCard({ r, kids, banner, onKids }: { r: Room; kids: Kid[] | undefine
               data-testid="copy-code"
               aria-label={t('cl.copy')}
               onClick={() => void copy()}
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-primary 2xl:h-[52px] 2xl:w-[52px]"
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-primary big:h-[52px] big:w-[52px]"
             >
-              <Icon name={note === 'copied' ? 'check' : 'copy'} className="h-6 w-6 2xl:h-9 2xl:w-9" />
+              <Icon name={note === 'copied' ? 'check' : 'copy'} className="h-6 w-6 big:h-9 big:w-9" />
             </button>
           </div>
         </div>
@@ -226,27 +226,27 @@ function RoomCard({ r, kids, banner, onKids }: { r: Room; kids: Kid[] | undefine
           </p>
         )}
       </div>
-      <div className="mt-3 flex items-center gap-3 border-t border-border px-1 pt-3 2xl:mt-5 2xl:pt-5">
+      <div className="mt-3 flex items-center gap-3 border-t border-border px-1 pt-3 big:mt-5 big:pt-5">
         <div className="flex">
           {(kids ?? []).slice(0, SHOWN).map((k, i) => (
-            <Avatar key={k.id} nick={k.nick} className={`h-11 w-11 2xl:h-[78px] 2xl:w-[78px] ${i ? '-ml-2 2xl:-ml-2.5' : ''}`} />
+            <Avatar key={k.id} nick={k.nick} className={`h-11 w-11 big:h-[78px] big:w-[78px] ${i ? '-ml-2 big:-ml-2.5' : ''}`} />
           ))}
         </div>
-        {kids && <span data-testid="kids-count" className="text-base font-bold text-muted 2xl:text-xl">{t('cl.kids', { count: kids.length })}</span>}
+        {kids && <span data-testid="kids-count" className="text-base font-bold text-muted big:text-xl">{t('cl.kids', { count: kids.length })}</span>}
       </div>
-      <div className="mt-3 grid grid-cols-[1fr_1.25fr] gap-3 2xl:mt-5">
+      <div className="mt-3 grid grid-cols-[1fr_1.25fr] gap-3 big:mt-5">
         <button
           type="button"
           data-testid={`open-${r.name}`}
           onClick={onKids}
-          className="h-11 rounded-2xl border border-border bg-surface px-3 text-base font-extrabold text-heading 2xl:h-[67px] 2xl:text-[26px]"
+          className="h-11 rounded-2xl border border-border bg-surface px-3 text-base font-extrabold text-heading big:h-[67px] big:text-[26px]"
         >
           {t('cl2.kids')}
         </button>
         <Link
           to={`/teacher/feed/${r.id}`}
           data-testid={`feed-link-${r.name}`}
-          className="flex h-11 items-center justify-center rounded-2xl bg-primary px-3 text-base font-extrabold uppercase text-primary-fg 2xl:h-[67px] 2xl:text-[26px]"
+          className="flex h-11 items-center justify-center rounded-2xl bg-primary px-3 text-base font-extrabold uppercase text-primary-fg big:h-[67px] big:text-[26px]"
         >
           {t('feed.classFeed')}
         </Link>

@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 
 type Props = { to: string; icon: string; label: string; testid: string; end?: boolean; badge?: number | null; className?: string }
 
-/** Вкладка-пилюля с цветной иконкой из /art/: активная фиолетовая. На телефоне — часть нижней панели. */
+/** Вкладка с цветной иконкой из /art/ на общей дорожке: активная белая, с тенью. На телефоне — часть нижней панели. */
 export default function TabPill({ to, icon, label, testid, end, badge, className = '' }: Props) {
   return (
     <NavLink
@@ -10,13 +10,13 @@ export default function TabPill({ to, icon, label, testid, end, badge, className
       end={end}
       data-testid={testid}
       className={({ isActive }) =>
-        `relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-xs font-extrabold lg:h-[55px] lg:w-[92px] lg:flex-none lg:gap-0 lg:rounded-full lg:px-2 lg:text-[11px] 2xl:w-auto 2xl:min-w-[145px] 2xl:flex-row 2xl:gap-2 2xl:px-6 2xl:text-lg ${
-          isActive ? 'bg-primary text-primary-fg shadow-card' : 'text-heading lg:border lg:border-border lg:bg-surface lg:shadow-card'
+        `relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-xs font-extrabold transition-colors duration-150 lg:h-10 lg:flex-none lg:flex-row lg:gap-2 lg:whitespace-nowrap lg:rounded-full lg:px-4 lg:text-[15px] ${
+          isActive ? 'bg-primary-soft text-primary lg:bg-surface lg:shadow-card' : 'text-heading lg:hover:text-primary'
         } ${className}`
       }
     >
-      <img src={icon.includes('.') ? `/art/${icon}` : `/art/tab-${icon}.webp`} alt="" className="h-8 w-8 shrink-0 lg:h-6 lg:w-6 2xl:h-10 2xl:w-10" />
-      <span className="line-clamp-2 max-w-full break-words text-center leading-tight 2xl:line-clamp-1">{label}</span>
+      <img src={icon.includes('.') ? `/art/${icon}` : `/art/tab-${icon}.webp`} alt="" className="h-8 w-8 shrink-0 lg:h-6 lg:w-6" />
+      <span className="line-clamp-2 max-w-full break-words text-center leading-tight lg:line-clamp-1">{label}</span>
       {!!badge && (
         <span
           data-testid={`${testid}-badge`}

@@ -102,16 +102,16 @@ export default function AppShell() {
   }
 
   return (
-    <div className="min-h-screen bg-bg pb-24 lg:pb-4">
+    <div className="min-h-dvh bg-bg pb-24 lg:pb-4">
       <header
         data-testid="shell-header"
-        className="flex h-[60px] items-center gap-1.5 border-b border-border bg-surface px-2 min-[380px]:gap-2 min-[380px]:px-3 lg:grid lg:h-[87px] lg:grid-cols-[1fr_auto_1fr] lg:gap-3 lg:px-8"
+        className="flex h-[60px] items-center gap-1.5 border-b border-border bg-surface px-2 s380:gap-2 s380:px-3 lg:sticky lg:top-0 lg:z-30 lg:grid lg:h-16 lg:grid-cols-[1fr_auto_1fr] lg:gap-3 lg:px-8"
       >
         <Logo />
         <nav
           aria-label={t('shell.nav')}
           data-testid="main-nav"
-          className="fixed inset-x-0 bottom-0 z-30 flex h-[72px] items-stretch gap-1 border-t border-border bg-surface px-1 py-1 lg:static lg:z-auto lg:h-auto lg:justify-center lg:gap-3 lg:border-0 lg:bg-transparent lg:p-0 2xl:gap-4"
+          className="fixed inset-x-0 bottom-0 z-30 flex h-[72px] items-stretch gap-1 border-t border-border bg-surface px-1 py-1 lg:static lg:z-auto lg:h-auto lg:justify-center lg:gap-1 lg:border-0 lg:rounded-full lg:bg-primary-soft lg:p-1 lg:justify-self-center"
         >
           {TABS.map((tab) => (
             <TabPill
@@ -124,16 +124,16 @@ export default function AppShell() {
             />
           ))}
         </nav>
-        <div className="ml-auto flex shrink-0 items-center gap-1.5 min-[380px]:gap-2 lg:justify-self-end 2xl:gap-4">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 s380:gap-2 lg:justify-self-end big:gap-4">
           <LangSwitch />
           {me && (
             <>
               <span
                 data-testid="coins"
                 title={me.coins === null ? t('shell.coinsUnknown') : t('child.coins')}
-                className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-full border border-border bg-surface px-2 text-sm font-extrabold text-heading shadow-card min-[380px]:px-3 min-[380px]:text-base lg:h-[55px] lg:gap-2 lg:text-2xl"
+                className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-full bg-primary-soft px-2 text-sm font-extrabold text-heading s380:px-3 s380:text-base lg:h-11 lg:gap-2 lg:text-lg"
               >
-                <img src="/art/coin.webp" alt="" className="h-6 w-6 lg:h-9 lg:w-9" />
+                <img src="/art/coin.webp" alt="" className="h-6 w-6 lg:h-7 lg:w-7" />
                 {me.coins ?? '—'}
               </span>
               <div ref={menuRef} className="relative shrink-0">
@@ -144,9 +144,9 @@ export default function AppShell() {
                   aria-expanded={menu}
                   aria-label={t('shell.account')}
                   onClick={() => setMenu((v) => !v)}
-                  className="block rounded-full lg:h-[58px]"
+                  className="block rounded-full lg:h-11"
                 >
-                  <Avatar nick={me.nick} className="h-9 w-9 min-[380px]:h-10 min-[380px]:w-10 lg:h-[54px] lg:w-[54px]" />
+                  <Avatar nick={me.nick} className="h-9 w-9 s380:h-10 s380:w-10 lg:h-11 lg:w-11" />
                 </button>
                 {menu && (
                   <div
@@ -208,7 +208,7 @@ export default function AppShell() {
           )}
         </div>
       </header>
-      <main className="px-4 py-5 md:px-[35px] md:pb-0 pt-1.5 lg:pt-[17px]">
+      <main className="px-4 pb-5 pt-1.5 md:px-8 md:pb-0 lg:pt-4">
         {me && !me.class && (
           <form
             onSubmit={(e) => void join(e)}

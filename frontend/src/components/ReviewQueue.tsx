@@ -63,7 +63,7 @@ export default function ReviewQueue({
       : t(`review.where.${it.where}`)
 
   const thumb = (it: ReviewItem) => {
-    const size = compact ? 'h-20 w-24' : 'h-[90px] w-full xl:h-[115px] xl:w-[305px]'
+    const size = compact ? 'h-20 w-24' : 'h-[90px] w-full xl:h-20 xl:w-[200px]'
     if (it.urgent) {
       return (
         <button
@@ -88,15 +88,15 @@ export default function ReviewQueue({
         ['blurred', it.blurred_url, t('cab.upload.blurred')],
       ]
       return (
-        <div className={`flex gap-1 ${compact ? 'w-24' : 'w-full xl:w-[305px]'}`} data-testid="review-pair">
+        <div className={`flex gap-1 ${compact ? 'w-24' : 'w-full xl:w-[200px]'}`} data-testid="review-pair">
           {pair
             .filter(([, url]) => url || !compact)
             .map(([k, url, cap]) => (
               <figure key={k} className="min-w-0 flex-1 text-center">
                 {url ? (
-                  <img src={url} alt="" data-testid={`review-${k}`} className="h-20 w-full rounded-lg object-cover xl:h-[100px]" />
+                  <img src={url} alt="" data-testid={`review-${k}`} className="h-20 w-full rounded-lg object-contain bg-primary-soft xl:h-16" />
                 ) : (
-                  <div data-testid={`review-${k}-none`} className="flex h-20 items-center justify-center rounded-lg bg-primary-soft px-1 text-[10px] font-bold text-muted xl:h-[100px]">
+                  <div data-testid={`review-${k}-none`} className="flex h-20 items-center justify-center rounded-lg bg-primary-soft px-1 text-[10px] font-bold text-muted xl:h-16">
                     {t('cab.upload.noBlur')}
                   </div>
                 )}
@@ -106,9 +106,9 @@ export default function ReviewQueue({
         </div>
       )
     }
-    if (it.image_url) return <img src={it.image_url} alt="" className={`rounded-2xl object-cover ${size}`} />
+    if (it.image_url) return <img src={it.image_url} alt="" className={`rounded-2xl object-contain bg-primary-soft ${size}`} />
     return (
-      <div className={`flex items-center rounded-2xl bg-primary-soft p-3 text-sm font-bold text-heading ${compact ? 'h-20 w-24' : 'h-24 xl:h-[115px] xl:w-[305px]'}`}>
+      <div className={`flex items-center rounded-2xl bg-primary-soft p-3 text-sm font-bold text-heading ${compact ? 'h-20 w-24' : 'h-24 xl:h-20 xl:w-[200px]'}`}>
         <span className="line-clamp-3 break-words">{it.preview_text}</span>
       </div>
     )
@@ -148,11 +148,11 @@ export default function ReviewQueue({
           className={`grid items-center gap-3 rounded-card border p-3 shadow-card ${
             compact
               ? 'grid-cols-[auto_1fr_auto]'
-              : 'xl:grid-cols-[305px_auto_minmax(0,1fr)_auto_auto] xl:gap-5 xl:px-4'
+              : 'xl:grid-cols-[200px_auto_minmax(0,1fr)_auto_auto] xl:gap-4 xl:px-3 xl:py-2'
           } ${it.urgent ? 'border-urgent-border bg-urgent-soft' : 'border-border bg-surface'}`}
         >
           {thumb(it)}
-          {!compact && <Avatar nick={it.nick} className="hidden h-[90px] w-[90px] xl:block" />}
+          {!compact && <Avatar nick={it.nick} className="hidden h-12 w-12 xl:block" />}
           <div className="flex min-w-0 flex-col gap-1">
             <p className="flex flex-wrap items-baseline gap-x-2">
               <span data-testid="review-nick" className="text-lg font-extrabold text-heading">
@@ -188,11 +188,11 @@ export default function ReviewQueue({
             </span>
           )}
           {!it.urgent && (
-            <div className={compact ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-2 xl:flex xl:gap-[15px]'}>
-              <button type="button" data-testid="review-approve" disabled={busy === it.id} className={`${btnMain} ${compact ? '' : 'h-12 xl:h-[65px] xl:w-[190px]'}`} onClick={() => void act(it, 'approve')}>
+            <div className={compact ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-2 xl:flex xl:gap-2'}>
+              <button type="button" data-testid="review-approve" disabled={busy === it.id} className={`${btnMain} ${compact ? '' : 'h-12 xl:h-11 xl:w-[130px]'}`} onClick={() => void act(it, 'approve')}>
                 {t('review.approve')}
               </button>
-              <button type="button" data-testid="review-reject" disabled={busy === it.id} className={`${btnSide} ${compact ? '' : 'h-12 xl:h-[65px] xl:w-[155px]'}`} onClick={() => void act(it, 'reject')}>
+              <button type="button" data-testid="review-reject" disabled={busy === it.id} className={`${btnSide} ${compact ? '' : 'h-12 xl:h-11 xl:w-[120px]'}`} onClick={() => void act(it, 'reject')}>
                 {t('review.reject')}
               </button>
             </div>

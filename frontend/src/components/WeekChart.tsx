@@ -10,7 +10,7 @@ export default function WeekChart({ readyAt }: { readyAt: string[] }) {
   const box = useRef<HTMLDivElement>(null);
   // размеры берём из колонки, чтобы подписи не сжимались вместе с картинкой
   const [W, setW] = useState(550);
-  const H = W < 400 ? 160 : 200;
+  const H = window.innerWidth >= 1024 && window.innerHeight < 860 ? (window.innerHeight < 720 ? 80 : 120) : W < 400 ? 160 : 200;
   useEffect(() => {
     const el = box.current;
     if (!el) return;

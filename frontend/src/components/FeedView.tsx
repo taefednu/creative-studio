@@ -127,7 +127,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
                 aria-selected={kind === k}
                 data-testid={`feed-${k}`}
                 onClick={() => setKind(k)}
-                className={`h-10 whitespace-nowrap shrink-0 rounded-full px-4 text-sm min-[380px]:px-[26px] font-extrabold md:h-[45px] md:px-9 md:text-base ${
+                className={`h-10 whitespace-nowrap shrink-0 rounded-full px-4 text-sm s380:px-[26px] font-extrabold md:h-[45px] md:px-9 md:text-base ${
                   kind === k ? 'bg-primary text-primary-fg shadow-card' : 'border border-border bg-surface text-heading shadow-card'
                 }`}
               >

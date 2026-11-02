@@ -5,6 +5,15 @@ const v = (name: string) => `var(--${name})`
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
+    screens: {
+      s360: '360px',
+      s380: '380px',
+      s400: '400px',
+      s520: '520px',
+      sm: '640px', md: '768px', lg: '1024px', xl: '1280px',
+      short: { raw: '(min-width:1024px) and (max-height:859px)' },
+      big: { raw: '(min-width:1536px) and (min-height:860px)' },
+    },
     extend: {
       colors: {
         bg: v('color-bg'),

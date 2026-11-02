@@ -18,10 +18,10 @@ const ROLES: { role: Role; icon: string }[] = [
 ]
 
 const input =
-  'w-full rounded-2xl border border-border bg-surface px-4 py-0 h-12 text-2xl font-bold text-heading outline-none focus:border-primary'
+  'w-full rounded-2xl border border-border bg-surface px-4 py-0 h-12 text-2xl short:h-11 font-bold text-heading outline-none focus:border-primary'
 const label = 'mb-1 block text-xs font-extrabold uppercase text-primary'
 const primaryBtn =
-  'w-full rounded-full bg-primary px-6 h-[52px] lg:h-14 text-2xl font-extrabold uppercase text-primary-fg disabled:opacity-50'
+  'w-full rounded-full bg-primary px-6 h-[52px] lg:h-14 text-2xl short:h-12 short:text-xl font-extrabold uppercase text-primary-fg disabled:opacity-50'
 
 function ChildForm({ onDone }: { onDone: (r: Role) => void }) {
   const { t } = useTranslation()
@@ -46,7 +46,7 @@ function ChildForm({ onDone }: { onDone: (r: Role) => void }) {
   }
 
   return (
-    <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4" data-testid="child-form">
+    <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4 short:gap-2" data-testid="child-form">
       <div>
         <label htmlFor="nick" className={label}>
           {t('auth.nick')}
@@ -102,7 +102,7 @@ function EmailForm({ role, onDone }: { role: 'parent' | 'teacher'; onDone: (r: R
   }
 
   return (
-    <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4" data-testid={`${role}-form`}>
+    <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4 short:gap-2" data-testid={`${role}-form`}>
       <div>
         <label htmlFor="email" className={label}>
           {t('auth.email')}
@@ -265,16 +265,16 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-bg bg-cover bg-center" style={{ backgroundImage: 'url(/art/login-bg.webp)' }}>
-      <header data-testid="login-header" className="flex h-[60px] items-center justify-between border-b border-border bg-surface px-3 lg:h-[84px] lg:px-8">
+    <div className="flex min-h-dvh flex-col bg-bg bg-cover bg-center" style={{ backgroundImage: 'url(/art/login-bg.webp)' }}>
+      <header data-testid="login-header" className="flex h-[60px] items-center justify-between border-b border-border bg-surface px-3 lg:h-16 lg:px-8">
         <Logo />
         <div className="rounded-full border border-border bg-surface px-2 shadow-card">
           <LangSwitch />
         </div>
       </header>
-      <main className="mx-auto w-full max-w-[719px] px-3 pb-10 pt-3 lg:pt-[23px] xl:ml-[calc(22.5%-12px)] xl:mr-0">
-        <div data-testid="login-card" className="rounded-card border border-border bg-surface p-3 shadow-card md:p-[29px]">
-          <div className="mb-4 grid grid-cols-3 gap-2 md:gap-3" role="tablist">
+      <main className="mx-auto w-full max-w-[719px] px-3 pb-10 pt-3 lg:flex lg:max-w-[600px] lg:flex-1 lg:flex-col lg:justify-center lg:py-2">
+        <div data-testid="login-card" className="rounded-card border border-border bg-surface p-3 shadow-card md:p-[29px] short:p-4">
+          <div className="mb-3 grid grid-cols-3 gap-2 md:gap-3" role="tablist">
             {ROLES.map((r) => (
               <button
                 key={r.role}
@@ -286,7 +286,7 @@ export default function Login() {
                   setRole(r.role)
                   setPlatform(false)
                 }}
-                className={`relative flex flex-col items-center gap-1 rounded-2xl border-2 px-1 py-2 text-sm font-extrabold text-heading md:h-[176px] md:justify-center md:text-2xl ${
+                className={`relative flex flex-col items-center gap-1 rounded-2xl border-2 px-1 py-2 text-sm font-extrabold text-heading md:h-[176px] md:justify-center md:text-2xl short:h-[84px] short:text-base ${
                   role === r.role ? 'border-primary bg-primary-soft' : 'border-border bg-surface'
                 }`}
               >
@@ -297,7 +297,7 @@ export default function Login() {
                     </svg>
                   </span>
                 )}
-                <img src={r.icon} alt="" className="h-16 w-16 object-contain md:h-[110px] md:w-[110px]" />
+                <img src={r.icon} alt="" className="h-16 w-16 object-contain md:h-[110px] md:w-[110px] short:h-11 short:w-11" />
                 {t(`auth.roles.${r.role}`)}
               </button>
             ))}
@@ -319,19 +319,19 @@ export default function Login() {
             data-testid="mentorium-login"
             aria-expanded={platform}
             onClick={() => setPlatform((v) => !v)}
-            className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-3 py-1 text-base md:text-xl font-extrabold text-heading"
+            className="flex min-h-[52px] short:min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-3 py-1 text-base md:text-xl font-extrabold text-heading"
           >
             <img src="/mentorium-logo.png" alt="" className="h-6 w-auto md:h-8" />
             {t('auth.mentorium')}
           </button>
           {platform && <PlatformForm onDone={(r) => void done(r)} onClose={() => setPlatform(false)} />}
-          <p className="mt-2 flex items-center justify-center gap-2 text-center text-base text-muted">
+          <p className="mt-2 flex items-center justify-center gap-2 text-center text-base text-muted short:hidden">
             <img src="/art/coin.webp" alt="" className="h-6 w-6 shrink-0" />
             {t('auth.coinsLine')}
           </p>
-          <p className="text-center text-base font-bold text-primary underline">{t('auth.classHint')}</p>
+          <p className="text-center text-base font-bold text-primary underline short:hidden">{t('auth.classHint')}</p>
         </div>
-        <Link to="/" data-testid="to-showcase" className="mt-3 block text-center text-base font-bold text-primary underline">
+        <Link to="/" data-testid="to-showcase" className="mt-3 block text-center text-base font-bold text-primary underline short:hidden">
           {t('showcase.fromLogin')}
         </Link>
       </main>

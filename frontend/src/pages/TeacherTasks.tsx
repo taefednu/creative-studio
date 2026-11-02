@@ -20,8 +20,8 @@ type Sub = { id: number; nick: string; status: 'accepted' | 'held'; shown_in_fee
 
 const loadRooms = () => api<Room[]>('/api/teacher/classes')
 const field =
-  'w-full rounded-2xl border border-border bg-bg px-4 text-heading outline-none placeholder:text-muted focus:border-primary 2xl:text-[22px]'
-const label = 'mb-1.5 mt-4 block text-base font-extrabold text-heading 2xl:mb-2.5 2xl:mt-7 2xl:text-[22px]'
+  'w-full rounded-2xl border border-border bg-bg px-4 text-heading outline-none placeholder:text-muted focus:border-primary big:text-[22px]'
+const label = 'mb-1 mt-3 block text-base font-extrabold text-heading big:mb-2.5 big:mt-7 big:text-[22px]'
 const SHOWN = 4 // аватаров сдавших в строке задания; остальные — «+N»
 
 /** Задания учителя (#13): создать, список класса со сдачами и прогрессом, галерея сдач и «показать в ленте класса». */
@@ -101,9 +101,9 @@ export default function TeacherTasks() {
   return (
     <div className="min-h-screen bg-bg pb-24 lg:pb-6">
       <CabinetHeader role="teacher" />
-      <main className="px-4 py-4 md:px-9">
+      <main className="px-4 py-4 md:px-8">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
-          <h1 data-testid="page-title" className="w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-[54px] lg:leading-[50px]">
+          <h1 data-testid="page-title" className="w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-4xl lg:leading-10">
             {t('cab.tasks.title')}
           </h1>
           {rooms && rooms.length > 0 && (
@@ -116,7 +116,7 @@ export default function TeacherTasks() {
                 setOpen(null)
               }}
               options={rooms.map((r) => ({ value: String(r.id), label: r.name }))}
-              className="h-11 w-full lg:h-[55px] lg:w-[213px]"
+              className="h-11 w-full lg:w-[213px]"
             />
           )}
         </div>
@@ -139,13 +139,13 @@ export default function TeacherTasks() {
           </p>
         )}
         {classId !== null && (
-          <div className="mt-4 grid items-start gap-4 lg:mt-[18px] lg:grid-cols-[minmax(300px,1fr)_2fr] 2xl:grid-cols-[521px_1fr]">
+          <div className="mt-3 grid items-start gap-4 lg:grid-cols-[minmax(300px,1fr)_2fr] big:grid-cols-[521px_1fr]">
             <form
               onSubmit={(e) => void create(e)}
               data-testid="task-form"
-              className="rounded-card border border-border bg-surface p-4 shadow-card 2xl:p-6"
+              className="rounded-card border border-border bg-surface p-4 shadow-card big:p-6 lg:sticky lg:top-20"
             >
-              <h2 className="text-2xl font-extrabold text-heading 2xl:text-[40px] 2xl:leading-[48px]">{t('tt.newTask')}</h2>
+              <h2 className="text-2xl font-extrabold text-heading big:text-[40px] big:leading-[48px]">{t('tt.newTask')}</h2>
               <label htmlFor="task-title" className={label}>{t('tt.titleLabel')}</label>
               <input
                 id="task-title"
@@ -154,7 +154,7 @@ export default function TeacherTasks() {
                 maxLength={100}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder={t('cab.tasks.titlePh')}
-                className={`${field} h-12 2xl:h-[65px]`}
+                className={`${field} h-12 big:h-[65px]`}
               />
               <label htmlFor="task-description" className={label}>{t('tt.descLabel')}</label>
               <textarea
@@ -164,7 +164,7 @@ export default function TeacherTasks() {
                 maxLength={1000}
                 onChange={(e) => setDesc(e.target.value)}
                 placeholder={t('cab.tasks.descPh')}
-                className={`${field} h-[110px] resize-none py-3 2xl:h-[169px]`}
+                className={`${field} h-[110px] short:h-20 resize-none py-3 big:h-[169px]`}
               />
               <span className={label}>{t('tt.dueLabel')}</span>
               <ChipSelect
@@ -173,20 +173,20 @@ export default function TeacherTasks() {
                 value={due}
                 onChange={setDue}
                 options={presets.map((p) => ({ ...p, icon: <Icon name="calendar" className="h-5 w-5" /> }))}
-                className="h-12 w-full 2xl:h-[70px] 2xl:w-[328px]"
+                className="h-12 w-full big:h-[70px] big:w-[328px]"
               />
               <button
                 type="submit"
                 data-testid="task-create"
                 disabled={busy || !title.trim()}
-                className="mt-5 h-[52px] w-full rounded-full bg-primary px-4 text-lg font-extrabold uppercase text-primary-fg disabled:opacity-60 2xl:mt-12 2xl:h-[77px] 2xl:text-[28px]"
+                className="mt-5 h-[52px] w-full rounded-full bg-primary px-4 text-lg font-extrabold uppercase text-primary-fg disabled:opacity-60 big:mt-12 big:h-[77px] big:text-[28px]"
               >
                 {t('cab.tasks.create')}
               </button>
               <ErrorText code={err} />
             </form>
-            <section data-testid="tasks-panel" className="rounded-card border border-border bg-surface p-3 shadow-card 2xl:p-[14px]">
-              <h2 className="px-2 text-2xl font-extrabold text-heading 2xl:text-[40px] 2xl:leading-[48px]">{t('tt.assigned')}</h2>
+            <section data-testid="tasks-panel" className="rounded-card border border-border bg-surface p-3 shadow-card big:p-[14px]">
+              <h2 className="px-2 text-2xl font-extrabold text-heading big:text-[40px] big:leading-[48px]">{t('tt.assigned')}</h2>
               {items && items.length === 0 && (
                 <p data-testid="tasks-none" className="mt-3 px-2 text-muted">
                   {t('tt.empty')}
@@ -211,7 +211,7 @@ export default function TeacherTasks() {
                 items &&
                 items.length > 0 && (
                   <section className="mt-5" data-testid="recent">
-                    <h2 className="px-2 text-2xl font-extrabold text-heading 2xl:text-[40px] 2xl:leading-[48px]">{t('tt.recent')}</h2>
+                    <h2 className="px-2 text-2xl font-extrabold text-heading big:text-[40px] big:leading-[48px]">{t('tt.recent')}</h2>
                     {recent.length === 0 ? (
                       <p className="mt-2 px-2 text-muted">{t('tt.recentEmpty')}</p>
                     ) : (
@@ -240,20 +240,20 @@ function AssignmentRow({ a, subs, total, sample, active, onClick }: { a: Task; s
       data-testid="assignment-card"
       aria-pressed={active}
       onClick={onClick}
-      className={`grid grid-cols-[96px_1fr] items-center gap-x-3 gap-y-2 rounded-2xl border bg-surface p-2 text-left shadow-card md:grid-cols-[110px_1fr] lg:grid-cols-[120px_minmax(0,1fr)_minmax(150px,200px)_auto] 2xl:grid-cols-[163px_minmax(0,1fr)_205px_auto] 2xl:gap-x-5 ${active ? 'border-primary' : 'border-border'}`}
+      className={`grid grid-cols-[96px_1fr] items-center gap-x-3 gap-y-2 rounded-2xl border bg-surface p-2 text-left shadow-card md:grid-cols-[110px_1fr] lg:grid-cols-[120px_minmax(0,1fr)_minmax(150px,200px)_auto] big:grid-cols-[163px_minmax(0,1fr)_205px_auto] big:gap-x-5 ${active ? 'border-primary' : 'border-border'}`}
     >
       <span className="aspect-[1.66] overflow-hidden rounded-xl bg-primary-soft">
         {thumb && <img src={thumb} alt="" className="h-full w-full object-cover" />}
       </span>
       <span className="flex min-w-0 flex-col items-start gap-1.5">
-        <span className="text-lg font-extrabold leading-6 text-heading 2xl:text-[26px] 2xl:leading-8">{a.title}</span>
-        <span className="flex h-8 items-center gap-2 rounded-full bg-primary-soft px-3 text-sm font-extrabold text-primary 2xl:h-[38px] 2xl:text-xl">
-          <Icon name="calendar" className="h-4 w-4 2xl:h-5 2xl:w-5" />
+        <span className="text-lg font-extrabold leading-6 text-heading big:text-[26px] big:leading-8">{a.title}</span>
+        <span className="flex h-8 items-center gap-2 rounded-full bg-primary-soft px-3 text-sm font-extrabold text-primary big:h-[38px] big:text-xl">
+          <Icon name="calendar" className="h-4 w-4 big:h-5 big:w-5" />
           {a.due_at ? t('tt.dueOn', { date: dateLabel(parseUtc(a.due_at), t) }) : t('cab.tasks.noDue')}
         </span>
       </span>
       <span className="col-span-2 flex flex-col gap-1.5 lg:col-span-1">
-        <span data-testid="assignment-count" className="text-sm font-bold text-heading 2xl:text-lg">
+        <span data-testid="assignment-count" className="text-sm font-bold text-heading big:text-lg">
           {total > 0 ? t('tt.handedOf', { done: a.submissions, total }) : t('cab.tasks.count', { count: a.submissions })}
         </span>
         {total > 0 && (
@@ -264,10 +264,10 @@ function AssignmentRow({ a, subs, total, sample, active, onClick }: { a: Task; s
       </span>
       <span className="col-span-2 flex items-center lg:col-span-1">
         {nicks.slice(0, SHOWN).map((n, i) => (
-          <Avatar key={n} nick={n} className={`h-10 w-10 2xl:h-[52px] 2xl:w-[52px] ${i ? '-ml-2' : ''}`} />
+          <Avatar key={n} nick={n} className={`h-10 w-10 big:h-[52px] big:w-[52px] ${i ? '-ml-2' : ''}`} />
         ))}
         {a.submissions > Math.min(nicks.length, SHOWN) && (
-          <span className="ml-2 flex h-10 min-w-10 items-center justify-center rounded-full bg-primary-soft px-2 text-sm font-extrabold text-primary 2xl:h-[52px] 2xl:min-w-[52px]">
+          <span className="ml-2 flex h-10 min-w-10 items-center justify-center rounded-full bg-primary-soft px-2 text-sm font-extrabold text-primary big:h-[52px] big:min-w-[52px]">
             {t('tt.more', { count: a.submissions - Math.min(nicks.length, SHOWN) })}
           </span>
         )}

@@ -21,14 +21,14 @@ export default function ParentReview() {
   return (
     <div className="min-h-screen bg-bg pb-24 lg:pb-6">
       <CabinetHeader role="parent" />
-      <main className="flex flex-col gap-4 px-4 py-4 md:px-9">
-        <h1 data-testid="page-title" className="w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-[54px] lg:leading-[50px]">
+      <main className="flex flex-col gap-3 px-4 py-4 md:px-8">
+        <h1 data-testid="page-title" className="w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-4xl lg:leading-10">
           {t('review.okTitle')}
         </h1>
         <ReviewQueue />
         <section data-testid="notifications" className="mt-4 rounded-card border border-border bg-surface p-4 shadow-card md:p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-2xl font-extrabold text-heading 2xl:text-[34px]">{t('parent.notifications')}</h2>
+            <h2 className="text-2xl font-extrabold text-heading big:text-[34px]">{t('parent.notifications')}</h2>
             {notes?.some((n) => !n.read) && (
               <button type="button" data-testid="mark-read" onClick={() => void markRead()} className="h-10 rounded-full border border-border bg-surface px-5 text-sm font-extrabold text-primary">
                 {t('parent.markRead')}

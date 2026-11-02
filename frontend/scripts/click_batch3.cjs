@@ -153,6 +153,7 @@ const adult = (p, who) =>
   await T(p, 'qr-box').waitFor()
   ok('QR остался', true)
   // привязка: неверный код
+  await T(p, 'add-child-tile').click() // привязка живёт в окне «Добавить ребёнка»
   await T(p, 'link-cell-0').click()
   await p.keyboard.type('AAAAAA')
   ok('6 клеток заполнились при наборе', (await T(p, 'link-cell-5').inputValue()) === 'A')

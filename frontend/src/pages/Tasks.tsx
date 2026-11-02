@@ -20,7 +20,7 @@ export default function Tasks() {
   const open = list?.filter(isOpen).length ?? 0
   return (
     <div>
-      <h1 data-testid="tasks-title" className="w-fit text-3xl font-extrabold leading-9 text-heading md:text-[54px] md:leading-[50px]">
+      <h1 data-testid="tasks-title" className="w-fit text-3xl font-extrabold leading-9 text-heading md:text-4xl md:leading-10">
         {t('nav.tasks')}
       </h1>
       {!cls && (
@@ -42,9 +42,9 @@ export default function Tasks() {
         </p>
       )}
       {cls && list && list.length > 0 && (
-        <div data-testid="tasks-hero" className="relative mt-3 flex min-h-[88px] items-center gap-3 rounded-card border border-border bg-surface pl-2 pr-4 shadow-card md:mt-4 md:h-[127px] md:gap-5">
-          <img src="/art/robot-wave.webp" alt="" className="h-[84px] w-[84px] shrink-0 object-contain md:h-[124px] md:w-[124px]" />
-          <p className="text-lg font-extrabold leading-6 text-heading md:text-[40px] md:leading-[44px]">
+        <div data-testid="tasks-hero" className="relative mt-3 flex min-h-[88px] items-center gap-3 rounded-card border border-border bg-surface pl-2 pr-4 shadow-card md:mt-3 md:h-[72px] md:gap-3">
+          <img src="/art/robot-wave.webp" alt="" className="h-[84px] w-[84px] shrink-0 object-contain md:h-[68px] md:w-[68px]" />
+          <p className="text-lg font-extrabold leading-6 text-heading md:text-2xl md:leading-8">
             {open > 0 ? t('tp.hero', { count: open }) : t('tp.allDone')}
           </p>
         </div>
@@ -64,23 +64,23 @@ function TaskCard({ a, sample }: { a: Assignment; sample: string | null }) {
   const img = sent.length ? `/api/works/${sent[0].work_id}/image` : sample
   return (
     <article data-testid="task-card" className="flex flex-col rounded-card border border-border bg-surface p-3 shadow-card">
-      <div className="aspect-[1.8] overflow-hidden rounded-2xl bg-primary-soft">
+      <div className="aspect-[1.8] short:aspect-[2.4] overflow-hidden rounded-2xl bg-primary-soft">
         {img && <img data-testid="task-image" src={img} alt="" className="h-full w-full object-cover" />}
       </div>
-      <h2 className="mt-3 px-1 text-xl font-extrabold leading-7 text-heading 2xl:text-[28px] 2xl:leading-9">{a.title}</h2>
-      {a.description && <p className="mt-1 px-1 text-base leading-6 text-text 2xl:text-[22px] 2xl:leading-7">{a.description}</p>}
+      <h2 className="mt-3 px-1 text-xl font-extrabold leading-7 text-heading big:text-[28px] big:leading-9">{a.title}</h2>
+      {a.description && <p className="mt-1 px-1 text-base leading-6 text-text big:text-[22px] big:leading-7">{a.description}</p>}
       {due && sent.length === 0 && (
-        <p data-testid="task-left" className="mt-3 flex h-10 w-fit items-center gap-2 rounded-full bg-primary-soft px-4 text-sm font-extrabold text-primary 2xl:h-[46px] 2xl:text-xl">
-          <Icon name="clock" className="h-5 w-5 2xl:h-7 2xl:w-7" />
+        <p data-testid="task-left" className="mt-3 flex h-10 w-fit items-center gap-2 rounded-full bg-primary-soft px-4 text-sm font-extrabold text-primary big:h-[46px] big:text-xl">
+          <Icon name="clock" className="h-5 w-5 big:h-7 big:w-7" />
           {t(due.key, { count: due.count })}
         </p>
       )}
       {sent.length > 0 && (
         <div data-testid="task-sent" className="mt-3 flex flex-col gap-3">
           <p
-            className={`flex h-10 w-fit items-center gap-2 rounded-full px-4 text-sm font-extrabold 2xl:h-[46px] 2xl:text-xl ${done ? 'bg-success-soft text-success' : 'bg-primary-soft text-primary'}`}
+            className={`flex h-10 w-fit items-center gap-2 rounded-full px-4 text-sm font-extrabold big:h-[46px] big:text-xl ${done ? 'bg-success-soft text-success' : 'bg-primary-soft text-primary'}`}
           >
-            <Icon name={done ? 'check' : 'clock'} className="h-5 w-5 2xl:h-7 2xl:w-7" />
+            <Icon name={done ? 'check' : 'clock'} className="h-5 w-5 big:h-7 big:w-7" />
             {t(done ? 'tp.handed' : 'tp.review')}
           </p>
           <div className="flex gap-2">
@@ -90,7 +90,7 @@ function TaskCard({ a, sample }: { a: Assignment; sample: string | null }) {
                 src={`/api/works/${s.work_id}/image`}
                 alt=""
                 title={t(s.status === 'held' ? 'task.heldMark' : 'task.sentMark')}
-                className={`h-14 w-14 rounded-xl border-2 border-surface object-cover shadow-card 2xl:h-[84px] 2xl:w-[84px] ${i % 2 ? 'rotate-3' : '-rotate-3'}`}
+                className={`h-14 w-14 rounded-xl border-2 border-surface object-cover shadow-card big:h-[84px] big:w-[84px] ${i % 2 ? 'rotate-3' : '-rotate-3'}`}
               />
             ))}
           </div>
@@ -101,9 +101,9 @@ function TaskCard({ a, sample }: { a: Assignment; sample: string | null }) {
         <Link
           to={`/create?assignment=${a.id}`}
           data-testid="task-draw"
-          className="mx-3 mb-1 flex h-[52px] items-center justify-center gap-3 rounded-full bg-primary text-lg font-extrabold uppercase text-primary-fg 2xl:h-[75px] 2xl:text-[28px]"
+          className="mx-3 mb-1 flex h-[52px] items-center justify-center gap-3 rounded-full bg-primary text-lg font-extrabold uppercase text-primary-fg big:h-[75px] big:text-[28px]"
         >
-          <Icon name="wand" className="h-7 w-7 2xl:h-10 2xl:w-10" />
+          <Icon name="wand" className="h-7 w-7 big:h-10 big:w-10" />
           {t('task.draw')}
         </Link>
       )}

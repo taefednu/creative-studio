@@ -8,7 +8,7 @@ export default function PictureGrid({ value, onChange }: Props) {
   const { t } = useTranslation()
   return (
     <div>
-      <div className="mb-2 flex items-center justify-center gap-2 lg:h-[66px] lg:gap-3" data-testid="pic-slots" aria-live="polite">
+      <div className="mb-2 flex items-center justify-center gap-2 lg:h-[66px] lg:gap-3 short:h-10" data-testid="pic-slots" aria-live="polite">
         {Array.from({ length: PASSWORD_LENGTH }, (_, i) => (
           <span
             key={i}
