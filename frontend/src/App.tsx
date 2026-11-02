@@ -7,6 +7,7 @@ import AdultFeed from './pages/AdultFeed'
 import Create from './pages/Create'
 import Feed from './pages/Feed'
 import Login from './pages/Login'
+import Story from './pages/Story'
 import MyWorks from './pages/MyWorks'
 import ParentCabinet from './pages/ParentCabinet'
 import ParentPlans from './pages/ParentPlans'
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="create" element={<Create />} />
         <Route path="tasks" element={<Tasks />} />
         <Route path="my-works" element={<MyWorks />} />
+        <Route path="story/:id" element={<Story />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

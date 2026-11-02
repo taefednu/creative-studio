@@ -8,6 +8,7 @@ import type { CommentResult, Post, PostComment, ReactionKey } from '../features/
 import { loadTemplates } from '../features/works/works'
 import { useLoad } from '../useLoad'
 import Avatar from './Avatar'
+import StoryBook from './StoryBook'
 import ChipSelect from './ChipSelect'
 import ErrorText, { errorKey } from './ErrorText'
 
@@ -281,7 +282,12 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
           ×
         </button>
         <div className="relative overflow-hidden rounded-2xl bg-primary-soft lg:min-h-0">
-          {post && <img src={post.image_url} alt="" className="aspect-square w-full object-cover lg:aspect-auto lg:h-full" data-testid="modal-image" />}
+          {post?.story && (
+            <div className="p-2">
+              <StoryBook compact title={post.story.title} pages={post.story.pages.map((p, i) => ({ text: p.text, url: `/api/posts/${post.id}/story/${i + 1}` }))} />
+            </div>
+          )}
+          {post && !post.story && <img src={post.image_url} alt="" className="aspect-square w-full object-cover lg:aspect-auto lg:h-full" data-testid="modal-image" />}
           <span className="absolute bottom-3 left-3 rounded-full bg-success-soft px-3 py-1 text-sm font-extrabold text-success lg:bottom-4 lg:left-4 lg:text-xl">
             {t('create.checkedByAi')}
           </span>
@@ -327,10 +333,10 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
               <div data-testid="about" className="flex flex-col gap-2">
                 <p className="text-sm font-extrabold uppercase text-primary lg:text-lg">{t('feed.idea')}</p>
                 <p className="text-2xl font-extrabold leading-tight text-heading lg:text-[32px]">
-                  {post.caption ?? styleName ?? ''}
+                  {post.caption ?? post.story?.title ?? styleName ?? ''}
                 </p>
                 <div className="mt-2 flex flex-col gap-2 border-t border-border pt-3 lg:gap-3 lg:pt-4">
-                  {styleName && row(t('feed.style'), styleName)}
+                  {styleName && !post.story && row(t('feed.style'), styleName)}
                   {row(t('feed.model'), t('panel.model'))}
                   {row(t('feed.made'), made === 'today' || made === 'yesterday' ? t(`feed.${made}`) : made)}
                   {post.remix_of && (

@@ -8,10 +8,10 @@ import ErrorText, { errorKey } from './ErrorText'
 /** Как UPLOAD_MAX_BYTES на бэкенде (backend/app/config.py): большой файл не гоним по сети зря. */
 const UPLOAD_MAX_BYTES = 5_000_000
 
-type Props = { guest?: boolean; className: string; assignmentId?: number | null }
+type Props = { guest?: boolean; className: string; assignmentId?: number | null; label?: string; testid?: string; below?: boolean }
 
 /** Кнопка «+» и попап загрузки (menus.jpg): файл уходит только на POST /api/works/upload, дальше /create?work=<id>. */
-export default function UploadPopup({ guest, className, assignmentId }: Props) {
+export default function UploadPopup({ guest, className, assignmentId, label, testid = 'upload-open', below }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -87,23 +87,25 @@ export default function UploadPopup({ guest, className, assignmentId }: Props) {
     <div ref={box} className="relative">
       <button
         type="button"
-        data-testid="upload-open"
+        data-testid={testid}
         aria-expanded={open}
         aria-label={name}
         title={name}
         onClick={() => (guest ? navigate('/login') : setOpen((o) => !o))}
         className={className}
       >
+        {label ?? (
         <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
           <path d="M12 5v14M5 12h14" />
         </svg>
+        )}
       </button>
       {open && (
         <div
           data-testid="upload-popup"
           role="dialog"
           aria-label={name}
-          className="chip-pop absolute bottom-full left-0 z-40 mb-4 w-[min(250px,calc(100vw-32px))] rounded-3xl border border-border bg-surface p-3 shadow-pop"
+ className={`chip-pop absolute z-40 ${below ? 'top-full left-1/2 mt-2 -translate-x-1/2 text-left' : 'bottom-full left-0 mb-4'} w-[min(250px,calc(100vw-32px))] rounded-3xl border border-border bg-surface p-3 shadow-pop`}
           style={{ transformOrigin: 'bottom left' }}
         >
           <label

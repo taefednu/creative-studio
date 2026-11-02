@@ -14,6 +14,8 @@ export type Post = {
   nick: string
   caption: string | null
   image_url: string
+  /** Пост сказки: читается как книжка. */
+  story?: { id: number; title: string | null; pages: { text: string | null }[] } | null
   template_id: string | null
   audience: 'class' | 'family'
   status: string
@@ -101,10 +103,10 @@ export const isStyle = (id: string | null): id is string => !!id && id !== 'remi
 
 /** Что показать вместо «Нарисовать так же»: ремикс, переключатель автору или ссылку на стиль (взрослому ничего). */
 export function drawSameKind(
-  p: Pick<Post, 'can_remix' | 'is_author' | 'template_id'>,
+  p: Pick<Post, 'can_remix' | 'is_author' | 'template_id' | 'story'>,
   child = true,
 ): 'remix' | 'allow' | 'link' | null {
-  if (!child) return null
+  if (!child || p.story) return null // сказку не повторяют: у неё свой герой
   if (p.can_remix) return 'remix'
   if (p.is_author) return 'allow'
   return isStyle(p.template_id) ? 'link' : null

@@ -166,6 +166,44 @@ body {
   }
 }
 
+.hero-source {
+  animation: hero-source 0.5s var(--ease-pop) 0.7s backwards;
+}
+@keyframes hero-source {
+  from {
+    opacity: 0;
+    transform: translate(16px, -16px) scale(0.7) rotate(12deg);
+  }
+}
+.hero-cta {
+  background-image: linear-gradient(100deg, var(--color-primary), var(--color-heart), var(--color-primary));
+  background-size: 220% 100%;
+  animation: hero-cta 5s ease-in-out infinite alternate;
+}
+@keyframes hero-cta {
+  to {
+    background-position: 100% 0;
+  }
+}
+.story-turn {
+  animation: story-turn 0.32s var(--ease-out);
+}
+@keyframes story-turn {
+  from {
+    opacity: 0.2;
+    transform: translateX(var(--turn, 24px)) scale(1.02);
+  }
+}
+.story-pending {
+  background: linear-gradient(120deg, var(--color-primary-soft), var(--color-surface), var(--color-primary-soft));
+  background-size: 300% 100%;
+  animation: story-pending 2.4s ease-in-out infinite;
+}
+@keyframes story-pending {
+  50% {
+    background-position: 100% 0;
+  }
+}
 .gen-title {
   animation: gen-title-in 0.26s var(--ease-out);
 }
@@ -250,7 +288,11 @@ body {
   .gen-scan,
   .gen-ring,
   .gen-robot,
-  .gen-reveal {
+  .gen-reveal,
+  .story-turn,
+  .story-pending,
+  .hero-source,
+  .hero-cta {
     animation: none;
   }
   .gen-word-fall {

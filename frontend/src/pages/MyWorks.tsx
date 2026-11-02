@@ -9,6 +9,7 @@ import Icon from '../components/Icon'
 import PublishBox from '../components/PublishBox'
 import SubmitBox from '../components/SubmitBox'
 import { isOpen, loadAssignments } from '../features/assignments/assignments'
+import { loadMyStories } from '../features/story/story'
 import type { Assignment } from '../features/assignments/assignments'
 import { filterWorks, galleryOrder, loadTemplates, styleAlbum } from '../features/works/works'
 import type { Work, WorkFilter } from '../features/works/works'
@@ -27,6 +28,7 @@ export default function MyWorks() {
   const open = tasks?.filter(isOpen) ?? []
   const { nick } = useOutletContext<ShellContext>()
   const [tplData] = useLoad(loadTemplates)
+  const [stories] = useLoad(loadMyStories)
   const [style, setStyle] = useState<string | null>(null)
   const filtered = works ? filterWorks(works, filter).filter((w) => !style || w.template_id === style) : []
   const shown = galleryOrder(filtered)
@@ -97,6 +99,19 @@ export default function MyWorks() {
                 </Link>
               ),
             )}
+          </div>
+        </section>
+      )}
+      {!!stories?.filter((x) => x.status === 'ready').length && (
+        <section data-testid="my-stories" aria-label={t('story.mine')} className="mt-3">
+          <p className="text-sm font-extrabold text-heading">{t('story.mine')}</p>
+          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+            {stories.filter((x) => x.status === 'ready').map((x) => (
+              <Link key={x.id} to={`/story/${x.id}`} data-testid="my-story" className="w-40 shrink-0 overflow-hidden rounded-2xl bg-surface shadow-card transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transition-none">
+                <img src={`${x.pages[0]?.image_url}?thumb=1`} alt="" className="aspect-[4/3] w-full object-cover" />
+                <p className="truncate px-2 py-1.5 text-sm font-extrabold text-heading">{x.title}</p>
+              </Link>
+            ))}
           </div>
         </section>
       )}

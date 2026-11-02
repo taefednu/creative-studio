@@ -48,6 +48,7 @@ def _view(w: Work, adult_notified: bool = True) -> dict:
         "idea": (w.rewrite_text or w.child_text) if w.status in ("checking", "generating") else None,
         # файл записан до проверки картинки: идёт проверка, сама картинка до ready не отдаётся
         "drawn": w.status == "generating" and bool(w.file_path),
+        "hero_of_work_id": w.hero_of_work_id,
     }
 
 

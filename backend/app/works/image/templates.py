@@ -76,5 +76,6 @@ def build_alive_prompt() -> str:
     return (
         "Turn this child's drawing into a charming 3D animated movie character. Keep the exact "
         "shape, proportions and colors of the drawing, including its wobbly lines and imperfections. "
-        "Soft studio lighting, plain light background, friendly and safe for kids, no text."
+        "Remove the paper, the table and any photo background: the character stands alone in a soft, "
+        "cozy, colorful scene. Friendly and safe for kids, no text, no people."
     )

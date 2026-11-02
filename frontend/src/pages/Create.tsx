@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { ApiError, api } from '../api'
 import type { ShellContext } from '../components/AppShell'
+import StoryForm from '../components/StoryForm'
+import UploadPopup from '../components/UploadPopup'
 import CreatePanel from '../components/CreatePanel'
 import ErrorText, { errorKey } from '../components/ErrorText'
 import GenStage from '../components/GenStage'
@@ -167,6 +169,15 @@ export default function Create() {
           {t('create.title')}
         </h1>
       </div>
+      <div className="mt-2 flex justify-center">
+        <UploadPopup
+          below
+          testid="hero-cta"
+          label={t('story.heroCta')}
+          assignmentId={assignmentId}
+          className="hero-cta flex h-11 items-center rounded-full bg-primary px-5 text-sm font-extrabold text-primary-fg shadow-card md:text-base"
+        />
+      </div>
       <p className="mt-1 text-center md:mt-[5px]">
         <span data-testid="create-sub" className="inline-block rounded-full bg-primary-soft px-5 py-1 text-sm font-bold text-muted md:py-0.5 md:text-lg">
           {t('create.sub')}
@@ -281,6 +292,26 @@ function WorkView({
   const s = work.status
   // проявление только если на глазах ребёнка шло рисование: перезагрузка готовой работы её не запускает
   const [sawDrawing, setSawDrawing] = useState(false)
+  const navigate = useNavigate()
+  const { reloadMe } = useOutletContext<ShellContext>()
+  const [tplData] = useLoad(loadTemplates)
+  const price = tplData?.price
+  const storyPrice = tplData?.story_price
+  const [heroBusy, setHeroBusy] = useState(false)
+  const [heroRid] = useState(() => crypto.randomUUID())
+  async function bringAlive() {
+    setHeroBusy(true)
+    setErr(null)
+    try {
+      const r = await api<{ id: number }>(`/api/works/${work.id}/alive`, 'POST', { request_id: heroRid })
+      reloadMe()
+      navigate(`/create?work=${r.id}`)
+    } catch (x) {
+      setErr(errorKey(x))
+    } finally {
+      setHeroBusy(false)
+    }
+  }
   if (POLLING.includes(s) && !sawDrawing) setSawDrawing(true)
   const upload = work.kind === 'upload'
   // что SAM спрятал на загрузке: коды blurred_<что>, текст из i18n по коду; оригинал ребёнку не показывается
@@ -354,14 +385,31 @@ function WorkView({
         <div data-testid="result-image" className="relative mt-3 overflow-hidden rounded-3xl border-4 border-primary bg-surface lg:mt-0 lg:aspect-square lg:h-[calc(100dvh-112px)] lg:max-h-[700px] lg:shrink-0">
           <img data-testid="result-img" src={work.image_url} alt="" className={`aspect-square w-full object-cover lg:h-full ${sawDrawing ? 'gen-reveal' : ''}`} />
           <span className="absolute bottom-3 left-3 rounded-full bg-success-soft px-3 py-1 text-sm font-extrabold text-success lg:text-base">{t('create.checkedByAi')}</span>
+          {work.hero_of_work_id && (
+            <figure data-testid="hero-source" className="hero-source absolute right-3 top-3 w-[28%] rotate-3 overflow-hidden rounded-2xl border-4 border-surface bg-surface shadow-pop">
+              <img src={`/api/works/${work.hero_of_work_id}/image?thumb=1`} alt={t('story.yourDrawing')} className="aspect-square w-full object-cover" />
+              <figcaption className="px-1 py-0.5 text-center text-xs font-extrabold text-heading">{t('story.yourDrawing')}</figcaption>
+            </figure>
+          )}
         </div>
         <aside data-testid="result-side" className="mt-3 flex min-w-0 flex-col gap-2.5 rounded-[28px] border border-border bg-surface p-4 shadow-card lg:mt-0 lg:w-[420px] lg:p-5">
           <img data-testid="side-robot" src="/art/robot-brush.webp" alt="" className="mx-auto hidden h-[clamp(64px,12vh,160px)] object-contain lg:block" />
-          <h1 data-testid="result-title" className="text-[28px] font-extrabold leading-9 text-heading">{t(upload ? 'create.uploadReadyTitle' : 'create.readyTitle')}</h1>
+          <h1 data-testid="result-title" className="text-[28px] font-extrabold leading-9 text-heading">{t(upload ? 'create.uploadReadyTitle' : work.kind === 'alive' ? 'create.aliveTitle' : 'create.readyTitle')}</h1>
           {tpl && <p data-testid="style-chip" className="text-sm font-bold text-muted">{t('create.styleLabel')}: {t(`templates.${tpl.id}`)}</p>}
           {work.rewrite_text && <SideText>{t('create.rewrite', { text: work.rewrite_text })}</SideText>}
           {blurred.map((c) => <SideText key={c} testid={`blurred-${c}`}>{t(`create.blurred.${c}`)}</SideText>)}
           <div className="flex-1" />
+          {upload && (
+            <button type="button" data-testid="hero-go" disabled={heroBusy} onClick={() => void bringAlive()} className="hero-cta flex h-14 items-center justify-center gap-2 rounded-full bg-primary text-lg font-extrabold text-primary-fg shadow-card disabled:opacity-60">
+              {t('story.hero')}
+              <img src="/art/coin.webp" alt="" className="h-7 w-7" />
+              {price}
+            </button>
+          )}
+          {err && <ErrorText code={err} />}
+          {(work.kind === 'alive' || work.kind === 'image' || !work.kind) && (
+            <StoryForm heroId={work.id} price={storyPrice} onCreated={(id) => navigate(`/story/${id}`)} />
+          )}
           {task && <SubmitBox workId={work.id} assignment={task} onSupport={() => setSupportFor(work.id)} />}
           <PublishBox workId={work.id} onSupport={() => setSupportFor(work.id)} />
           <div className="grid grid-cols-2 gap-2">

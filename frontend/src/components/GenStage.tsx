@@ -141,7 +141,7 @@ function useScene(
  * Экран рисования (work-progress). Стадии идут только от настоящих статусов работы:
  * checking → generating → generating с файлом (идёт проверка картинки). Процентов и таймера нет: их неоткуда взять.
  */
-export default function GenStage({ work, sample, styleName }: { work: Work; sample?: string; styleName?: string }) {
+export default function GenStage({ work, sample, styleName, title: fixed }: { work: Work; sample?: string; styleName?: string; title?: string }) {
   const { t } = useTranslation()
   const blobs = useRef<HTMLCanvasElement>(null)
   const fx = useRef<HTMLCanvasElement>(null)
@@ -150,11 +150,11 @@ export default function GenStage({ work, sample, styleName }: { work: Work; samp
   useScene(blobs, fx, sample, drawn)
   const upload = work.kind === 'upload'
   const words = (work.idea || styleName || '').split(/\s+/).filter(Boolean).slice(0, 8)
-  const title = drawn
+  const title = fixed ?? (drawn
     ? t('gen.verify')
     : painting
-      ? t('gen.draw', { style: styleName ?? '', interpolation: { escapeValue: false } })
-      : t(upload ? 'gen.readUpload' : 'gen.read')
+      ? work.kind === 'alive' ? t('gen.alive') : t('gen.draw', { style: styleName ?? '', interpolation: { escapeValue: false } })
+      : t(upload ? 'gen.readUpload' : 'gen.read'))
 
   return (
     <div data-testid="work-progress" className="mx-auto flex max-w-xl flex-col items-center text-center">

@@ -2,8 +2,9 @@
   "app": { "name": "Creative Studio" },
   "nav": { "feed": "Lenta", "create": "Yaratish", "tasks": "Topshiriqlar", "mine": "Mening ishlarim" },
   "lang": { "label": "Til" },
+  "story": {"yourDrawing": "Rasming", "prev": "Orqaga", "next": "Keyingi", "pages": "Sahifalar", "pageN": "{{n}}-sahifa", "pageSoon": "Bu sahifa hali chizilyapti…", "checking": "Gʻoyangni oʻqiyapman", "writing": "Ertak toʻqiyapman", "drawing": "Sahifalarni chizyapman", "drawingLeft": "Qolgan sahifalarni chizyapman…", "heldTitle": "Kattalarga koʻrsatamiz", "heldText": "Kattalar ertakni oʻqib, qaror qiladi. Tangalaring qaytdi.", "refusedTitle": "Boshqasini oʻylab topamiz", "refusedText": "Bu ertakni koʻrsatib boʻlmaydi. Yangi gʻoya oʻylab top!", "failedTitle": "Boʻlmadi", "failedText": "Ertak chiqmadi, tangalaring qaytdi. Yana urinib koʻr.", "toCreate": "Chizishni davom ettirish", "formTitle": "Qahramoning haqida ertak toʻqi", "ideaPlaceholder": "Ertak nima haqida? Yozmasang ham boʻladi", "go": "Ertak toʻqish", "hero": "Rasmni jonlantirish", "heroCta": "Qogʻozga chizdingmi? Rasmni jonlantir!", "book": "Kitobcha", "mine": "Ertaklarim"},
   "demo": {"try": "Sinab koʻring:", "child": "bola", "parent": "ota-ona", "teacher": "oʻqituvchi"},
-  "gen": {"read": "G'oyangni o'qiyapman", "readUpload": "Rasmingni ko'ryapman", "draw": "Chizyapman: {{style}}", "verify": "Hammasi yaxshimi, tekshiryapman"},
+  "gen": {"alive": "Rasmingni jonlantiryapman", "read": "G'oyangni o'qiyapman", "readUpload": "Rasmingni ko'ryapman", "draw": "Chizyapman: {{style}}", "verify": "Hammasi yaxshimi, tekshiryapman"},
   "ideas": {"open": "O'ylab topishga yordam ber", "close": "Yopish", "ready": "Mana sening g'oyang!", "again": "Boshidan", "done": "Tayyor", "lesson": "Yaxshi so'rov uchta savolga javob beradi: kim, qayerda va nima qilyapti. O'zing ham shunday yoza olasan!", "phrase": "{{where}} {{who}} {{what}}", "ask": {"who": "Rasmda kim bo'ladi?", "where": "U qayerda bo'ladi?", "what": "U nima qilyapti?"}, "slot": {"who": "Kim?", "where": "Qayerda?", "what": "Nima qilyapti?"}, "who": {"cat": "mushuk", "dragon": "ajdar", "robot": "robot", "puppy": "kuchukcha", "bunny": "quyoncha", "penguin": "pingvin", "dino": "dinozavr", "fox": "tulkicha"}, "where": {"moon": "oyda", "castle": "qasrda", "forest": "o'rmonda", "sea": "suv ostida", "clouds": "bulutlar ustida", "space": "koinotda", "candy": "shirinliklar shahrida", "samarkand": "Samarqandda"}, "what": {"watermelon": "tarvuz yeyapti", "fly": "uchyapti", "dance": "raqs tushyapti", "paint": "rasm chizyapti", "bake": "tort pishiryapti", "sing": "qo'shiq aytyapti", "ball": "to'p o'ynayapti", "swim": "suzyapti"}},
   "showcase": { "title": "Vitrina", "login": "Kirish", "reactHint": "Rasmlarga munosabat bildirish uchun kir.", "loginToCreate": "Chizish uchun kir", "fromLogin": "Bolalar ishlarini ko‘rish" },
   "pages": {
@@ -92,6 +93,7 @@
     "empty": "Avval biror narsa yoz."
   },
   "create": {
+    "aliveTitle": "Qahramoning jonlandi!",
     "uploadReadyTitle": "Rasm yuklandi!",
     "uploadHeldTitle": "Kattalarga ko‘rsatamiz",
     "uploadHeldText": "Rasmni avval kattalar ko‘radi. Ular ko‘rishi bilan bilib olasan.",
@@ -214,7 +216,7 @@
   "shell": { "coinsUnknown": "Tangalar hozircha mavjud emas", "nav": "Asosiy menyu", "account": "Profil" },
   "task": { "start": "Boshlash", "overdue": "muddat tugagan", "today": "muddat bugun", "left_one": "{{count}} kun qoldi", "left_few": "{{count}} kun qoldi", "left_many": "{{count}} kun qoldi", "left_other": "{{count}} kun qoldi", "draw": "Chizish", "noClass": "Sinfga qo‘shilganingdan keyin topshiriqlar shu yerda chiqadi: o‘qituvchidan sinf kodini kiritgin.", "empty": "Hozircha topshiriq yo‘q. Keyinroq qara: o‘qituvchi tez orada nimadir o‘ylab topadi!", "sentMark": "Topshirildi, o‘qituvchi ko‘radi", "heldMark": "O‘qituvchiga ko‘rish uchun yuborildi", "submit": "Topshiriqqa topshirish", "submitFor": "Topshiryapman:", "submitComment": "Rasm izohi (shart emas)", "submitDone": "Topshirildi! O‘qituvchi rasmingni ko‘radi.", "submitRejected": "O‘qituvchi bu rasmni qabul qilmadi. Boshqasini tanla.", "submitHeld": "O‘qituvchiga ko‘rish uchun yuborildi. Tekshirgach, u javob beradi.", "pick": "Qaysi topshiriqqa topshirish" },
   "panel": { "voiceStart": "Ovozda ayt", "voiceStop": "Yozishni to‘xtat", "voiceListening": "Tinglayapman…", "uploadTitle": "Rasm yuklash", "uploadHint": "PNG yoki JPG", "uploadSending": "Yuborilmoqda…", "uploadClose": "Yopish", "model": "Muse Image", "format": "1:1", "style": "Uslub", "allStyles": "Barcha uslublar", "styleFilter": "Uslub bo'yicha filtr", "noStyleMatch": "Bu uslubda hali rasm yo'q" },
-  "templates": {
+  "templates": { "alive": "Jonlangan rasm", "story": "Ertak",
     "superhero": "Men superqahramonman",
     "space_pet": "Kosmosdagi uy hayvoni",
     "clay": "Plastilin dunyosi",

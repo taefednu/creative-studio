@@ -24,6 +24,8 @@ export type Work = {
   idea?: string | null
   /** Файл уже записан: идёт проверка картинки. */
   drawn?: boolean
+  /** Ожившая работа: id загруженного рисунка, из которого она сделана. */
+  hero_of_work_id?: number | null
   /** Где работа показана; у старого бэкенда поля нет. */
   shared?: Shared[]
 }
@@ -53,7 +55,7 @@ export function filterWorks(list: Work[], f: WorkFilter): Work[] {
 
 export type TemplateInfo = { id: string; image_url: string }
 
-export const loadTemplates = () => api<{ price: number; templates: TemplateInfo[] }>('/api/templates')
+export const loadTemplates = () => api<{ price: number; story_price?: number; templates: TemplateInfo[] }>('/api/templates')
 
 export const POLLING: WorkStatus[] = ['checking', 'generating']
 

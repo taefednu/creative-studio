@@ -212,6 +212,11 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
                 {t('feed.heldMark')}
               </span>
             )}
+            {p.story && (
+              <span data-testid="card-book" className="absolute left-2 top-2 rounded-full bg-surface px-2.5 py-1 text-xs font-extrabold text-primary shadow-card">
+                {t('story.book')}
+              </span>
+            )}
             <Avatar nick={p.nick} className="absolute bottom-2 left-2 h-9 w-9" />
             <span
               data-testid="card-heart"
