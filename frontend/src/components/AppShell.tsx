@@ -135,8 +135,8 @@ export default function AppShell() {
                 title={me.coins === null ? t('shell.coinsUnknown') : t('child.coins')}
                 className="flex h-9 shrink-0 items-center justify-center gap-1 rounded-full bg-primary-soft px-2 text-sm font-extrabold text-heading s380:px-3 s380:text-base lg:h-11 lg:gap-2 lg:text-lg"
               >
-                <img src="/art/coin.webp" alt="" className="h-6 w-6 lg:h-7 lg:w-7" />
-                {me.coins ?? '—'}
+                <img key={me.coins} src="/art/coin.webp" alt="" className="coin-flip h-6 w-6 lg:h-7 lg:w-7" />
+                <span key={`n-${me.coins}`} className="coin-tick">{me.coins ?? '—'}</span>
               </span>
               <div ref={menuRef} className="relative shrink-0">
                 <button

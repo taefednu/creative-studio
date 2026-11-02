@@ -103,6 +103,7 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
   const { t, i18n } = useTranslation()
   const [post, setPost] = useState<Post | null>(null)
   const [tab, setTab] = useState<'about' | 'comments'>('about')
+  const [pop, setPop] = useState<{ k: ReactionKey; n: number } | null>(null)
   const [comments, setComments] = useState<PostComment[]>([])
   const [text, setText] = useState('')
   const [suggest, setSuggest] = useState<Suggest | null>(null)
@@ -154,6 +155,7 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
     if (!post || !post.can_react) return
     const had = post.mine.includes(k)
     setActErr(null)
+    if (!had) setPop((x) => ({ k, n: (x?.n ?? 0) + 1 })) // отклик сразу, не дожидаясь сервера; счётчик придёт с ответом
     try {
       const r = await api<{ reactions: Post['reactions']; mine: ReactionKey[] }>(
         `/api/posts/${post.id}/reactions/${k}`,
@@ -258,7 +260,7 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-start justify-center bg-scrim p-2 pt-[68px] backdrop-blur-sm lg:p-8 lg:pt-[14.5dvh]"
+      className="modal-bg fixed inset-0 z-30 flex items-start justify-center bg-scrim p-2 pt-[68px] backdrop-blur-sm lg:p-8 lg:pt-[14.5dvh]"
       onClick={onClose}
       data-testid="post-modal-bg"
     >
@@ -267,7 +269,7 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
         aria-modal="true"
         data-testid="post-modal"
         onClick={(e) => e.stopPropagation()}
-        className="relative grid max-h-[calc(100dvh-76px)] w-full max-w-[1167px] content-start gap-2 overflow-y-auto rounded-3xl border border-border bg-bg p-2 shadow-card lg:h-[737px] lg:max-h-[calc(85.5dvh-16px)] lg:grid-cols-[663fr_447fr] lg:grid-rows-[minmax(0,1fr)] lg:gap-[13px] lg:overflow-hidden lg:py-[27px] lg:pl-[27px] lg:pr-[17px]"
+        className="modal-in relative grid max-h-[calc(100dvh-76px)] w-full max-w-[1167px] content-start gap-2 overflow-y-auto rounded-3xl border border-border bg-bg p-2 shadow-card lg:h-[737px] lg:max-h-[calc(85.5dvh-16px)] lg:grid-cols-[663fr_447fr] lg:grid-rows-[minmax(0,1fr)] lg:gap-[13px] lg:overflow-hidden lg:py-[27px] lg:pl-[27px] lg:pr-[17px]"
       >
         <button
           type="button"
@@ -364,9 +366,12 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
                       aria-pressed={on}
                       disabled={!post.can_react && !guest}
                       onClick={() => void react(r.key)}
-                      className={`flex h-[52px] items-center justify-center gap-1.5 rounded-2xl border font-extrabold text-heading lg:h-[58px] lg:gap-2 ${on ? 'border-primary bg-primary-soft' : 'border-border bg-surface'}`}
+                      className={`relative flex h-[52px] items-center justify-center gap-1.5 rounded-2xl border font-extrabold text-heading lg:h-[58px] lg:gap-2 ${on ? 'border-primary bg-primary-soft' : 'border-border bg-surface'}`}
                     >
-                      <span aria-hidden="true" className="text-2xl lg:text-[32px]">{r.emoji}</span>
+                      <span key={pop?.k === r.key ? pop.n : 0} aria-hidden="true" className={`text-2xl lg:text-[32px] ${pop?.k === r.key ? 'react-pop' : ''}`}>{r.emoji}</span>
+                      {pop?.k === r.key && [0, 1, 2].map((i) => (
+                        <span key={`${pop.n}-${i}`} aria-hidden="true" className="react-fly text-xl">{r.emoji}</span>
+                      ))}
                       <span data-testid={`count-${r.key}`} className="text-base lg:text-xl">{post.reactions[r.key] ?? 0}</span>
                       <span className="sr-only">{t(`feed.reaction.${r.key}`)}</span>
                     </button>

@@ -203,7 +203,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
             aria-label={p.caption ? `${p.nick}: ${p.caption}` : p.nick}
             title={p.nick}
             onClick={() => setOpen(p.id)}
-            style={{ aspectRatio: cardRatio(p.id) }}
+            style={{ aspectRatio: cardRatio(p.id), animationDelay: row < 2 ? `${(row * count + c) * 40}ms` : undefined }}
             className="feed-card group relative block w-full overflow-hidden rounded-[22px] bg-primary-soft text-left shadow-card"
           >
             <CardImage src={`${p.image_url}?thumb=1`} alt={p.caption ?? ''} eager={row < 3} className="h-full w-full object-cover group-hover:scale-105" />

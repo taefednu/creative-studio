@@ -27,7 +27,7 @@ const FAN_STYLE = [
 
 function Spark({ className }: { className: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={`absolute ${className}`} aria-hidden="true">
+    <svg viewBox="0 0 24 24" className={`spark-twinkle absolute ${className}`} aria-hidden="true">
       <path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z" fill="currentColor" />
     </svg>
   )
@@ -50,7 +50,8 @@ function Fan({ templates }: { templates: TemplateInfo[] }) {
           key={it.id}
           src={it.image_url}
           alt=""
-          className={`-ml-5 h-[90px] w-[90px] sm:h-[120px] sm:w-[120px] rounded-2xl border-4 border-surface bg-surface object-cover shadow-card first:ml-0 md:-ml-3 md:h-[160px] md:w-[160px] md:rounded-3xl lg:h-[205px] lg:w-[205px] ${FAN_STYLE[i]}`}
+          className={`-ml-5 h-[90px] w-[90px] sm:h-[120px] sm:w-[120px] rounded-2xl border-4 border-surface bg-surface object-cover shadow-card first:ml-0 md:-ml-3 md:h-[160px] md:w-[160px] md:rounded-3xl lg:h-[205px] lg:w-[205px] fan-float ${FAN_STYLE[i]}`}
+          style={{ animationDelay: `${i * -1.2}s` }}
         />
       ))}
     </div>

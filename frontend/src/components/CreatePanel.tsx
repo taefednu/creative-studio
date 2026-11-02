@@ -126,7 +126,7 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
             value={tpl ?? ''}
             onChange={onTpl}
             options={templates.map((x) => ({ value: x.id, label: t(`templates.${x.id}`), thumb: x.image_url }))}
-            className="h-11 min-w-0 flex-1 md:h-12 md:flex-none"
+            className="h-11 min-w-0 flex-1 [&_button]:text-[0px] md:h-12 md:flex-none md:[&_button]:text-base"
           />
         </div>
       </div>

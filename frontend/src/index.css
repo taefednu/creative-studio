@@ -53,7 +53,7 @@ body {
 }
 
 .feed-card {
-  animation: feed-card-in 0.35s ease-out;
+  animation: feed-card-in 0.3s var(--ease-out) backwards;
 }
 @keyframes feed-card-in {
   from {
@@ -68,9 +68,98 @@ body {
 .feed-img-on {
   opacity: 1;
 }
+.modal-bg {
+  animation: modal-bg 0.2s ease-out;
+}
+@keyframes modal-bg {
+  from {
+    opacity: 0;
+  }
+}
+.modal-in {
+  animation: modal-in 0.28s var(--ease-drawer);
+}
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.97);
+  }
+}
+.react-pop {
+  animation: react-pop 0.32s var(--ease-pop);
+}
+@keyframes react-pop {
+  40% {
+    transform: scale(1.35);
+  }
+}
+.react-fly {
+  position: absolute;
+  left: 50%;
+  bottom: 60%;
+  pointer-events: none;
+  opacity: 0;
+  animation: react-fly 0.6s var(--ease-out);
+}
+.react-fly:nth-of-type(2) {
+  --fly-x: -22px;
+  animation-delay: 40ms;
+}
+.react-fly:nth-of-type(3) {
+  --fly-x: 22px;
+  animation-delay: 80ms;
+}
+@keyframes react-fly {
+  from {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(0.7);
+  }
+  to {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--fly-x, 0px)), -46px) scale(1.1);
+  }
+}
+.fan-float {
+  animation: fan-float 5s ease-in-out infinite alternate;
+}
+@keyframes fan-float {
+  to {
+    translate: 0 -8px;
+  }
+}
+.spark-twinkle {
+  animation: spark-twinkle 2.4s ease-in-out infinite alternate;
+}
+@keyframes spark-twinkle {
+  to {
+    opacity: 0.35;
+    scale: 0.8;
+  }
+}
+.coin-flip {
+  animation: coin-flip 0.5s var(--ease-in-out);
+}
+@keyframes coin-flip {
+  from {
+    transform: rotateY(180deg);
+  }
+}
+.coin-tick {
+  display: inline-block;
+  animation: react-pop 0.32s var(--ease-pop);
+}
 @media (prefers-reduced-motion: reduce) {
-  .feed-card {
+  .feed-card,
+  .modal-in,
+  .react-pop,
+  .fan-float,
+  .spark-twinkle,
+  .coin-flip,
+  .coin-tick {
     animation: none;
+  }
+  .react-fly {
+    display: none;
   }
   .feed-img {
     transition: none;
