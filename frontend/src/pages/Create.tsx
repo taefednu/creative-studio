@@ -206,7 +206,7 @@ export default function Create() {
 const ICON = 'h-6 w-6 shrink-0 lg:h-9 lg:w-9'
 const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
 const btnOutline =
-  'flex h-[52px] items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-3 text-base font-extrabold text-heading shadow-card lg:h-[85px] lg:gap-3 lg:text-[26px]'
+  'flex h-[52px] items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-3 text-base font-extrabold text-heading shadow-card lg:h-[85px] lg:gap-3 lg:text-2xl whitespace-nowrap'
 
 /** Правая колонка: робот, подпись, заголовок, текст. Одна на готовую работу, «Давай так», отказ, задержку и сбой. */
 function Side({ children }: { children: ReactNode }) {
