@@ -474,6 +474,11 @@
     "sample": "Picture for the task"
   },
   "mw": {
+    "gallery": "{{nick}}'s gallery",
+    "counts": "Pictures: {{n}}, shown: {{s}}",
+    "album": "Styles collected: {{n}} of {{total}}",
+    "albumLabel": "Style album",
+    "albumEmpty": "Draw in the “{{style}}” style",
     "all": "All",
     "shared": "Shared",
     "waiting": "Waiting",

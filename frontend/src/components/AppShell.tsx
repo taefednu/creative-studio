@@ -30,6 +30,7 @@ export type ShellContext = {
   reloadMe: () => void
   coins: number | null
   cls: { id: number; name: string } | null
+  nick: string | null
   hasParent: boolean
   needsAdult: boolean
   ready: boolean
@@ -96,6 +97,7 @@ export default function AppShell() {
     reloadMe: load,
     coins: me ? me.coins : null,
     cls: me?.class ?? null,
+    nick: me?.nick ?? null,
     hasParent: me?.has_parent ?? false,
     needsAdult: me?.needs_adult ?? false,
     ready: me !== null,

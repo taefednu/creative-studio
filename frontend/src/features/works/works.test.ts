@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import en from '../../i18n/en.json'
 import ru from '../../i18n/ru.json'
 import uz from '../../i18n/uz.json'
-import { BLURRED, filterWorks } from './works'
+import { BLURRED, filterWorks, galleryOrder, styleAlbum } from './works'
 import type { Work } from './works'
 
 const w = (id: number, shared?: Work['shared']): Work => ({ id, template_id: 'clay', status: 'ready', reason_codes: [], rewrite_text: null, image_url: '/x', shared })
@@ -31,5 +31,21 @@ describe('размытое на загрузке', () => {
     for (const [name, d] of Object.entries({ ru, en, uz })) {
       for (const c of BLURRED) expect((d.create.blurred as Record<string, string>)[c], `${name} ${c}`).toBeTruthy()
     }
+  })
+})
+
+describe('галерея', () => {
+  const work = (id: number, template_id: string, image_url: string | null) => ({ id, template_id, image_url }) as Work
+  it('готовые картинки впереди, порядок внутри групп сохраняется', () => {
+    const order = galleryOrder([work(3, 'a', null), work(2, 'a', '/2'), work(1, 'a', '/1')])
+    expect(order.map((x) => x.id)).toEqual([2, 1, 3])
+  })
+  it('альбом: новейшая готовая работа стиля; без готовой работы стиль пуст', () => {
+    const album = styleAlbum(
+      [{ id: 'a', image_url: '/a' }, { id: 'b', image_url: '/b' }],
+      [work(3, 'a', null), work(2, 'a', '/2'), work(1, 'a', '/1'), work(4, 'b', null)],
+    )
+    expect(album[0].work?.id).toBe(2)
+    expect(album[1].work).toBeNull()
   })
 })

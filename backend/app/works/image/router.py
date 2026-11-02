@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Cookie, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select, update
@@ -19,6 +19,7 @@ from app.moderation import HeldItem, register
 from app.works.image import pipeline
 from app.works.image.models import Work
 from app.works.image.templates import BY_ID, TEMPLATES
+from app.works.image.thumbs import thumb_response
 from app.works.remix import source as remix_source
 
 router = APIRouter(prefix="/api")
@@ -141,7 +142,11 @@ def get_work(work_id: int, c: Annotated[Child, Depends(current_child)], db: Db):
 
 @router.get("/works/{work_id}/image")
 def work_image(
-    work_id: int, db: Db, studio_session: Annotated[str | None, Cookie(alias=COOKIE)] = None
+    work_id: int,
+    request: Request,
+    db: Db,
+    studio_session: Annotated[str | None, Cookie(alias=COOKIE)] = None,
+    thumb: bool = False,
 ):
     """Автору — только при ready; родителю этого ребёнка — и held (на проверку). Остальным 404."""
     w = db.get(Work, work_id)
@@ -160,6 +165,8 @@ def work_image(
             )
     if not allowed or w is None or w.file_path is None or not Path(w.file_path).is_file():
         raise HTTPException(404, "not_found")
+    if thumb:
+        return thumb_response(w.file_path, request)
     return FileResponse(w.file_path, media_type="image/webp", headers={"Cache-Control": "private"})
 
 

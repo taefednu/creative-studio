@@ -34,6 +34,16 @@ export type WorkFilter = 'all' | 'shared' | 'waiting'
 /** Что SAM прячет на загрузке: коды blurred_<что> (backend/app/works/upload/sam.py ENTITIES), текст в create.blurred.<что>. */
 export const BLURRED = ['face', 'school_uniform', 'house_number', 'handwritten_name', 'written_word']
 
+/** Галерея: готовые картинки впереди, плитки без картинки в конце; порядок внутри групп не меняется. */
+export function galleryOrder(list: Work[]): Work[] {
+  return [...list.filter((w) => w.image_url), ...list.filter((w) => !w.image_url)]
+}
+
+/** Альбом стилей: последняя готовая работа ребёнка в каждом стиле; список приходит от новых к старым. */
+export function styleAlbum(templates: TemplateInfo[], works: Work[]) {
+  return templates.map((tpl) => ({ tpl, work: works.find((w) => w.template_id === tpl.id && w.image_url) ?? null }))
+}
+
 /** Фильтры «Моих работ»: «Показанные» — есть опубликованный пост, «Ждут» — пост ждёт взрослого или сама работа на проверке. */
 export function filterWorks(list: Work[], f: WorkFilter): Work[] {
   if (f === 'all') return list
