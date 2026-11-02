@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiError, api } from '../api'
-import { REACTIONS, byStyle, cardRatio, feedUrl, toColumns } from '../features/feed/feed'
+import { REACTIONS, byStyle, captionOf, cardRatio, feedUrl, toColumns } from '../features/feed/feed'
 import type { FeedKind, FeedPage, Post } from '../features/feed/feed'
 import type { TemplateInfo } from '../features/works/works'
 import Avatar from './Avatar'
@@ -37,6 +37,9 @@ function CardImage({ src, alt, eager, className }: { src: string; alt: string; e
 const COLUMN_STEPS: [number, number][] = [[768, 3], [1024, 5], [1280, 6]]
 const columnCount = () => COLUMN_STEPS.reduce((n, [w, c]) => (window.innerWidth >= w ? c : n), 2)
 
+// Дальше подгрузка только по кнопке: иначе до подвала не дойти
+const AUTO_LOAD_MAX = 60
+
 function useColumnCount() {
   const [count, setCount] = useState(columnCount)
   useEffect(() => {
@@ -49,7 +52,7 @@ function useColumnCount() {
 
 /** Лента (docs/design/feed.jpg): «кирпичная» сетка, клик по карточке — работа поверх. Новые страницы подгружаются при прокрутке. */
 export default function FeedView({ kinds, classId, title, child, guest }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [kind, setKind] = useState<FeedKind>(kinds[0])
   const [page, setPage] = useState<{ key: string; items: Post[]; cursor: number | null } | null>(null)
   const [open, setOpen] = useState<number | null>(null)
@@ -91,12 +94,13 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
   useEffect(() => {
     const el = moreRef.current
     if (!el) return
-    const io = new IntersectionObserver((e) => e[0].isIntersecting && void more(), { rootMargin: '800px' })
+    const io = new IntersectionObserver((e) => e[0].isIntersecting && items.length < AUTO_LOAD_MAX && void more(), { rootMargin: '800px' })
     io.observe(el)
     return () => io.disconnect()
-  }, [more])
+  }, [more, items.length])
 
   const close = useCallback(() => setOpen(null), [])
+  const Title = child ? 'h2' : 'h1' // на главной заголовок страницы в баннере
 
   // Обновляем только изменённый пост: перезагрузка ленты вернула бы её к первой странице и сбила прокрутку
   async function refreshPost(id: number) {
@@ -110,12 +114,12 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
   }
 
   return (
-    <div className={child ? 'pb-[110px] md:pb-[125px] lg:pb-[150px]' : ''}>
+    <div className={child ? 'mt-4' : ''}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:flex-nowrap">
         <div className="order-1 mt-1 md:mt-0">
-          <h1 data-testid="feed-title" className="w-fit text-3xl font-extrabold leading-9 text-heading md:text-[44px] md:leading-[42px]">
+          <Title data-testid="feed-title" className={`w-fit font-extrabold text-heading ${child ? 'text-2xl md:text-[32px] md:leading-[38px]' : 'text-3xl leading-9 md:text-[44px] md:leading-[42px]'}`}>
             {title ?? t(`feed.title.${kind}`)}
-          </h1>
+          </Title>
         </div>
         {kinds.length > 1 && (
           <div className="order-3 flex max-w-full basis-full gap-2 overflow-x-auto md:order-2 md:basis-auto md:gap-1.5" role="tablist">
@@ -181,10 +185,10 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
               onClick={() => setOpen(p.id)}
               className="feed-card block w-full overflow-hidden rounded-card border border-border bg-primary-soft text-left shadow-card"
             >
-              <CardImage src={`${p.image_url}?thumb=1`} alt={p.caption ?? ''} eager={row < 3} className="w-full object-cover" />
+              <CardImage src={`${p.image_url}?thumb=1`} alt={captionOf(p, i18n.language) ?? ''} eager={row < 3} className="w-full object-cover" />
               <div className="px-3 py-2">
                 <p className="truncate text-sm font-extrabold text-heading">{p.nick}</p>
-                {p.caption && <p className="text-sm text-text">{p.caption}</p>}
+                {p.caption && <p className="text-sm text-text">{captionOf(p, i18n.language)}</p>}
                 <div className="mt-1 flex flex-wrap gap-x-3 text-sm font-bold text-heading">
                   {REACTIONS.map((r) => (
                     <span key={r.key} data-testid={`card-${r.key}`}>
@@ -200,13 +204,13 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
             type="button"
             data-testid="post-card"
               data-post-id={p.id}
-            aria-label={p.caption ? `${p.nick}: ${p.caption}` : p.nick}
+            aria-label={p.caption ? `${p.nick}: ${captionOf(p, i18n.language)}` : p.nick}
             title={p.nick}
             onClick={() => setOpen(p.id)}
             style={{ aspectRatio: cardRatio(p.id), animationDelay: row < 2 ? `${(row * count + c) * 40}ms` : undefined }}
             className="feed-card group relative block w-full overflow-hidden rounded-[22px] bg-primary-soft text-left shadow-card"
           >
-            <CardImage src={`${p.image_url}?thumb=1`} alt={p.caption ?? ''} eager={row < 3} className="h-full w-full object-cover group-hover:scale-105" />
+            <CardImage src={`${p.image_url}?thumb=1`} alt={captionOf(p, i18n.language) ?? ''} eager={row < 3} className="h-full w-full object-cover group-hover:scale-105" />
             {p.status === 'held' && !p.support && (
               <span className="absolute inset-x-2 top-2 rounded-xl bg-scrim px-3 py-1.5 text-xs font-bold text-primary-fg">
                 {t('feed.heldMark')}
@@ -240,7 +244,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
           type="button"
           data-testid="feed-more"
           onClick={() => void more()}
-          className="mt-2 rounded-full border border-border bg-surface px-6 py-2 font-extrabold text-heading"
+          className="mx-auto mt-4 block rounded-full border border-border bg-surface px-6 py-2 font-extrabold text-heading"
         >
           {t('feed.more')}
         </button>

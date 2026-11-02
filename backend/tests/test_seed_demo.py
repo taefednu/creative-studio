@@ -56,6 +56,7 @@ def test_seed_queues_feed_analytics(seeded):
     kid = _login("/api/child/login", {"nick": "StarFox", "pictures": out["child_pictures"]})
     posts = kid.get("/api/feed/class").json()["items"]
     assert len(posts) >= 20 and all(p["status"] == "published" for p in posts)
+    assert any((p["caption_i18n"] or {}).get("en") == "My first robot" for p in posts)  # демо-подпись на всех языках
     assert kid.get(f"/api/posts/{posts[0]['id']}/image").status_code == 200
     up = out["upload_item"]
     assert kid.get(f"/api/review/items/{up}/image?version=original").status_code in (401, 403, 404)

@@ -6,6 +6,7 @@ import { useSession } from '../features/auth/session'
 import type { Role } from '../features/auth/session'
 import { CABINET_EVENT, useReviewCount } from '../features/review/review'
 import { useLoad } from '../useLoad'
+import { HEADER_CLS, NAV_CLS } from './headerStyles'
 import LangSwitch from './LangSwitch'
 import Logo from './Logo'
 import TabPill from './TabPill'
@@ -77,12 +78,12 @@ export default function CabinetHeader({ role }: { role: Exclude<Role, 'child'> }
   return (
     <header
       data-testid="cabinet-header"
-      className="flex h-[60px] items-center gap-1.5 border-b border-border bg-surface px-2 s380:gap-2 s380:px-3 lg:sticky lg:top-0 lg:z-30 lg:grid lg:h-16 lg:grid-cols-[1fr_auto_1fr] lg:gap-3 lg:px-8"
+      className={HEADER_CLS}
     >
       <Logo />
       <nav
         aria-label={t('cab.nav')}
-        className="fixed inset-x-0 bottom-0 z-30 flex h-[72px] items-stretch gap-1 border-t border-border bg-surface px-1 py-1 lg:static lg:z-auto lg:h-auto lg:justify-center lg:gap-1 lg:border-0 lg:rounded-full lg:bg-primary-soft lg:p-1 lg:justify-self-center"
+        className={NAV_CLS}
       >
         {tabs.map((tab) => (
           <TabPill

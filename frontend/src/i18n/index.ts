@@ -34,4 +34,13 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 })
 
+// Заголовок и описание вкладки на языке интерфейса: их видят поисковики и закладки
+function applyLang() {
+  document.documentElement.lang = i18n.language
+  document.title = i18n.t('seo.title')
+  document.querySelector('meta[name="description"]')?.setAttribute('content', i18n.t('seo.description'))
+}
+i18n.on('languageChanged', applyLang)
+if (typeof document !== 'undefined') applyLang()
+
 export default i18n

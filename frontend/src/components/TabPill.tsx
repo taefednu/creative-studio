@@ -10,8 +10,8 @@ export default function TabPill({ to, icon, label, testid, end, badge, className
       end={end}
       data-testid={testid}
       className={({ isActive }) =>
-        `relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-xs font-extrabold transition-colors duration-150 lg:h-10 lg:flex-none lg:flex-row lg:gap-2 lg:whitespace-nowrap lg:rounded-full lg:px-4 lg:text-[15px] ${
-          isActive ? 'bg-primary-soft text-primary lg:bg-surface lg:shadow-card' : 'text-heading lg:hover:text-primary'
+        `relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-xs font-extrabold transition-colors duration-150 lg:h-11 lg:flex-none lg:flex-row lg:gap-2 lg:whitespace-nowrap lg:rounded-full lg:px-4 lg:text-base ${
+          isActive ? 'bg-primary-soft text-primary lg:bg-surface lg:shadow-card' : 'text-heading lg:text-text lg:hover:bg-primary-soft lg:hover:text-heading'
         } ${className}`
       }
     >

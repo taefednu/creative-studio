@@ -68,7 +68,7 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
     <div
       data-testid="create-panel"
       className={`max-w-[835px] rounded-[28px] border border-border bg-surface p-2 shadow-card md:p-[11px] ${
-        floating ? 'fixed bottom-[80px] left-1/2 z-20 w-[calc(100%-16px)] -translate-x-1/2 lg:bottom-6' : 'sticky bottom-[80px] z-20 -mx-2 mt-3 w-[calc(100%+16px)] md:mt-[15px] md:mx-auto md:w-full lg:static'
+        floating ? 'sticky bottom-[80px] z-20 -mx-2 mb-4 mt-3 w-[calc(100%+16px)] md:mx-auto md:mb-6 md:w-full lg:bottom-6' : 'sticky bottom-[80px] z-20 -mx-2 mt-3 w-[calc(100%+16px)] md:mt-[15px] md:mx-auto md:w-full lg:static'
       }`}
     >
       {err && (
@@ -126,7 +126,7 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
             value={tpl ?? ''}
             onChange={onTpl}
             options={templates.map((x) => ({ value: x.id, label: t(`templates.${x.id}`), thumb: x.image_url }))}
-            className="h-11 min-w-0 flex-1 [&_button]:text-[0px] md:h-12 md:flex-none md:[&_button]:text-base"
+            className="h-11 min-w-0 flex-1 [&_button]:text-[0px] md:h-12 md:flex-initial md:[&_button]:text-base"
           />
         </div>
       </div>

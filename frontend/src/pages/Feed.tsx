@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import CreatePanel from '../components/CreatePanel'
 import FeedView from '../components/FeedView'
+import HomeBanners from '../components/HomeBanners'
 import type { ShellContext } from '../components/AppShell'
 import type { FeedKind } from '../features/feed/feed'
 import { loadTemplates } from '../features/works/works'
@@ -18,6 +19,7 @@ export default function Feed() {
   const kinds: FeedKind[] = [...(cls ? (['class'] as const) : []), ...(hasParent ? (['family'] as const) : []), 'best']
   return (
     <>
+      <HomeBanners templates={templates} />
       <FeedView
         key={kinds.join()}
         kinds={kinds}

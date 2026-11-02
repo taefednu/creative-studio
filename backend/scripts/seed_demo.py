@@ -37,8 +37,13 @@ PICTURES = [3, 7, 1]
 KINDS = ("star", "heart", "laugh", "wow")
 SHOWCASE = ["NovaBear", "MiloOwl", "TinyStar", "PipFox", "LunaCub", "RoboKid"]
 MATES = ["Lumi", "SkyFox", "PixelPanda", "MoonCat", "DinoDash", "LimeLion", "OllieTree", "SunnyBee", "TikTak", "Zuzu"]
-CAPTIONS = {0: "Лиса идёт домой", 2: "Мой первый робот", 5: "Тут живёт мой друг", 7: "Динозавр охраняет коврик",
-            12: "Котёнок и его венок", 15: "Дракончик не страшный"}
+CAPTIONS = {0: ("Лиса идёт домой", "The fox is going home", "Tulki uyga ketmoqda"),
+            2: ("Мой первый робот", "My first robot", "Mening birinchi robotim"),
+            5: ("Тут живёт мой друг", "My friend lives here", "Bu yerda do'stim yashaydi"),
+            7: ("Динозавр охраняет коврик", "The dinosaur guards the rug", "Dinozavr gilamchani qo'riqlaydi"),
+            12: ("Котёнок и его венок", "The kitten and its wreath", "Mushukcha va uning gulchambari"),
+            15: ("Дракончик не страшный", "The little dragon isn't scary", "Ajdarcha qo'rqinchli emas")}
+PUPPY = ("Мой щенок", "My puppy", "Mening kuchugim")
 LANGS = ["ru", "en", "uz"]
 
 
@@ -49,10 +54,21 @@ def load_images(d: Path) -> list[dict]:
     slugs = [s for s in meta if (d / f"{s}.webp").is_file()] or sorted(p.stem for p in d.glob("*.webp"))
     return [
         {"path": d / f"{s}.webp", "slug": s, "idea": meta.get(s, {}).get("idea_ru"),
+         "idea_en": meta.get(s, {}).get("idea_en"), "idea_uz": meta.get(s, {}).get("idea_uz"),
          "template_id": meta.get(s, {}).get("template_id")
          or TEMPLATES[i % len(TEMPLATES)].id}
         for i, s in enumerate(slugs)
     ]
+
+
+def captions(ru: str | None, en: str | None, uz: str | None) -> dict:
+    """Подпись демо-поста и её перевод: витрину смотрят на всех трёх языках. Без перевода показывается как есть."""
+    en = en and en[0].upper() + en[1:]
+    return {"caption": ru, "caption_i18n": {"ru": ru, "en": en, "uz": uz} if ru and en and uz else None}
+
+
+def image_captions(img: dict) -> dict:
+    return captions(img["idea"], img["idea_en"], img["idea_uz"])
 
 
 def seed(images_dir: Path) -> dict:
@@ -129,7 +145,7 @@ def seed(images_dir: Path) -> dict:
         when = ago(hours=i * 8 + 1)
         w = work(author, i, when, **extra)
         p = Post(work_id=w.id, child_id=author.id, audience="class", class_id=room.id,
-                 caption=CAPTIONS.get(i) or imgs[i % n_img]["idea"],
+                 **(captions(*CAPTIONS[i]) if i in CAPTIONS else image_captions(imgs[i % n_img])),
                  status="published", best=i in (2, 5), remix_allowed=i != 8, created_at=when)
         s.add(p)
         s.flush()
@@ -147,7 +163,7 @@ def seed(images_dir: Path) -> dict:
         when = ago(hours=i * 11 + 2)
         w = work(author, 100 + i, when)
         p = Post(work_id=w.id, child_id=author.id, audience="class", class_id=comets.id,
-                 caption=imgs[(100 + i) % n_img]["idea"], status="published", best=True, created_at=when)
+                 **image_captions(imgs[(100 + i) % n_img]), status="published", best=True, created_at=when)
         s.add(p)
         s.flush()
         for k in range(1 + (i * 3) % len(show)):
@@ -169,7 +185,7 @@ def seed(images_dir: Path) -> dict:
     for i, d in enumerate((1, 3)):
         when = ago(days=d, hours=2)
         w = work(bunny, 4 + i, when)
-        p = Post(work_id=w.id, child_id=bunny.id, audience="family", caption=("Мой щенок" if i == 0 else None),
+        p = Post(work_id=w.id, child_id=bunny.id, audience="family", **(captions(*PUPPY) if i == 0 else {"caption": None}),
                  status="published", created_at=when)
         s.add(p)
         s.flush()

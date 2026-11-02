@@ -20,6 +20,12 @@
   --color-urgent: #9a4a00;
   --color-urgent-soft: #fff1e0;
   --color-urgent-border: #f0a04b;
+  --color-footer: #15103f;
+  --color-footer-text: #d6d0f5;
+  --color-footer-muted: #8c85bd;
+  --color-footer-line: #2c2560;
+  --color-banner-sun: #fff1c9;
+  --color-banner-sky: #d9f6fb;
   --color-scrim: rgba(31, 42, 92, 0.55);
   --radius-card: 20px;
   --gradient-primary: linear-gradient(180deg, var(--color-primary-light), var(--color-primary));

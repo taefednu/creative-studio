@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, UniqueConstraint, text
+from sqlalchemy import JSON, DateTime, ForeignKey, Index, String, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app import clock
@@ -23,6 +23,7 @@ class Post(Base):
     audience: Mapped[str] = mapped_column(String(7))  # class | family
     class_id: Mapped[int | None] = mapped_column(ForeignKey("classrooms.id"), nullable=True, index=True)
     caption: Mapped[str | None] = mapped_column(String(300), nullable=True)  # только проверенная
+    caption_i18n: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # только демо-наполнение, не ввод ребёнка
     status: Mapped[str] = mapped_column(String(10), default="pending", index=True)
     best: Mapped[bool] = mapped_column(default=False, index=True)  # ставит только скрипт команды
     remix_allowed: Mapped[bool] = mapped_column(default=True, server_default=text("1"))  # автор может выключить

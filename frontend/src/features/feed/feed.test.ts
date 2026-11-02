@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { byStyle, cardRatio, createdLabel, drawSameKind, toColumns } from './feed'
+import { byStyle, captionOf, cardRatio, createdLabel, drawSameKind, toColumns } from './feed'
 import type { Post } from './feed'
 
 const post = (id: number, template_id: string | null) => ({ id, template_id }) as Post
 
 describe('feed', () => {
+  it('captionOf: перевод на язык интерфейса, иначе как написано', () => {
+    const p = { caption: 'Лиса', caption_i18n: { en: 'Fox' } }
+    expect(captionOf(p, 'en')).toBe('Fox')
+    expect(captionOf(p, 'uz')).toBe('Лиса')
+    expect(captionOf({ caption: 'Кот', caption_i18n: null }, 'en')).toBe('Кот')
+  })
   it('byStyle: пустой стиль — все, иначе только свой template_id', () => {
     const l = [post(1, 'clay'), post(2, 'anime'), post(3, null), post(4, 'clay')]
     expect(byStyle(l, '')).toHaveLength(4)

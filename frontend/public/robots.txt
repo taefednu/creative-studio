@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /parent
+Disallow: /teacher
+Disallow: /create
+Disallow: /tasks
+Disallow: /my-works
+Disallow: /story
+Disallow: /qr

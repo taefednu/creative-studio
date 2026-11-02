@@ -9,6 +9,12 @@
   }
 }
 
+/* Открыто окно поверх страницы: страница под ним стоит. Правило одно на все окна; дорожка полосы держит ширину, контент не прыгает. */
+html:has(.fixed.inset-0.bg-scrim) {
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   background: var(--color-bg);

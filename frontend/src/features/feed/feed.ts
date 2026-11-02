@@ -13,6 +13,8 @@ export type Post = {
   id: number
   nick: string
   caption: string | null
+  /** Только у демо-постов: подпись на языках интерфейса. Текст настоящего ребёнка остаётся как написан. */
+  caption_i18n?: Record<string, string> | null
   image_url: string
   /** Пост сказки: читается как книжка. */
   story?: { id: number; title: string | null; pages: { text: string | null }[] } | null
@@ -33,6 +35,10 @@ export type Post = {
   remix_allowed: boolean
   remix_of: { post_id: number; nick: string } | null
   created_at: string
+}
+
+export function captionOf(p: Pick<Post, 'caption' | 'caption_i18n'>, lang: string): string | null {
+  return p.caption_i18n?.[lang] ?? p.caption
 }
 
 export type FeedPage = { items: Post[]; next_cursor: number | null }

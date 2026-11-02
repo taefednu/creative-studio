@@ -31,11 +31,12 @@ export default function LangSwitch() {
         aria-label={t('lang.label')}
         aria-expanded={open}
         onClick={() => setOpen(!open)}
-        className={`flex h-10 w-10 items-center justify-center rounded-full ${
-          open ? 'bg-primary-soft text-primary' : 'text-muted hover:bg-primary-soft hover:text-primary'
+        className={`flex h-10 min-w-10 items-center justify-center gap-1.5 rounded-full lg:h-11 lg:border lg:border-border lg:bg-surface lg:px-3.5 ${
+          open ? 'bg-primary-soft text-primary' : 'text-text hover:text-primary lg:hover:border-primary'
         }`}
       >
         <Icon name="globe" />
+        <span className="hidden text-sm font-extrabold uppercase lg:inline">{i18n.language}</span>
       </button>
       {open && (
         <div

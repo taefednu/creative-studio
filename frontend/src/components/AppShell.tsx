@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api'
 import { useSession } from '../features/auth/session'
 import { useLoad } from '../useLoad'
 import ErrorText, { errorKey } from './ErrorText'
+import { HEADER_CLS, NAV_CLS } from './headerStyles'
 import LangSwitch from './LangSwitch'
 import Logo from './Logo'
 import Avatar from './Avatar'
+import SiteFooter from './SiteFooter'
 import TabPill from './TabPill'
 
 const TABS = [
@@ -42,6 +44,7 @@ export default function AppShell() {
   const { t } = useTranslation()
   const { refresh } = useSession()
   const navigate = useNavigate()
+  const home = useLocation().pathname === '/' // подвал только на главной: остальные экраны собраны под одно окно
   const [me, load] = useLoad(loadMe)
   const [code, setCode] = useState('')
   const [err, setErr] = useState<string | null>(null)
@@ -104,16 +107,16 @@ export default function AppShell() {
   }
 
   return (
-    <div className="min-h-dvh bg-bg pb-24 lg:pb-4">
+    <div className={`min-h-dvh bg-bg ${home ? '' : 'pb-24 lg:pb-4'}`}>
       <header
         data-testid="shell-header"
-        className="flex h-[60px] items-center gap-1.5 border-b border-border bg-surface px-2 s380:gap-2 s380:px-3 lg:sticky lg:top-0 lg:z-30 lg:grid lg:h-16 lg:grid-cols-[1fr_auto_1fr] lg:gap-3 lg:px-8"
+        className={HEADER_CLS}
       >
         <Logo />
         <nav
           aria-label={t('shell.nav')}
           data-testid="main-nav"
-          className="fixed inset-x-0 bottom-0 z-30 flex h-[72px] items-stretch gap-1 border-t border-border bg-surface px-1 py-1 lg:static lg:z-auto lg:h-auto lg:justify-center lg:gap-1 lg:border-0 lg:rounded-full lg:bg-primary-soft lg:p-1 lg:justify-self-center"
+          className={NAV_CLS}
         >
           {TABS.map((tab) => (
             <TabPill
@@ -248,6 +251,7 @@ export default function AppShell() {
         )}
         <Outlet context={ctx} />
       </main>
+      {home && <SiteFooter />}
     </div>
   )
 }

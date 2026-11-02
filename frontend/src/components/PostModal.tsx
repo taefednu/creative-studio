@@ -3,7 +3,7 @@ import type { FormEvent, ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError, api } from '../api'
-import { REACTIONS, createdLabel, drawSameKind } from '../features/feed/feed'
+import { REACTIONS, captionOf, createdLabel, drawSameKind } from '../features/feed/feed'
 import type { CommentResult, Post, PostComment, ReactionKey } from '../features/feed/feed'
 import { loadTemplates } from '../features/works/works'
 import { useLoad } from '../useLoad'
@@ -333,7 +333,7 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
               <div data-testid="about" className="flex flex-col gap-2">
                 <p className="text-sm font-extrabold uppercase text-primary lg:text-lg">{t('feed.idea')}</p>
                 <p className="text-2xl font-extrabold leading-tight text-heading lg:text-[32px]">
-                  {post.caption ?? post.story?.title ?? styleName ?? ''}
+                  {captionOf(post, i18n.language) ?? post.story?.title ?? styleName ?? ''}
                 </p>
                 <div className="mt-2 flex flex-col gap-2 border-t border-border pt-3 lg:gap-3 lg:pt-4">
                   {styleName && !post.story && row(t('feed.style'), styleName)}

@@ -293,9 +293,7 @@ export default function Login() {
       <header data-testid="login-header" className="flex h-[60px] items-center justify-between border-b border-border bg-surface px-3 lg:h-16 lg:px-8">
         <Logo />
         <div className="hidden lg:block"><DemoButtons /></div>
-        <div className="rounded-full border border-border bg-surface px-2 shadow-card">
-          <LangSwitch />
-        </div>
+        <LangSwitch />
       </header>
       <div className="flex justify-center px-3 pt-3 lg:hidden"><DemoButtons /></div>
       <main className="mx-auto w-full max-w-[719px] px-3 pb-10 pt-3 lg:flex lg:max-w-[600px] lg:flex-1 lg:flex-col lg:justify-center lg:py-2">
