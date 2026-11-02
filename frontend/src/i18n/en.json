@@ -527,6 +527,7 @@
     "noKids": "Nobody has joined yet."
   },
   "pl": {
+    "enough": "Enough for {{n}} pictures",
     "soonChip": "Buying coins is coming soon",
     "word_one": "coin",
     "word_few": "coins",
