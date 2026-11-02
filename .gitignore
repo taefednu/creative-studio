@@ -34,3 +34,4 @@ docs/design/archive/
 # sqlite studio db
 backend/data/
 *.tsbuildinfo
+.playwright-mcp/

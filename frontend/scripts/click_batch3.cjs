@@ -42,7 +42,7 @@ const adult = (p, who) =>
   await l.goto(BASE + '/login')
   await T(l, 'login-card').waitFor()
   ok('фон входа /art/login-bg.webp', (await l.evaluate(() => getComputedStyle(document.querySelector('[data-testid=login-card]').parentElement.parentElement).backgroundImage)).includes('login-bg'))
-  ok('шапка входа с logo и переключателем языка', (await T(l, 'login-header').locator('[data-testid=logo]').count()) === 1 && (await T(l, 'lang-uz').count()) === 1)
+  ok('шапка входа с logo и переключателем языка', (await T(l, 'login-header').locator('[data-testid=logo]').count()) === 1 && (await T(l, 'lang-toggle').count()) === 1)
   ok('у ребёнка выбрана галочка', (await T(l, 'role-check-child').count()) === 1)
   await T(l, 'role-parent').click()
   ok('роль родителя: галочка переехала, форма почты', (await T(l, 'role-check-parent').count()) === 1 && (await T(l, 'role-check-child').count()) === 0 && (await T(l, 'email').isVisible()))
@@ -59,7 +59,7 @@ const adult = (p, who) =>
   await l.route('**/api/auth/platform-login', (r) =>
     r.fulfill({ status: 429, contentType: 'application/json', body: JSON.stringify({ detail: { code: 'platform_captcha', messages: { ru: 'RU-капча', en: 'EN-captcha', uz: 'UZ-captcha' } } }) }),
   )
-  await T(l, 'lang-uz').click()
+  await T(l, 'lang-toggle').click(); await T(l, 'lang-uz').click()
   await T(l, 'mentorium-login').click()
   await T(l, 'platform-login').fill('someone')
   await T(l, 'platform-password').fill('secret-not-logged')
@@ -67,7 +67,7 @@ const adult = (p, who) =>
   await T(l, 'platform-error').waitFor()
   ok('captcha: текст на текущем языке (uz)', (await T(l, 'platform-error').innerText()) === 'UZ-captcha', await T(l, 'platform-error').innerText())
   await l.unroute('**/api/auth/platform-login')
-  await T(l, 'lang-ru').click()
+  await T(l, 'lang-toggle').click(); await T(l, 'lang-ru').click()
   const resp = l.waitForResponse((r) => r.url().includes('/api/auth/platform-login'))
   await T(l, 'platform-submit').click()
   const rs = await resp

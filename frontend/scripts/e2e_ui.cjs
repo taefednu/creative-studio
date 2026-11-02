@@ -255,7 +255,7 @@ async function main() {
   await noScroll(parent, 'кабинет родителя 1672')
 
   // Язык интерфейса
-  await T(a, 'lang-uz').click()
+  await T(a, 'lang-toggle').click(); await T(a, 'lang-uz').click()
   await a.waitForTimeout(300)
   await a.goto(BASE + '/create')
   ok('переключатель языка на uz', (await T(a, 'create-title').innerText()) !== 'Что нарисуем сегодня?', await T(a, 'create-title').innerText())

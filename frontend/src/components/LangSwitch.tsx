@@ -1,24 +1,68 @@
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LANGS, setLang } from '../i18n'
+import Icon from './Icon'
+
+// Самоназвания языков не переводятся: человек ищет свой язык, на каком бы ни был открыт экран
+const NAMES = { ru: 'Русский', en: 'English', uz: "O'zbekcha" }
 
 export default function LangSwitch() {
   const { t, i18n } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const away = (e: PointerEvent) => !box.current?.contains(e.target as Node) && setOpen(false)
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('pointerdown', away)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('pointerdown', away)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [open])
+
   return (
-    <div className="ml-auto flex gap-1" role="group" aria-label={t('lang.label')}>
-      {LANGS.map((l) => (
-        <button
-          key={l}
-          type="button"
-          data-testid={`lang-${l}`}
-          aria-pressed={i18n.language === l}
-          onClick={() => setLang(l)}
-          className={`rounded-full px-1.5 py-1 text-xs font-extrabold uppercase min-[380px]:px-2 lg:px-3 ${
-            i18n.language === l ? 'bg-primary-soft text-primary' : 'text-muted'
-          }`}
+    <div ref={box} className="relative ml-auto">
+      <button
+        type="button"
+        data-testid="lang-toggle"
+        aria-label={t('lang.label')}
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+        className={`flex h-10 w-10 items-center justify-center rounded-full ${
+          open ? 'bg-primary-soft text-primary' : 'text-muted hover:bg-primary-soft hover:text-primary'
+        }`}
+      >
+        <Icon name="globe" />
+      </button>
+      {open && (
+        <div
+          role="group"
+          aria-label={t('lang.label')}
+          className="chip-pop absolute right-0 top-full z-[60] mt-2 flex w-40 flex-col gap-1 rounded-[20px] border border-border bg-surface p-1.5 shadow-pop"
         >
-          {l}
-        </button>
-      ))}
+          {LANGS.map((l) => (
+            <button
+              key={l}
+              type="button"
+              data-testid={`lang-${l}`}
+              aria-pressed={i18n.language === l}
+              onClick={() => {
+                setLang(l)
+                setOpen(false)
+              }}
+              className={`flex items-center justify-between rounded-2xl px-3 py-2 text-left text-base font-extrabold ${
+                i18n.language === l ? 'bg-primary-soft text-primary' : 'text-heading hover:bg-primary-soft'
+              }`}
+            >
+              {NAMES[l]}
+              {i18n.language === l && <Icon name="check" className="h-4 w-4" />}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

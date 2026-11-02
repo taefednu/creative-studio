@@ -109,7 +109,7 @@ const text = (p, id) => T(p, id).first().innerText()
     ok(`гость на ${path} уходит на /login`, true)
   }
   await g.goto(BASE + '/')
-  await T(g, 'lang-uz').click()
+  await T(g, 'lang-toggle').click(); await T(g, 'lang-uz').click()
   ok('витрина на uz', (await text(g, 'feed-title')) === I18N.uz.showcase.title && (await text(g, 'guest-login')).toLowerCase() === I18N.uz.showcase.login.toLowerCase())
   const gt = await page(b)
   await adult(gt, 'teacher')
@@ -176,7 +176,7 @@ const text = (p, id) => T(p, id).first().innerText()
     ok(`ошибка ${code} на ru, en, uz`, seen.every(([a, e]) => a === e) && new Set(seen.map((s) => s[0])).size === 3, seen.map((s) => s[0].slice(0, 25)).join(' / '))
   }
   mode = 'ok'
-  await T(t, 'lang-ru').click()
+  await T(t, 'lang-toggle').click(); await T(t, 'lang-ru').click()
   ok('при ошибке задание не добавилось', !(await T(t, 'assignment-card').filter({ hasText: 'Плохое задание' }).count()))
   // галерея сдач, настоящие данные
   const seeded = api0.find((a) => a.submissions > 0)
@@ -227,7 +227,7 @@ const text = (p, id) => T(p, id).first().innerText()
     }
     ok(`show-in-feed ${code}: текст на ru, en, uz`, seen.every(([a, e]) => a === e), seen.map((s) => s[0].slice(0, 22)).join(' / '))
   }
-  await T(t, 'lang-ru').click()
+  await T(t, 'lang-toggle').click(); await T(t, 'lang-ru').click()
   ok('нет ошибок консоли у учителя, кроме подменённых 409/4xx', t.errs.filter((e) => !/^(409|422|503) |status of (409|422|503)|^404 \/api\/submissions\/900|status of 404|same key/.test(e)).length === 0, t.errs.filter((e) => !/^(409|422|503) |status of (409|422|503)/.test(e)).join(' | '))
   await t.context().close()
 
