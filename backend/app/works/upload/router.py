@@ -72,9 +72,28 @@ def _reject(db: Session, item: HeldItem) -> None:
         return  # срочное (самоповреждение) не становится отказом: ребёнок остаётся на поддержке
     w.status = "refused"
     from app.works.remix.source import hide_remixes
+    from app.works.story.models import Story
 
+    # Герои «оживления» и сказки на них: та же картинка, уходят вместе с загрузкой (посты hidden,
+    # сказка и герой refused: источником не станут). Дальше — как для самой загрузки.
+    heroes = db.scalars(select(Work).where(Work.hero_of_work_id == w.id)).all()
+    stories = db.scalars(select(Story).where(Story.hero_work_id.in_([h.id for h in heroes]))).all()
+    covers = db.scalars(select(Work).where(Work.id.in_([s.cover_work_id for s in stories]))).all()
+    for h in heroes:
+        h.status = "refused"
+    for c in covers:
+        c.status = "refused"
+    for s in stories:
+        if s.status != "support":
+            s.status = "refused"
+    derived = [x.id for x in (*heroes, *covers)]
+    db.execute(
+        update(Post)
+        .where(Post.work_id.in_(derived), Post.status.in_(("pending", "held", "published")))
+        .values(status="hidden")
+    )
     # Ремиксы отклонённой загрузки уходят вместе с ней: в них та же картинка.
-    for post_id in db.scalars(select(Post.id).where(Post.work_id == w.id)).all():
+    for post_id in db.scalars(select(Post.id).where(Post.work_id.in_([w.id, *derived]))).all():
         hide_remixes(db, post_id)
     db.execute(
         update(Post)

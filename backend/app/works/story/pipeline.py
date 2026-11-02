@@ -42,9 +42,9 @@ class _Draft(BaseModel):
     pages: list[_Page] = Field(min_length=PAGES, max_length=PAGES)
 
 
-def spawn(story_id: int, skip_idea_check: bool = False) -> None:
-    """Фон вне запроса (одобрение из «Задержано»)."""
-    threading.Thread(target=run, args=(story_id, skip_idea_check), daemon=True).start()
+def spawn(story_id: int, skip_idea_check: bool = False, redraw: bool = False) -> None:
+    """Фон вне запроса (одобрение из «Задержано»). redraw: текст утверждён взрослым, только рисуем."""
+    threading.Thread(target=run, args=(story_id, skip_idea_check, redraw), daemon=True).start()
 
 
 def _gen_ref(s: Story) -> str:
@@ -101,7 +101,7 @@ def recover_stuck() -> int:
         db.close()
 
 
-def run(story_id: int, skip_idea_check: bool = False) -> None:
+def run(story_id: int, skip_idea_check: bool = False, redraw: bool = False) -> None:
     """Фоновая задача. Своя сессия; любое исключение — failed + возврат, не падение потока."""
     db = dbmod.new_session()
     try:
@@ -109,7 +109,7 @@ def run(story_id: int, skip_idea_check: bool = False) -> None:
         if s is None:
             return
         try:
-            _run(db, s, skip_idea_check)
+            _run(db, s, skip_idea_check, redraw)
         except Exception:
             log.exception("story %s failed", story_id)
             db.rollback()
@@ -163,7 +163,7 @@ def _worst(verdicts: list[tuple[str, list[str], bool]]) -> tuple[str, list[str]]
     return action, list(dict.fromkeys(c for v in bad for c in v[1])) or ["held"]
 
 
-def _run(db: Session, s: Story, skip_idea_check: bool) -> None:
+def _run(db: Session, s: Story, skip_idea_check: bool, redraw: bool = False) -> None:
     st = get_settings()
     child = db.get(Child, s.child_id)
     assert child is not None
@@ -190,20 +190,23 @@ def _run(db: Session, s: Story, skip_idea_check: bool) -> None:
             db.rollback()
         return
 
-    s.status = "writing"
-    db.commit()
-    draft = _write(s.idea, child.lang, st.STORY_TEXT_TIMEOUT)
-    s.title = draft.title
-    s.pages = [{"text": p.text, "scene": p.scene, "file": None, "ok": False} for p in draft.pages]
-    db.commit()
+    if not redraw:  # redraw: текст уже утвердил взрослый, его не переписываем
+        s.status = "writing"
+        db.commit()
+        draft = _write(s.idea, child.lang, st.STORY_TEXT_TIMEOUT)
+        s.title = draft.title
+        s.pages = [{"text": p.text, "scene": p.scene, "file": None, "ok": False} for p in draft.pages]
+        db.commit()
 
-    # Название и каждая страница проверяются до первой картинки: не-allow — картинок не рисуем.
-    texts = [draft.title, *[p.text for p in draft.pages]]
-    with ThreadPoolExecutor(len(texts)) as ex:
-        verdicts = list(ex.map(lambda t: _verdict(ip.check_text, t, "caption", child.lang), texts))
-    if any(v[0] != "allow" for v in verdicts):
-        _to_adult(db, s, *_worst(verdicts))
-        return
+        # Название, страницы и сцены (они идут в промпт картинки) проверяются до первой картинки:
+        # не-allow — картинок не рисуем.
+        texts = [(draft.title, "caption")]
+        texts += [(p.text, "caption") for p in draft.pages] + [(p.scene, "prompt") for p in draft.pages]
+        with ThreadPoolExecutor(len(texts)) as ex:
+            verdicts = list(ex.map(lambda t: _verdict(ip.check_text, t[0], t[1], child.lang), texts))
+        if any(v[0] != "allow" for v in verdicts):
+            _to_adult(db, s, *_worst(verdicts))
+            return
 
     s.status = "drawing"
     db.commit()
@@ -238,8 +241,9 @@ def _draw(db: Session, s: Story, hero: bytes, child: Child, timeout: float) -> N
     results: list[tuple[str, list[str], bool]] = []
     policy = False
     error: Exception | None = None
+    todo = [i for i, p in enumerate(s.pages) if not (p.get("file") and Path(p["file"]).is_file())]
     with ThreadPoolExecutor(PAGES) as ex:
-        futs = [ex.submit(one, i + 1, p["scene"]) for i, p in enumerate(s.pages)]
+        futs = [ex.submit(one, i + 1, s.pages[i]["scene"]) for i in todo]
         for f in as_completed(futs):
             try:
                 n, path, v, pol = f.result()
@@ -253,12 +257,13 @@ def _draw(db: Session, s: Story, hero: bytes, child: Child, timeout: float) -> N
             pages[n - 1]["ok"] = v[0] == "allow"  # страница видна, как только прошла она сама
             s.pages = pages
             db.commit()
-    if error is not None:
-        raise error
+    # Сначала вердикты: сигнал о самоповреждении на одной странице не теряется из-за сбоя другой.
     if any(v[0] != "allow" for v in results):
         action, codes = _worst(results)
         _to_adult(db, s, action, codes, "refused" if policy and action == "hold" else None)
         return
+    if error is not None:
+        raise error
     finish(db, s)
 
 

@@ -5,8 +5,10 @@
 
 from pathlib import Path
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.feed.models import Post
 from app.works.image.models import Work
 
 
@@ -18,6 +20,16 @@ def load(db: Session, work_id: int | None, child_id: int, kinds: tuple[str, ...]
         or w.kind not in kinds
         or w.status != "ready"
         or not w.file_path
+    ):
+        return None
+    # Герой сказки: не ремикс (его правила «только класс, пока исходник жив» сказка бы обошла) и
+    # без поста, снятого взрослым. У загрузки это не смотрим: «оживить» для себя можно всегда.
+    if w.kind != "upload" and (
+        w.remix_of_post_id is not None
+        or db.scalar(
+            select(Post.id).where(Post.work_id == w.id, Post.status.in_(("hidden", "rejected")))
+        )
+        is not None
     ):
         return None
     try:

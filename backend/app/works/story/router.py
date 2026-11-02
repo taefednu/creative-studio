@@ -23,6 +23,7 @@ from app.config import get_settings
 from app.db import get_session
 from app.feed import service
 from app.moderation import HeldItem, register
+from app.moderation.router import _scope
 from app.works.image import pipeline as image_pipeline
 from app.works.image.models import Work
 from app.works.image.thumbs import thumb_response
@@ -138,8 +139,10 @@ def _view(s: Story, role: str) -> dict:
             {
                 "n": i + 1,
                 "ok": p["ok"],
-                "text": p["text"] if see else None,
+                # взрослый решает по тексту, даже если до картинок не дошло; одобрив, он утверждает именно его
+                "text": p["text"] if see or role == "adult" else None,
                 "image_url": f"/api/stories/{s.id}/pages/{i + 1}/image" if see and p.get("file") else None,
+                **({"scene": p["scene"]} if role == "adult" else {}),  # уходит в промпт картинки
             }
         )
     return {
@@ -166,7 +169,12 @@ def _access(db: Session, cookie: str | None, story_id: int) -> tuple[Story, str]
     owner = db.get(Child, s.child_id)
     if v.role == "parent" and owner is not None and owner.parent_id == v.id:
         return s, "adult"
-    if v.role == "teacher" and service.teacher_owns(db, v.id, service.class_of(db, s.child_id)):
+    # Учитель: только сказка, которую ему прислали на проверку (личное остаётся личным).
+    if v.role == "teacher" and db.scalar(
+        select(HeldItem.id).where(
+            HeldItem.item_type == "story", HeldItem.target_id == str(s.id), *_scope("teacher", v.id)
+        )
+    ):
         return s, "adult"
     raise HTTPException(404, "not_found")
 
@@ -215,14 +223,16 @@ def _approve(db: Session, item: HeldItem) -> None:
     if pipeline.complete(s):  # взрослый видел все четыре страницы целиком
         pipeline.finish(db, s)
         return
-    # Задержана до рисования (или Muse Image отказал): страниц нет, пишем заново, новая попытка
-    # = новое списание. Текст, который смотрел взрослый, при этом не сохраняется.
+    # Новая попытка = новое списание.
     s.attempt += 1
     s.status = "checking"
-    s.pages = []
-    s.title = None
+    redraw = bool(s.pages)
+    if not redraw:  # задержана на идее: текста ещё нет, пишем
+        s.title = None
+    # Текст есть (задержан на нём или Muse Image отказал странице): взрослый его видел, остаётся тот же,
+    # рисуем только страницы без картинки.
     db.commit()
-    pipeline.spawn(s.id, True)
+    pipeline.spawn(s.id, True, redraw)
 
 
 def _reject(db: Session, item: HeldItem) -> None:

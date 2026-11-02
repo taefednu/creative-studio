@@ -226,7 +226,7 @@ def test_story_happy_path(w, fake):
     assert len(fake.edits) == 4 and all(e[0] == BLURRED for e in fake.edits)
     assert fake.img_calls == ["image_result"] * 4
     kinds = [k for _, k in fake.text_calls]
-    assert kinds.count("prompt") == 1 and kinds.count("caption") == 5  # идея, название, 4 страницы
+    assert kinds.count("prompt") == 5 and kinds.count("caption") == 5  # идея и 4 сцены; название и 4 текста
     assert bal(w.a_id) == 20 - get_settings().STORY_PRICE
     assert w.a.get("/api/stories/mine").json()[0]["id"] == sid
     assert w.a.get("/api/templates").json()["story_price"] == 3
@@ -326,7 +326,7 @@ def test_held_story_visible_to_parent_not_to_strangers(w, fake):
     v = w.parent.get(f"/api/stories/{sid}").json()
     assert len(v["pages"]) == 4 and v["pages"][0]["text"]
     assert w.parent.get(v["pages"][0]["image_url"]).status_code == 200
-    assert w.teacher.get(f"/api/stories/{sid}").status_code == 200
+    assert w.teacher.get(f"/api/stories/{sid}").status_code == 404  # личное: учителю не приходит
     assert w.parent2.get(f"/api/stories/{sid}").status_code == 404
     queue = w.parent.get("/api/review/queue").json()
     assert queue[0]["item_type"] == "story" and queue[0]["story_id"] == sid
@@ -348,7 +348,7 @@ def test_approve_makes_ready_and_reject_refuses(w, fake):
     assert w.a.get(f"/api/stories/{sid2}").json()["pages"] == []
 
 
-def test_approve_of_story_held_before_drawing_rewrites_and_charges_again(w, fake):
+def test_approve_of_story_held_on_text_keeps_the_text_and_charges_again(w, fake):
     fake.text = lambda t, k: D("hold") if t == "Page 1 text" and not fake.edits and len(fake.chat_calls) < 2 else D()
     sid = make_story(w)
     assert story_row(sid).status == "held" and bal(w.a_id) == 20
@@ -361,6 +361,8 @@ def test_approve_of_story_held_before_drawing_rewrites_and_charges_again(w, fake
         time.sleep(0.1)
     row = story_row(sid)
     assert row.status == "ready" and row.attempt == 2 and bal(w.a_id) == 17
+    assert len(fake.chat_calls) == 1  # текст не переписан: взрослый одобрил то, что видел
+    assert [p["text"] for p in row.pages] == [f"Page {i} text" for i in range(1, 5)]
 
 
 # ---------- сбой генерации: возврат один раз ----------
@@ -493,3 +495,189 @@ def test_model_ids_not_hardcoded_in_story_code():
     src = "".join(p.read_text() for p in Path(sp.__file__).parent.glob("*.py"))
     for needle in ("muse-", "muse_", "llama", "sam-3", "api.meta.ai", "bearer"):
         assert needle not in src.lower()
+
+
+# ---------- правки ревью: решение взрослого держится на производных ----------
+
+from app.feed.models import Post
+from app.moderation import hold
+
+
+def hold_upload(w, up, reviewer="parent"):
+    with db.new_session() as s:
+        hold(s, item_type="upload", target_id=up, child_id=w.a_id, reviewer=reviewer,
+             reason_codes=["blurred_face"])
+        return s.scalar(select(HeldItem.id).where(HeldItem.item_type == "upload"))
+
+
+def post_status(pid):
+    with db.new_session() as s:
+        return s.get(Post, pid).status
+
+
+def alive_of(w, up, rid="alive-req-1"):
+    return w.a.post(f"/api/works/{up}/alive", json={"request_id": rid}).json()["id"]
+
+
+def test_upload_gate_holds_alive_and_story_cover_posts(w, fake):
+    up = make_work(w, w.a_id, kind="upload")
+    hold_upload(w, up)
+    assert w.a.post("/api/posts", json={"work_id": up, "audience": "class"}).json()["status"] == "held"
+    al = alive_of(w, up)  # для себя оживлять можно
+    with db.new_session() as s:
+        assert s.get(Work, al).status == "ready"
+    assert w.a.post("/api/posts", json={"work_id": al, "audience": "class"}).json()["status"] == "held"
+    sid = make_story(w, hero=al, rid="story-req-9")
+    cover = story_row(sid).cover_work_id
+    assert w.a.post("/api/posts", json={"work_id": cover, "audience": "class"}).json()["status"] == "held"
+
+
+def test_reject_of_upload_hides_hero_story_and_their_posts(w, fake):
+    up = make_work(w, w.a_id, kind="upload")
+    iid = hold_upload(w, up)
+    al = alive_of(w, up)
+    sid = make_story(w, hero=al, rid="story-req-9")
+    cover = story_row(sid).cover_work_id
+    pa = w.a.post("/api/posts", json={"work_id": al, "audience": "class"}).json()["id"]
+    ps = w.a.post("/api/posts", json={"work_id": cover, "audience": "class"}).json()["id"]
+    with db.new_session() as s:  # посты уже в ленте (учитель одобрил), потом взрослый отклонил загрузку
+        for pid in (pa, ps):
+            s.get(Post, pid).status = "published"
+        s.commit()
+    assert w.b.get(f"/api/posts/{ps}/story/1").status_code == 200
+    assert w.parent.post(f"/api/review/items/{iid}/reject").status_code == 200
+    assert post_status(pa) == "hidden" and post_status(ps) == "hidden"
+    assert w.b.get(f"/api/posts/{pa}").status_code == 404
+    assert w.b.get(f"/api/posts/{ps}/story/1").status_code == 404
+    assert story_row(sid).status == "refused"
+    with db.new_session() as s:
+        assert s.get(Work, al).status == "refused"
+    r = w.a.post("/api/stories", json={"hero_work_id": al, "idea": None, "request_id": "story-req-10"})
+    assert r.status_code == 404  # герой больше не источник
+
+
+def test_story_cannot_launder_adult_removal(w, fake):
+    src = make_work(w, w.a_id)
+    p = w.a.post("/api/posts", json={"work_id": src, "audience": "class"}).json()["id"]
+    assert w.teacher.delete(f"/api/posts/{p}").status_code == 200
+    r = w.a.post("/api/stories", json={"hero_work_id": src, "idea": None, "request_id": "story-req-6"})
+    assert r.status_code == 404  # новая сказка на снятом герое
+    # сказка уже была, пост работы снят потом: публикация обложки закрыта
+    src2 = make_work(w, w.a_id)
+    sid = make_story(w, hero=src2, rid="story-req-7")
+    cover = story_row(sid).cover_work_id
+    p2 = w.a.post("/api/posts", json={"work_id": src2, "audience": "class"}).json()["id"]
+    assert w.teacher.delete(f"/api/posts/{p2}").status_code == 200
+    r = w.a.post("/api/posts", json={"work_id": cover, "audience": "class"})
+    assert r.status_code == 409 and r.json()["detail"] == "removed_by_adult"
+
+
+def test_remix_hero_refused_and_old_story_stays_class_only(w, fake):
+    src = make_work(w, w.b_id)
+    pb = w.b.post("/api/posts", json={"work_id": src, "audience": "class"}).json()["id"]
+    rw = make_work(w, w.a_id)
+    with db.new_session() as s:
+        s.get(Work, rw).remix_of_post_id = pb
+        s.commit()
+    r = w.a.post("/api/stories", json={"hero_work_id": rw, "idea": None, "request_id": "story-req-8"})
+    assert r.status_code == 404
+    # сказка, созданная до запрета: обложка не уходит в семью и держит исходник
+    with db.new_session() as s:
+        s.add(Story(child_id=w.a_id, hero_work_id=rw, request_id="old-story-1", lang="ru", status="ready"))
+        s.flush()
+        cv = Work(child_id=w.a_id, kind="page", template_id="story", status="ready",
+                  file_path=s.get(Work, rw).file_path, request_id="cv-1")
+        s.add(cv)
+        s.flush()
+        s.scalars(select(Story)).first().cover_work_id = cv.id
+        s.commit()
+        cid = cv.id
+    r = w.a.post("/api/posts", json={"work_id": cid, "audience": "family"})
+    assert r.status_code == 409 and r.json()["detail"] == "remix_class_only"
+    assert w.teacher.delete(f"/api/posts/{pb}").status_code == 200
+    r = w.a.post("/api/posts", json={"work_id": cid, "audience": "class"})
+    assert r.status_code == 409 and r.json()["detail"] == "remix_source_gone"
+
+
+def test_teacher_reads_only_stories_sent_to_them(w, fake):
+    sid = make_story(w, idea="my secret")
+    assert w.teacher.get(f"/api/stories/{sid}").status_code == 404
+    fake.image = lambda n: D("hold") if n == 1 else D()
+    sid2 = make_story(w, rid="story-req-2")  # held у родителя: учителю не приходит
+    assert w.teacher.get(f"/api/stories/{sid2}").status_code == 404
+    with db.new_session() as s:
+        hold(s, item_type="story", target_id=sid2, child_id=w.a_id, reviewer="teacher",
+             reason_codes=["x"], class_id=None)
+    assert w.teacher.get(f"/api/stories/{sid2}").status_code == 404  # не его класс в записи
+    fake.image = lambda n: D("support", urgent=True)
+    sid3 = make_story(w, rid="story-req-3")  # срочное: оба взрослых
+    assert w.teacher.get(f"/api/stories/{sid3}").status_code == 200
+
+
+def test_adult_sees_text_of_story_held_on_text_and_approval_keeps_it(w, fake):
+    fake.text = lambda t, k: D("hold") if t == "Page 3 text" else D()
+    sid = make_story(w)
+    v = w.parent.get(f"/api/stories/{sid}").json()
+    assert v["title"] == "The Hero" and [p["text"] for p in v["pages"]] == [f"Page {i} text" for i in range(1, 5)]
+    assert all(p["image_url"] is None for p in v["pages"]) and v["pages"][0]["scene"]
+    assert w.a.get(f"/api/stories/{sid}").json()["pages"] == []
+    fake.chat = [json.dumps({"title": "OTHER", "pages": [{"text": "x", "scene": "y"}] * 4})]
+    assert w.parent.post(f"/api/review/items/{items()[0].id}/approve").status_code == 200
+    import time
+
+    for _ in range(100):
+        if story_row(sid).status == "ready":
+            break
+        time.sleep(0.1)
+    row = story_row(sid)
+    assert row.status == "ready" and row.title == "The Hero" and len(fake.chat_calls) == 1
+    assert fake.img_calls == ["image_result"] * 4  # новые картинки проверены
+
+
+def test_scene_is_checked_as_prompt(w, fake):
+    bad = "the hero holds a real gun"
+    fake.chat = [json.dumps({"title": "T", "pages": [{"text": f"p{i}", "scene": bad} for i in range(4)]})]
+    fake.text = lambda t, k: D("hold") if t == bad else D()
+    sid = make_story(w)
+    assert (bad, "prompt") in fake.text_calls
+    assert story_row(sid).status == "held" and fake.edits == [] and bal(w.a_id) == 20
+
+
+def test_urgent_survives_other_page_timeout(w, fake, monkeypatch):
+    orig = fake.edit_image
+
+    def edit(source, prompt, user, timeout):
+        if "thing 3" in prompt:
+            raise ModelTimeout("t")
+        return orig(source, prompt, user, timeout)
+
+    monkeypatch.setattr(ip, "edit_image", edit)
+    fake.image = lambda n: D("support", urgent=True)
+    sid = make_story(w)
+    assert story_row(sid).status == "support"
+    assert [(i.item_type, i.urgent) for i in items()] == [("story", True)]
+
+
+def test_approve_after_muse_image_refusal_redraws_only_that_scene(w, fake, monkeypatch):
+    orig = fake.edit_image
+    state = {"refuse": True}
+
+    def edit(source, prompt, user, timeout):
+        if "thing 2" in prompt and state["refuse"]:
+            raise ContentPolicyViolation("no")
+        return orig(source, prompt, user, timeout)
+
+    monkeypatch.setattr(ip, "edit_image", edit)
+    sid = make_story(w)
+    assert story_row(sid).status == "refused"
+    state["refuse"] = False
+    n = len(fake.edits)
+    assert w.parent.post(f"/api/review/items/{items()[0].id}/approve").status_code == 200
+    import time
+
+    for _ in range(100):
+        if story_row(sid).status == "ready":
+            break
+        time.sleep(0.1)
+    assert story_row(sid).status == "ready" and len(fake.edits) - n == 1
+    assert "thing 2" in fake.edits[-1][1] and len(fake.chat_calls) == 1

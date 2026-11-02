@@ -66,6 +66,23 @@ def _get_post(db: Session, v: Viewer, post_id: int) -> tuple[Post, str]:
 # ---------------- публикация ----------------
 
 
+def _origin_chain(db: Session, w: Work) -> list[Work]:
+    """Работа и всё, из чего она сделана: обложка сказки -> герой -> загрузка под «оживлением».
+    Решение взрослого про любое звено (отказ, шлюз загрузки, снятый пост, правила ремикса) держит
+    и для производных."""
+    chain = [w]
+    if w.kind == "page":
+        hero_id = db.scalar(select(Story.hero_work_id).where(Story.cover_work_id == w.id))
+        hero = db.get(Work, hero_id) if hero_id is not None else None
+        if hero is not None:
+            chain.append(hero)
+    if chain[-1].hero_of_work_id is not None:
+        up = db.get(Work, chain[-1].hero_of_work_id)
+        if up is not None:
+            chain.append(up)
+    return chain
+
+
 @router.post("/posts")
 def publish(body: NewPost, c: AdultChild, db: Db):
     w = db.get(Work, body.work_id)
@@ -73,11 +90,14 @@ def publish(body: NewPost, c: AdultChild, db: Db):
         raise HTTPException(404, "not_found")
     if w.status != "ready":
         raise HTTPException(409, "work_not_ready")
-    if w.remix_of_post_id is not None:
-        if body.audience != "class":  # ремикс — работа одноклассника, за пределы класса не уходит
-            raise HTTPException(409, "remix_class_only")
-        if not alive(db, w.remix_of_post_id):  # исходник скрыли или удалили, пока ремикс ждал
-            raise HTTPException(409, "remix_source_gone")
+    chain = _origin_chain(db, w)
+    chain_ids = [x.id for x in chain]
+    for x in chain:
+        if x.remix_of_post_id is not None:
+            if body.audience != "class":  # ремикс — работа одноклассника, за пределы класса не уходит
+                raise HTTPException(409, "remix_class_only")
+            if not alive(db, x.remix_of_post_id):  # исходник скрыли или удалили, пока ремикс ждал
+                raise HTTPException(409, "remix_source_gone")
     class_id = service.class_of(db, c.id)
     if body.audience == "class" and class_id is None:
         raise HTTPException(409, "no_class")
@@ -86,7 +106,7 @@ def publish(body: NewPost, c: AdultChild, db: Db):
     # Взрослый скрыл или отклонил пост этой работы в этой аудитории — повторно не выложить.
     removed = db.scalar(
         select(Post.id).where(
-            Post.work_id == w.id,
+            Post.work_id.in_(chain_ids),
             Post.audience == body.audience,
             Post.status.in_(("hidden", "rejected")),
         )
@@ -120,10 +140,11 @@ def publish(body: NewPost, c: AdultChild, db: Db):
     # Загрузку с размытым или задержанным ждёт учитель класса: он видит оригинал и размытую.
     gated = (
         clean
-        and w.kind == "upload"
         and body.audience == "class"
         and db.scalar(
-            select(HeldItem.id).where(HeldItem.item_type == "upload", HeldItem.target_id == str(w.id))
+            select(HeldItem.id).where(
+                HeldItem.item_type == "upload", HeldItem.target_id.in_([str(i) for i in chain_ids])
+            )
         )
         is not None
     )
