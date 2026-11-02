@@ -43,6 +43,10 @@ def _view(w: Work, adult_notified: bool = True) -> dict:
         "created_at": w.created_at.isoformat(),
         # false: у ребёнка нет ни родителя, ни класса, сигнал пока некому увидеть (open-questions №14)
         "adult_notified": adult_notified,
+        # только пока рисуем: экран показывает ребёнку его же идею; после отказа текст не возвращаем
+        "idea": (w.rewrite_text or w.child_text) if w.status in ("checking", "generating") else None,
+        # файл записан до проверки картинки: идёт проверка, сама картинка до ready не отдаётся
+        "drawn": w.status == "generating" and bool(w.file_path),
     }
 
 

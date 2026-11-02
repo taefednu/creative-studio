@@ -355,7 +355,8 @@ def post_image(post_id: int, db: Db, v: Guest, thumb: bool = False):
         raise HTTPException(404, "not_found")
     if thumb:
         data = _thumb(w.file_path, Path(w.file_path).stat().st_mtime_ns)
-        return Response(data, media_type="image/webp", headers={"Cache-Control": "private"})
+        # ponytail: час в кэше браузера, скрытый пост ещё виден тому, кто уже загрузил его превью; короче, если важнее свежесть
+        return Response(data, media_type="image/webp", headers={"Cache-Control": "private, max-age=3600"})
     return FileResponse(w.file_path, media_type="image/webp", headers={"Cache-Control": "private"})
 
 

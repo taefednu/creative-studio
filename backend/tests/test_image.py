@@ -452,3 +452,19 @@ def test_parent_gets_no_file_while_generating(api, kid, fake):
         s.get(Work, wid).status = "generating"
         s.commit()
     assert api.get(f"/api/works/{wid}/image").status_code == 404
+
+
+def test_view_idea_and_drawn_only_while_painting():
+    from datetime import datetime
+
+    from app.works.image.models import Work
+    from app.works.image.router import _view
+    w = Work(id=1, child_id=1, template_id="clay", status="checking", child_text="кот", request_id="r" * 8, created_at=datetime(2026, 11, 2))
+    assert _view(w)["idea"] == "кот" and _view(w)["drawn"] is False
+    w.status, w.file_path = "generating", "/x.webp"
+    assert _view(w)["drawn"] is True
+    # после проверки текст ребёнка в ответе не возвращается: отказ и задержанное его не показывают
+    for st in ("refused", "held", "support", "ready", "failed"):
+        w.status = st
+        assert _view(w)["idea"] is None and _view(w)["drawn"] is False
+

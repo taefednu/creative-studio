@@ -20,6 +20,10 @@ export type Work = {
   rewrite_text: string | null
   image_url: string | null
   adult_notified?: boolean
+  /** Идея ребёнка, только пока идёт рисование. */
+  idea?: string | null
+  /** Файл уже записан: идёт проверка картинки. */
+  drawn?: boolean
   /** Где работа показана; у старого бэкенда поля нет. */
   shared?: Shared[]
 }

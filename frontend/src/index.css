@@ -55,9 +55,115 @@ body {
     transform: translateY(10px);
   }
 }
+.feed-img {
+  opacity: 0;
+  transition: opacity 0.25s ease-out, transform 0.3s ease-out;
+}
+.feed-img-on {
+  opacity: 1;
+}
 @media (prefers-reduced-motion: reduce) {
   .feed-card {
     animation: none;
+  }
+  .feed-img {
+    transition: none;
+  }
+}
+
+.gen-title {
+  animation: gen-title-in 0.26s var(--ease-out);
+}
+@keyframes gen-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.gen-word-in {
+  animation: gen-word-in 0.22s var(--ease-out) backwards;
+}
+@keyframes gen-word-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+.gen-word-fall {
+  animation: gen-word-fall 0.6s var(--ease-in-out) forwards;
+}
+@keyframes gen-word-fall {
+  to {
+    opacity: 0;
+    transform: translateY(40px) scale(0.8);
+    filter: blur(6px);
+  }
+}
+.gen-scan {
+  background: linear-gradient(to bottom, transparent, var(--color-primary-soft));
+  animation: gen-scan 1.6s linear infinite;
+}
+@keyframes gen-scan {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(400%);
+  }
+}
+.gen-ring {
+  fill: none;
+  stroke: var(--color-success);
+  vector-effect: non-scaling-stroke;
+  stroke-width: 4px;
+  stroke-dasharray: 100;
+  animation: gen-ring 2s var(--ease-in-out) infinite;
+}
+@keyframes gen-ring {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+.gen-robot {
+  transform-origin: 50% 90%;
+  animation: gen-robot 1.2s ease-in-out infinite alternate;
+}
+@keyframes gen-robot {
+  from {
+    transform: rotate(-4deg);
+  }
+  to {
+    transform: rotate(4deg);
+  }
+}
+.gen-reveal {
+  animation: gen-reveal 0.9s var(--ease-out);
+}
+@keyframes gen-reveal {
+  from {
+    opacity: 0.4;
+    transform: scale(1.04);
+    filter: blur(24px) saturate(1.4);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gen-title,
+  .gen-word-in,
+  .gen-scan,
+  .gen-ring,
+  .gen-robot,
+  .gen-reveal {
+    animation: none;
+  }
+  .gen-word-fall {
+    animation: none;
+    opacity: 0;
+  }
+  .gen-ring {
+    stroke-dashoffset: 0;
   }
 }
 

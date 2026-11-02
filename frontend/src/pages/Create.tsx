@@ -6,6 +6,7 @@ import { ApiError, api } from '../api'
 import type { ShellContext } from '../components/AppShell'
 import CreatePanel from '../components/CreatePanel'
 import ErrorText, { errorKey } from '../components/ErrorText'
+import GenStage from '../components/GenStage'
 import PublishBox from '../components/PublishBox'
 import SubmitBox from '../components/SubmitBox'
 import SupportCard from '../components/SupportCard'
@@ -277,6 +278,9 @@ function WorkView({
   const [tasks] = useLoad(loadAssignments)
   const task = submitTarget(tasks, assignmentId)
   const s = work.status
+  // проявление только если на глазах ребёнка шло рисование: перезагрузка готовой работы её не запускает
+  const [sawDrawing, setSawDrawing] = useState(false)
+  if (POLLING.includes(s) && !sawDrawing) setSawDrawing(true)
   const upload = work.kind === 'upload'
   // что SAM спрятал на загрузке: коды blurred_<что>, текст из i18n по коду; оригинал ребёнку не показывается
   const blurred = work.reason_codes.filter((c) => c.startsWith('blurred_')).map((c) => c.slice(8)).filter((c) => BLURRED.includes(c))
@@ -340,20 +344,7 @@ function WorkView({
   }
 
   if (s === 'checking' || s === 'generating') {
-    return (
-      <div data-testid="work-progress" className="mx-auto mt-6 flex max-w-xl flex-col items-center text-center lg:mt-10">
-        <img src="/art/robot-brush.webp" alt="" className="h-[140px] w-auto lg:h-[200px]" />
-        <p className="mt-3 animate-pulse text-3xl font-extrabold text-heading">
-          {t(s === 'checking' ? 'create.checking' : 'create.generating')}
-        </p>
-        {work.rewrite_text && (
-          <p data-testid="rewrite" className="mt-4 rounded-2xl bg-primary-soft px-4 py-3 text-lg font-bold text-heading">
-            {t('create.rewrite', { text: work.rewrite_text })}
-          </p>
-        )}
-        <div className="mt-5 w-full max-w-[280px]"><StyleSample tpl={tpl} /></div>
-      </div>
-    )
+    return <GenStage work={work} sample={tpl?.image_url} styleName={tpl ? t(`templates.${tpl.id}`) : undefined} />
   }
 
   if (s === 'ready' && work.image_url) {
@@ -369,7 +360,7 @@ function WorkView({
           >
             <div className={`col-span-2 grid gap-3 md:col-span-3 lg:mb-[17px] ${tpl ? 'md:grid-cols-[543fr_532fr] md:gap-[26px]' : 'md:mx-auto md:w-full md:max-w-[543px]'}`}>
               <div data-testid="result-image" className="relative overflow-hidden rounded-3xl border-4 border-primary bg-surface">
-                <img src={work.image_url} alt="" className="aspect-square w-full object-cover md:aspect-[543/532]" />
+                <img data-testid="result-img" src={work.image_url} alt="" className={`aspect-square w-full object-cover md:aspect-[543/532] ${sawDrawing ? 'gen-reveal' : ''}`} />
                 <span className="absolute left-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-fg lg:left-auto lg:right-2">
                   <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke} strokeWidth={3} aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
                 </span>

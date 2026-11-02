@@ -19,6 +19,20 @@ type Props = {
   guest?: boolean
 }
 
+/** Первые ряды грузим сразу, остальные при подходе к экрану; картинка проявляется, а не выскакивает. */
+function CardImage({ src, alt, eager, className }: { src: string; alt: string; eager: boolean; className: string }) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
+      className={`feed-img ${className}`}
+      onLoad={(e) => e.currentTarget.classList.add('feed-img-on')}
+    />
+  )
+}
+
 // Ширина экрана → число колонок, снизу вверх: как брейкпоинты md, lg, xl
 const COLUMN_STEPS: [number, number][] = [[768, 3], [1024, 5], [1280, 6]]
 const columnCount = () => COLUMN_STEPS.reduce((n, [w, c]) => (window.innerWidth >= w ? c : n), 2)
@@ -157,7 +171,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
       <div data-testid="feed-grid" className="mt-3 flex items-start gap-2">
         {toColumns(shown, count).map((col, c) => (
         <div key={c} className="flex min-w-0 flex-1 flex-col gap-2">
-        {col.map((p) =>
+        {col.map((p, row) =>
           !child ? (
             <button
               key={p.id}
@@ -167,7 +181,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
               onClick={() => setOpen(p.id)}
               className="feed-card block w-full overflow-hidden rounded-card border border-border bg-primary-soft text-left shadow-card"
             >
-              <img src={`${p.image_url}?thumb=1`} alt={p.caption ?? ''} className="w-full object-cover" loading="lazy" />
+              <CardImage src={`${p.image_url}?thumb=1`} alt={p.caption ?? ''} eager={row < 3} className="w-full object-cover" />
               <div className="px-3 py-2">
                 <p className="truncate text-sm font-extrabold text-heading">{p.nick}</p>
                 {p.caption && <p className="text-sm text-text">{p.caption}</p>}
@@ -192,7 +206,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
             style={{ aspectRatio: cardRatio(p.id) }}
             className="feed-card group relative block w-full overflow-hidden rounded-[22px] bg-primary-soft text-left shadow-card"
           >
-            <img src={`${p.image_url}?thumb=1`} alt={p.caption ?? ''} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none" loading="lazy" />
+            <CardImage src={`${p.image_url}?thumb=1`} alt={p.caption ?? ''} eager={row < 3} className="h-full w-full object-cover group-hover:scale-105" />
             {p.status === 'held' && !p.support && (
               <span className="absolute inset-x-2 top-2 rounded-xl bg-scrim px-3 py-1.5 text-xs font-bold text-primary-fg">
                 {t('feed.heldMark')}

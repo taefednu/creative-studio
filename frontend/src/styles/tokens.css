@@ -24,6 +24,9 @@
   --radius-card: 20px;
   --gradient-primary: linear-gradient(180deg, var(--color-primary-light), var(--color-primary));
   --shadow-primary: 0 5px 12px rgba(124, 77, 255, 0.32);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --shadow-pop: 0 12px 32px rgba(31, 42, 92, 0.18);
   --shadow-card: 0 4px 16px rgba(124, 77, 255, 0.1);
 }
