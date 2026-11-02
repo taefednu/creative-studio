@@ -41,9 +41,9 @@ class Settings(BaseSettings):
     VOICE_TIMEOUT: float = 30.0
     # Тарифы (#11): черновые пакеты, покупка пока недоступна.
     COIN_PACKS: list[CoinPack] = [
-        CoinPack(id="small", coins=50, price_usd=2.0),
-        CoinPack(id="medium", coins=150, price_usd=5.0),
-        CoinPack(id="large", coins=400, price_usd=10.0),
+        CoinPack(id="small", coins=50, price_usd=2.99),
+        CoinPack(id="medium", coins=150, price_usd=6.99),
+        CoinPack(id="large", coins=400, price_usd=14.99),
     ]
     # Аккаунты (#4). Секрет подписи сессий — только из env.
     SESSION_SECRET: str = Field(min_length=32)  # пустой ключ = любой подделает cookie
