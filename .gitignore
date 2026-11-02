@@ -35,3 +35,4 @@ docs/design/archive/
 backend/data/
 *.tsbuildinfo
 .playwright-mcp/
+.claude/worktrees/
