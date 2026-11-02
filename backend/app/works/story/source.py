@@ -12,6 +12,17 @@ from app.feed.models import Post
 from app.works.image.models import Work
 
 
+def origin_ok(db: Session, work_id: int | None) -> bool:
+    """Герой и загрузка, из которой он сделан, не отклонены взрослым. Читаем свежее: отказ мог прийти из другого запроса."""
+    w = db.get(Work, work_id, populate_existing=True) if work_id is not None else None
+    if w is None or w.status != "ready":
+        return False
+    if w.hero_of_work_id is None:
+        return True
+    up = db.get(Work, w.hero_of_work_id, populate_existing=True)
+    return up is not None and up.status == "ready"
+
+
 def load(db: Session, work_id: int | None, child_id: int, kinds: tuple[str, ...]) -> bytes | None:
     w = db.get(Work, work_id) if work_id is not None else None
     if (
@@ -21,6 +32,8 @@ def load(db: Session, work_id: int | None, child_id: int, kinds: tuple[str, ...]
         or w.status != "ready"
         or not w.file_path
     ):
+        return None
+    if not origin_ok(db, work_id):  # загрузку отклонили: и герой из неё больше не источник
         return None
     # Герой сказки: не ремикс (его правила «только класс, пока исходник жив» сказка бы обошла) и
     # без поста, снятого взрослым. У загрузки это не смотрим: «оживить» для себя можно всегда.

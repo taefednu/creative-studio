@@ -330,6 +330,13 @@ def _run(db: Session, work: Work, skip_text_check: bool) -> None:
         if work.remix_of_post_id is not None and not remix_source.alive(db, work.remix_of_post_id):
             fail_remix(db, work)  # исходник скрыли за время генерации: ребёнку не показываем
             return
+        # Загрузку отклонили, пока рисовали героя: отказ взрослого сильнее
+        if work.hero_of_work_id is not None:
+            up = db.get(Work, work.hero_of_work_id, populate_existing=True)
+            if up is None or up.status != "ready":
+                _refund(db, work)
+                _set(db, work, "refused", ["alive_source_gone"])
+                return
         _set(db, work, "ready")
         return
     _refund(db, work)

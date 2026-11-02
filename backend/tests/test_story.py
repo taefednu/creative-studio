@@ -681,3 +681,69 @@ def test_approve_after_muse_image_refusal_redraws_only_that_scene(w, fake, monke
         time.sleep(0.1)
     assert story_row(sid).status == "ready" and len(fake.edits) - n == 1
     assert "thing 2" in fake.edits[-1][1] and len(fake.chat_calls) == 1
+
+
+def test_rejected_upload_beats_later_story_approval(w, fake):
+    """Родитель отклонил загрузку, учитель потом одобряет задержанную сказку: сказка не открывается."""
+    up = make_work(w, w.a_id, kind="upload")
+    iid = hold_upload(w, up)
+    al = alive_of(w, up)
+    sid = make_story(w, hero=al, rid="story-req-30")
+    with db.new_session() as s:
+        st = s.get(Story, sid)
+        st.status = "held"
+        # страница без картинки: одобрение пошло бы дорисовывать, а не сразу в finish
+        st.pages = [{**st.pages[0], "file": None, "ok": False}, *st.pages[1:]]
+        s.add(HeldItem(item_type="story", target_id=str(sid), child_id=w.a_id, reviewer="parent", reason_codes=["held"]))
+        s.commit()
+        story_item = s.scalar(select(HeldItem.id).where(HeldItem.item_type == "story", HeldItem.target_id == str(sid)))
+    assert w.parent.post(f"/api/review/items/{iid}/reject").status_code == 200
+    assert w.parent.post(f"/api/review/items/{story_item}/approve").status_code == 200
+    assert story_row(sid).status == "refused"
+    assert w.a.get(f"/api/stories/{sid}").json()["pages"] == []
+
+
+def test_rejected_upload_stops_story_finishing_in_flight(w, fake):
+    """Отказ пришёл, пока сказка рисуется: рисование не возвращает её в ready и не делает обложку."""
+    up = make_work(w, w.a_id, kind="upload")
+    al = alive_of(w, up)
+    sid = make_story(w, hero=al, rid="story-req-31")
+    with db.new_session() as s:
+        st = s.get(Story, sid)
+        st.status, st.cover_work_id = "drawing", None
+        s.get(Work, up).status = "refused"
+        s.commit()
+        sp.finish(s, s.get(Story, sid))
+    r = story_row(sid)
+    assert r.status == "refused" and r.cover_work_id is None
+
+
+def test_publish_refuses_derived_work_of_rejected_upload(w, fake):
+    up = make_work(w, w.a_id, kind="upload")
+    al = alive_of(w, up)
+    with db.new_session() as s:
+        s.get(Work, up).status = "refused"
+        s.commit()
+    r = w.a.post("/api/posts", json={"work_id": al, "audience": "class"})
+    assert r.status_code == 409 and r.json()["detail"] == "removed_by_adult"
+
+
+def test_alive_finishing_after_upload_rejected_stays_refused(w, fake, monkeypatch):
+    up = make_work(w, w.a_id, kind="upload")
+    with db.new_session() as s:
+        hero = Work(child_id=w.a_id, kind="alive", template_id="alive", request_id="alive-race-1", hero_of_work_id=up)
+        s.add(hero)
+        s.commit()
+        hid = hero.id
+    check = ip.check_image
+
+    def reject_meanwhile(*a, **k):  # взрослый отклонил загрузку, пока шла проверка картинки героя
+        with db.new_session() as s:
+            s.get(Work, up).status = "refused"
+            s.commit()
+        return check(*a, **k)
+
+    monkeypatch.setattr(ip, "check_image", reject_meanwhile)
+    ip.run(hid)
+    with db.new_session() as s:
+        assert s.get(Work, hid).status == "refused"

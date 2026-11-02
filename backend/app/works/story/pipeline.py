@@ -272,7 +272,14 @@ def complete(s: Story) -> bool:
 
 
 def finish(db: Session, s: Story) -> None:
-    """Все страницы прошли (или взрослый одобрил): обложка-работа и статус ready одним коммитом."""
+    """Отказ взрослого по исходной загрузке сильнее и одобрения сказки, и рисования, начатого до него.
+
+    Все страницы прошли (или взрослый одобрил): обложка-работа и статус ready одним коммитом."""
+    if not hero_source.origin_ok(db, s.hero_work_id):
+        s.status = "refused"
+        _refund(db, s)
+        db.commit()
+        return
     s.pages = [{**p, "ok": True} for p in s.pages]
     if s.cover_work_id is None:
         cover = Work(

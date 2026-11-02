@@ -220,6 +220,10 @@ def _approve(db: Session, item: HeldItem) -> None:
     s = db.get(Story, int(item.target_id))
     if s is None or s.status not in ("held", "refused"):
         return  # support (срочное) не одобряется
+    if not source.origin_ok(db, s.hero_work_id):  # отказ по загрузке: одобрение сказки его не отменяет
+        s.status = "refused"
+        db.commit()
+        return
     if pipeline.complete(s):  # взрослый видел все четыре страницы целиком
         pipeline.finish(db, s)
         return

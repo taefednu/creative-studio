@@ -91,6 +91,8 @@ def publish(body: NewPost, c: AdultChild, db: Db):
     if w.status != "ready":
         raise HTTPException(409, "work_not_ready")
     chain = _origin_chain(db, w)
+    if any(x.status != "ready" for x in chain):  # звено отклонено взрослым: производное не показываем
+        raise HTTPException(409, "removed_by_adult")
     chain_ids = [x.id for x in chain]
     for x in chain:
         if x.remix_of_post_id is not None:
