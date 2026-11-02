@@ -13,8 +13,9 @@ export async function api<T = unknown>(path: string, method = 'GET', body?: unkn
   const res = await fetch(path, {
     method,
     credentials: 'same-origin',
-    headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    // FormData: boundary проставит браузер, заголовок руками не ставим
+    headers: body === undefined || body instanceof FormData ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : body instanceof FormData ? body : JSON.stringify(body),
   })
   let data: { detail?: unknown } | null = null
   try {

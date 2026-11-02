@@ -79,7 +79,7 @@ function RemixBox({ postId }: { postId: number }) {
         onChange={setStyle}
         options={[
           { value: '', label: t('feed.remixNoStyle') },
-          ...(tplData?.templates ?? []).map((x) => ({ value: x.id, label: t(`templates.${x.id}`) })),
+          ...(tplData?.templates ?? []).map((x) => ({ value: x.id, label: t(`templates.${x.id}`), thumb: x.image_url })),
         ]}
         className="h-11"
       />

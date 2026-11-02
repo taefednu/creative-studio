@@ -1,4 +1,5 @@
 const { chromium } = require('playwright')
+const { pick, optionValues } = require('./ui_helpers.cjs')
 // Клики по первой партии на стенде stand.sh (без живой модели: draw перехвачен). Запуск из frontend/: node scripts/click_batch1.cjs
 const BASE = process.env.BASE || 'http://127.0.0.1:5180'
 const OUT = '/tmp/ui-batch1'
@@ -23,19 +24,19 @@ async function login(b,w,h,nick='StarFox'){
   ok('20+ постов', n0>=1, n0)
   await p.waitForTimeout(1500); await p.screenshot({path:`${OUT}/feed-1672.png`})
   // фильтр
-  const opts=await T(p,'style-filter').locator('option').evaluateAll(o=>o.map(x=>x.value))
+  const opts=await optionValues(p,'style-filter')
   let changed=false
-  for (const v of opts.filter(Boolean)) { await T(p,'style-filter').selectOption(v); const n=await T(p,'post-card').count(); if(n!==n0){changed=true; ok('фильтр '+v+' меняет число карточек',true,n0+'->'+n); break} }
+  for (const v of opts.filter(Boolean)) { await pick(p, 'style-filter', v); const n=await T(p,'post-card').count(); if(n!==n0){changed=true; ok('фильтр '+v+' меняет число карточек',true,n0+'->'+n); break} }
   ok('фильтр меняет число', changed)
   // panel-style синхронен с фильтром
-  const sel=await T(p,'panel-style').inputValue(); ok('panel-style взял стиль фильтра', sel===(await T(p,'style-filter').inputValue()), sel)
-  await T(p,'style-filter').selectOption('')
+  const sel=await T(p, 'panel-style').getAttribute('data-value'); ok('panel-style взял стиль фильтра', sel===(await T(p, 'style-filter').getAttribute('data-value')), sel)
+  await pick(p, 'style-filter', '')
   // вкладка
   await T(p,'tab-create').click(); await p.waitForURL('**/create'); await T(p,'create-title').waitFor()
   ok('вкладка Создать', true)
   await T(p,'tpl-clay').click()
-  ok('panel-style синхронен с сеткой', (await T(p,'panel-style').inputValue())==='clay')
-  await T(p,'panel-style').selectOption('paper')
+  ok('panel-style синхронен с сеткой', (await T(p, 'panel-style').getAttribute('data-value'))==='clay')
+  await pick(p, 'panel-style', 'paper')
   ok('panel-style меняет выбор в сетке', (await T(p,'tpl-paper').getAttribute('aria-pressed'))==='true')
   await p.screenshot({path:`${OUT}/create-1672.png`})
   ok('Создать без прокрутки', await p.evaluate(()=>document.documentElement.scrollHeight<=window.innerHeight), await p.evaluate(()=>document.documentElement.scrollHeight))

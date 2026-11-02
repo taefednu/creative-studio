@@ -274,6 +274,9 @@ function WorkView({
   const [tasks] = useLoad(loadAssignments)
   const task = submitTarget(tasks, assignmentId)
   const s = work.status
+  const upload = work.kind === 'upload'
+  // что SAM спрятал на загрузке: коды blurred_<что>, текст из i18n по коду; оригинал ребёнку не показывается
+  const blurred = work.reason_codes.filter((c) => c.startsWith('blurred_')).map((c) => c.slice(8))
   const tpl = templates?.find((x) => x.id === work.template_id)
   const wrap = 'mx-auto max-w-[1672px]'
   const grid = 'mt-3 grid gap-3 lg:mt-[22px] lg:grid-cols-[minmax(0,1155fr)_minmax(0,434fr)] lg:gap-[13px]'
@@ -354,7 +357,7 @@ function WorkView({
     return (
       <div data-testid="work-ready" className={wrap}>
         <h1 data-testid="result-title" className="mt-1 text-[28px] font-extrabold leading-9 text-heading lg:mt-[15px] lg:w-fit lg:text-[52px] lg:leading-[55px]">
-          {t('create.readyTitle')}
+          {t(upload ? 'create.uploadReadyTitle' : 'create.readyTitle')}
         </h1>
         <div className={grid}>
           <div
@@ -396,6 +399,9 @@ function WorkView({
             ) : (
               <>
                 <SideTitle>{t('create.sideReadyTitle')}</SideTitle>
+                {blurred.map((c) => (
+                  <SideText key={c} testid={`blurred-${c}`}>{t(`create.blurred.${c}`)}</SideText>
+                ))}
                 <SideText>{t('create.sideReadyText')}</SideText>
               </>
             )}
@@ -412,12 +418,12 @@ function WorkView({
 
   const title = {
     refused: t('create.refusedTitle'),
-    held: t('create.heldTitle'),
+    held: t(upload ? 'create.uploadHeldTitle' : 'create.heldTitle'),
     failed: t('create.failedTitle'),
     ready: t('create.failedTitle'),
   }[s as 'refused']
   const body =
-    s === 'refused' ? t(hintKey(work.reason_codes)) : s === 'held' ? t('create.heldText') : t('create.failedText')
+    s === 'refused' ? t(hintKey(work.reason_codes)) : s === 'held' ? t(upload ? 'create.uploadHeldText' : 'create.heldText') : t('create.failedText')
   return (
     <div data-testid={`work-${s}`} className={wrap}>
       <div className={tpl ? grid : 'mx-auto mt-3 max-w-[434px]'}>

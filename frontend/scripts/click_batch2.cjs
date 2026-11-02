@@ -8,6 +8,7 @@ let fails = 0
 const ok = (n, c, d = '') => { if (!c) fails++; console.log(c ? 'PASS' : 'FAIL', n, String(d).slice(0, 140)) }
 const json = (body, status = 200) => ({ status, contentType: 'application/json', body: JSON.stringify(body) })
 require('fs').mkdirSync(OUT, { recursive: true })
+const { pick } = require('./ui_helpers.cjs')
 
 async function login(b, w, h, nick = 'StarFox', lang = 'ru') {
   const c = await b.newContext({ viewport: { width: w, height: h } })
@@ -100,7 +101,7 @@ const proposed = { id: 777, kind: 'image', template_id: 'anime', status: 'propos
     await p.unroute('**/api/posts/*/remix'); await p.unroute('**/api/works/999')
     // можно только стиль
     await openCard(p, (x) => x.id === remixable.id)
-    await T(p, 'draw-same').click(); await T(p, 'remix-style').selectOption('clay')
+    await T(p, 'draw-same').click(); await pick(p, 'remix-style', 'clay')
     ok('remix-go включается от стиля', !(await T(p, 'remix-go').isDisabled()))
   }
 
@@ -183,11 +184,11 @@ const proposed = { id: 777, kind: 'image', template_id: 'anime', status: 'propos
     const rest = ['side-robot', 'result-side', 'result-image', 'draw-more', 'to-mine', 'accept', 'style-sample'].map((id) => s.getByTestId(id).count())
     ok(`publish-support ${lang}: тёплый ответ, ни робота, ни «нарисовать ещё»`, !bannedPub[lang].test(txt) && (await Promise.all(rest)).every((c) => c === 0) && /./.test(txt), txt.slice(0, 70))
     await s.goto(BASE + '/my-works'); await T(s, 'work-card').first().waitFor()
-    const before = await s.getByTestId('publish-class').count()
-    const card = s.locator('[data-testid=work-card]', { has: s.getByTestId('publish-class') }).first()
-    await card.getByTestId('publish-class').click(); await card.getByTestId('publish-send').click(); await s.getByTestId('publish-support').waitFor()
+    const before = await s.getByTestId('work-share').count()
+    const card = s.locator('[data-testid=work-card]', { has: s.getByTestId('work-share') }).first()
+    await card.getByTestId('work-share').click(); await card.getByTestId('publish-class').click(); await card.getByTestId('publish-send').click(); await s.getByTestId('publish-support').waitFor()
     const ctxt = await s.getByTestId('publish-support').innerText()
-    ok(`MyWorks publish-support ${lang}: в карточке только тёплый текст`, !bannedPub[lang].test(ctxt) && (await s.getByTestId('publish-class').count()) === before - 1 && (await s.getByTestId('publish-support').count()) === 1, ctxt.slice(0, 70))
+    ok(`MyWorks publish-support ${lang}: в карточке только тёплый текст`, !bannedPub[lang].test(ctxt) && (await s.getByTestId('work-share').count()) === before - 1 && (await s.getByTestId('publish-support').count()) === 1, ctxt.slice(0, 70))
     await s.context().close()
   }
 

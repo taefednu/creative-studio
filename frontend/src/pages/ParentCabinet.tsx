@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../api'
 import Avatar from '../components/Avatar'
 import CabinetHeader from '../components/CabinetHeader'
+import ChipSelect from '../components/ChipSelect'
 import ErrorText, { errorKey } from '../components/ErrorText'
 import LinkCard from '../components/LinkCard'
 import PictureGrid from '../components/PictureGrid'
@@ -97,23 +98,33 @@ function AddKidModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="kid-age" className={label}>
-              {t('parent.age')}
-            </label>
-            <select id="kid-age" data-testid="kid-age" className={input} value={age} onChange={(e) => setAge(e.target.value)}>
-              <option value="5-8">5–8</option>
-              <option value="9-12">9–12</option>
-            </select>
+            <span className={label}>{t('parent.age')}</span>
+            <ChipSelect
+              testid="kid-age"
+              label={t('parent.age')}
+              value={age}
+              onChange={setAge}
+              options={[
+                { value: '5-8', label: '5–8' },
+                { value: '9-12', label: '9–12' },
+              ]}
+              className="h-12 w-full"
+            />
           </div>
           <div>
-            <label htmlFor="kid-lang" className={label}>
-              {t('parent.lang')}
-            </label>
-            <select id="kid-lang" data-testid="kid-lang" className={input} value={lang} onChange={(e) => setLang(e.target.value)}>
-              <option value="ru">Русский</option>
-              <option value="en">English</option>
-              <option value="uz">Oʻzbekcha</option>
-            </select>
+            <span className={label}>{t('parent.lang')}</span>
+            <ChipSelect
+              testid="kid-lang"
+              label={t('parent.lang')}
+              value={lang}
+              onChange={setLang}
+              options={[
+                { value: 'ru', label: 'Русский' },
+                { value: 'en', label: 'English' },
+                { value: 'uz', label: 'Oʻzbekcha' },
+              ]}
+              className="h-12 w-full"
+            />
           </div>
         </div>
         <div>

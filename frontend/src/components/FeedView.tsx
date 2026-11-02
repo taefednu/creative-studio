@@ -89,7 +89,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
             }}
             options={[
               { value: '', label: t('panel.allStyles') },
-              ...child.templates.map((x) => ({ value: x.id, label: t(`templates.${x.id}`) })),
+              ...child.templates.map((x) => ({ value: x.id, label: t(`templates.${x.id}`), thumb: x.image_url })),
             ]}
             className="order-2 ml-auto h-10 w-[124px] md:order-3 md:h-[45px] md:w-[156px]"
           />

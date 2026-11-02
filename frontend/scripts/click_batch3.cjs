@@ -4,6 +4,7 @@ const { chromium } = require('playwright')
 const BASE = process.env.BASE || 'http://127.0.0.1:5180'
 const OUT = '/tmp/ui-batch3'
 require('fs').mkdirSync(OUT, { recursive: true })
+const { pick } = require('./ui_helpers.cjs')
 const T = (p, id) => p.getByTestId(id)
 let fails = 0
 const ok = (n, c, d = '') => {
@@ -262,6 +263,9 @@ const adult = (p, who) =>
   await T(t, 'class-code').first().waitFor()
   ok('вкладка классов: коды и room-*', (await T(t, 'room-4B Stars').count()) === 1)
   await T(t, 'open-4B Stars').click()
+  ok('«Дети» открывает окно со списком', (await T(t, 'kids-modal').count()) === 1)
+  await T(t, 'kids-modal-close').click()
+  await T(t, 'new-class').click()
   await T(t, 'class-name').fill('5Z' + rnd)
   await T(t, 'class-create').click()
   await T(t, 'error').waitFor()
@@ -281,12 +285,12 @@ const adult = (p, who) =>
   await T(t, 'review').waitFor()
   await t.waitForTimeout(800)
   const all = await T(t, 'review-item').count()
-  await T(t, 'class-filter').selectOption('5Z' + rnd)
+  await pick(t, 'class-filter', '5Z' + rnd)
   ok('фильтр: чужой класс скрыл карточки своего класса, срочные и без класса остаются', (await T(t, 'review-item').count()) < all)
-  await T(t, 'class-filter').selectOption('4B Stars')
+  await pick(t, 'class-filter', '4B Stars')
   const inClass = await T(t, 'review-item').count()
   ok('фильтр: 4B Stars показывает только свой класс', inClass <= all, `${inClass}/${all}`)
-  await T(t, 'class-filter').selectOption('')
+  await pick(t, 'class-filter', '')
   ok('фильтр «Все классы» возвращает всё', (await T(t, 'review-item').count()) === all)
   // загрузка PixelPanda: две миниатюры (если сид уже разобран прежним прогоном — подмена очереди с теми же полями)
   let mocked = false

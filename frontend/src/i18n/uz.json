@@ -31,6 +31,19 @@
     "classHint": "Sinf kodi bormi? Kirgandan keyin kiritasan"
   },
   "errors": {
+    "bad_audio": "Yozuvni o‘qib bo‘lmadi. Yana bir bor yozib ko‘r.",
+    "audio_too_large": "Yozuv juda katta chiqdi. Qisqaroq ayt.",
+    "audio_too_long": "Yozuv juda uzun: 30 soniyagacha gapirish mumkin.",
+    "length_required": "Yuborib bo‘lmadi. Yana bir bor urinib ko‘r.",
+    "no_speech": "Eshitolmadim, yana bir bor urinib ko‘r.",
+    "asr_failed": "Ovoz yordamchisi hozir ishlamayapti. Fikrni yozib qo‘y yoki uslub tanla.",
+    "asr_timeout": "Ovoz yordamchisi uzoq o‘ylayapti. Yana urinib ko‘r yoki yozib qo‘y.",
+    "mic_denied": "Mikrofon o‘chiq. Brauzerda ruxsat ber yoki yozib qo‘y.",
+    "voice_unsupported": "Bu brauzerda ovoz yozib bo‘lmaydi. Yozib qo‘y.",
+    "file_too_large": "Fayl juda katta. 5 MB gacha kichikroq rasm tanla.",
+    "image_too_large": "Rasm juda katta. Kichikroq rasm tanla.",
+    "unsupported_type": "Faqat PNG va JPG mos keladi. Boshqa fayl tanla.",
+    "upload_busy": "Yuklash hozir ishlamayapti. Birozdan keyin urinib ko‘r.",
     "own_post": "Bu o‘zingning ishing: do‘stlaring ishidan remiks qil.",
     "remix_not_allowed": "Muallif bu ishning remiksiga ruxsat bermagan.",
     "remix_class_only": "Remiks faqat sinf ichida.",
@@ -75,6 +88,15 @@
     "empty": "Avval biror narsa yoz."
   },
   "create": {
+    "uploadReadyTitle": "Rasm yuklandi!",
+    "uploadHeldTitle": "Kattalarga ko‘rsatamiz",
+    "uploadHeldText": "Rasmni avval kattalar ko‘radi. Ular ko‘rishi bilan bilib olasan.",
+    "blurred": {
+      "face": "Xavfsiz bo‘lishi uchun yuzni yashirdik.",
+      "school_uniform": "Xavfsiz bo‘lishi uchun formani yashirdik.",
+      "house_number": "Xavfsiz bo‘lishi uchun raqamni yashirdik.",
+      "handwritten_name": "Xavfsiz bo‘lishi uchun ismni yashirdik."
+    },
     "title": "Bugun nima chizamiz?",
     "sub": "Bilmayapsanmi? Pastdan uslubni tanla",
     "chooseStyle": "Uslubni tanla",
@@ -187,7 +209,7 @@
   },
   "shell": { "coinsUnknown": "Tangalar hozircha mavjud emas", "nav": "Asosiy menyu", "account": "Profil" },
   "task": { "start": "Boshlash", "overdue": "muddat tugagan", "today": "muddat bugun", "left_one": "{{count}} kun qoldi", "left_few": "{{count}} kun qoldi", "left_many": "{{count}} kun qoldi", "left_other": "{{count}} kun qoldi", "draw": "Chizish", "noClass": "Sinfga qo‘shilganingdan keyin topshiriqlar shu yerda chiqadi: o‘qituvchidan sinf kodini kiritgin.", "empty": "Hozircha topshiriq yo‘q. Keyinroq qara: o‘qituvchi tez orada nimadir o‘ylab topadi!", "sentMark": "Topshirildi, o‘qituvchi ko‘radi", "heldMark": "O‘qituvchiga ko‘rish uchun yuborildi", "submit": "Topshiriqqa topshirish", "submitFor": "Topshiryapman:", "submitComment": "Rasm izohi (shart emas)", "submitDone": "Topshirildi! O‘qituvchi rasmingni ko‘radi.", "submitHeld": "O‘qituvchiga ko‘rish uchun yuborildi. Tekshirgach, u javob beradi.", "pick": "Qaysi topshiriqqa topshirish" },
-  "panel": { "model": "Muse Image", "format": "1:1", "style": "Uslub", "uploadSoon": "Rasm yuklash tez orada qo'shiladi", "allStyles": "Barcha uslublar", "styleFilter": "Uslub bo'yicha filtr", "noStyleMatch": "Bu uslubda hali rasm yo'q" },
+  "panel": { "voiceStart": "Ovozda ayt", "voiceStop": "Yozishni to‘xtat", "voiceListening": "Tinglayapman…", "uploadTitle": "Rasm yuklash", "uploadHint": "PNG yoki JPG", "uploadSending": "Yuborilmoqda…", "uploadClose": "Yopish", "model": "Muse Image", "format": "1:1", "style": "Uslub", "uploadSoon": "Rasm yuklash tez orada qo'shiladi", "allStyles": "Barcha uslublar", "styleFilter": "Uslub bo'yicha filtr", "noStyleMatch": "Bu uslubda hali rasm yo'q" },
   "templates": {
     "superhero": "Men superqahramonman",
     "space_pet": "Kosmosdagi uy hayvoni",
@@ -437,5 +459,91 @@
     "4": "Pay",
     "5": "Jum",
     "6": "Shan"
+  },
+  "tp": {
+    "hero_one": "O‘qituvchida sen uchun {{count}} ta topshiriq bor",
+    "hero_few": "O‘qituvchida sen uchun {{count}} ta topshiriq bor",
+    "hero_many": "O‘qituvchida sen uchun {{count}} ta topshiriq bor",
+    "hero_other": "O‘qituvchida sen uchun {{count}} ta topshiriq bor",
+    "allDone": "Hammasi topshirildi! Yangi topshiriqlar shu yerda chiqadi",
+    "handed": "Topshirildi",
+    "review": "Tekshiruvda",
+    "sample": "Topshiriq rasmi"
+  },
+  "mw": {
+    "all": "Hammasi",
+    "shared": "Ulashilgan",
+    "waiting": "Kutayotgan",
+    "inClass": "Sinfda",
+    "inFamily": "Oilada",
+    "waitingAdult": "Kattani kutyapti",
+    "share": "Ulashish",
+    "retry": "Keling, boshqacha urinib ko‘ramiz",
+    "showAdult": "Kattaga ko‘rsatamiz",
+    "failed": "Bo‘lmadi, yana urinib ko‘ramiz",
+    "none": "Hozircha bu yerda hech narsa yo‘q",
+    "close": "Yopish",
+    "draw": "Chizish",
+    "filters": "Ishlar filtri"
+  },
+  "tt": {
+    "newTask": "Yangi topshiriq",
+    "assigned": "Berilgan topshiriqlar",
+    "recent": "So‘nggi ishlar",
+    "titleLabel": "Nomi",
+    "descLabel": "Tavsif",
+    "dueLabel": "Topshirish muddati",
+    "today": "Bugun",
+    "tomorrow": "Ertaga",
+    "in3": "3 kundan keyin",
+    "week": "Bir haftadan keyin",
+    "none": "Muddatsiz",
+    "handedOf": "{{total}} tadan {{done}} tasi topshirdi",
+    "empty": "Hozircha topshiriq yo‘q: chapda birinchisini yarating.",
+    "recentEmpty": "Hozircha ishlar yo‘q.",
+    "dueOn": "Muddat: {{date}}",
+    "more": "+{{count}}"
+  },
+  "cl": {
+    "copy": "Kodni nusxalash",
+    "copied": "Nusxalandi",
+    "copyFail": "Nusxalab bo‘lmadi",
+    "joinCode": "Sinf kodi",
+    "kids_one": "{{count}} ta bola",
+    "kids_few": "{{count}} ta bola",
+    "kids_many": "{{count}} ta bola",
+    "kids_other": "{{count}} ta bola",
+    "close": "Yopish",
+    "noKids": "Hali hech kim qo‘shilmagan."
+  },
+  "pl": {
+    "soonChip": "Tanga sotib olish tez orada",
+    "word_one": "tanga",
+    "word_few": "tanga",
+    "word_many": "tanga",
+    "word_other": "tanga",
+    "lessonsTitle": "Darslardan tangalar",
+    "lessonsText": "Bolalar Mentorium darslari va ijodiy mashg‘ulotlarni bajarib tanga topadi."
+  },
+  "cal": {
+    "date": "{{wd}}, {{d}} {{m}}",
+    "month": {
+      "0": "yan",
+      "1": "fev",
+      "2": "mar",
+      "3": "apr",
+      "4": "may",
+      "5": "iyn",
+      "6": "iyl",
+      "7": "avg",
+      "8": "sen",
+      "9": "okt",
+      "10": "noy",
+      "11": "dek"
+    }
+  },
+  "cl2": {
+    "new": "Yangi sinf",
+    "kids": "Bolalar"
   }
 }

@@ -48,6 +48,10 @@ module.exports = {
   // новые экраны без макета (партия 4а): план в specs/tasks.json и specs/teacher-tasks.json
   tasks: async (p) => { await child(p, 'Lumi'); await go(p, '/tasks', 'task-card') },
   'teacher-tasks': async (p) => { await adult(p, 'teacher'); await go(p, '/teacher/tasks', 'assignment-card') },
+  // партия 4в: экраны по макетам mine, classes, plans
+  mine: async (p) => { await child(p); await go(p, '/my-works', 'work-card') },
+  classes: async (p) => { await adult(p, 'teacher'); await go(p, '/teacher/classes', 'class-code') },
+  plans: async (p) => { await adult(p, 'parent'); await go(p, '/parent/plans', 'plan-small') },
   login: async (p) => { await go(p, '/login', 'role-child') },
   parent: async (p) => { await adult(p, 'parent'); await go(p, '/parent', 'kid-card') },
   teacher: async (p) => { await adult(p, 'teacher'); await go(p, '/teacher', 'review-urgent') },

@@ -7,6 +7,7 @@ const BASE = process.env.BASE || 'http://127.0.0.1:5180'
 const OUT = '/tmp/ui-batch4'
 require('fs').mkdirSync(OUT, { recursive: true })
 const I18N = { ru: require('../src/i18n/ru.json'), en: require('../src/i18n/en.json'), uz: require('../src/i18n/uz.json') }
+const { pick, optionValues } = require('./ui_helpers.cjs')
 const T = (p, id) => p.getByTestId(id)
 let fails = 0
 const ok = (n, c, d = '') => {
@@ -55,15 +56,15 @@ const text = (p, id) => T(p, id).first().innerText()
   ok('в сети нет закрытых ручек', !g.reqs.some((r) => /\/api\/(feed\/(class|family)|child\/|teacher\/|parent\/)/.test(r)), g.reqs.filter((r) => r.includes('/api/')).join(' | '))
   ok('в консоли нет 401 и ошибок', g.errs.length === 0, g.errs.join(' | '))
   const total = await T(g, 'post-card').count()
-  const opts = await T(g, 'style-filter').locator('option').evaluateAll((o) => o.map((x) => x.value).filter(Boolean))
+  const opts = (await optionValues(g, 'style-filter')).filter(Boolean)
   let changed = false
   for (const v of opts) {
-    await T(g, 'style-filter').selectOption(v)
+    await pick(g, 'style-filter', v)
     await g.waitForTimeout(150)
     if ((await T(g, 'post-card').count()) !== total) { changed = true; break }
   }
   ok('стиль-фильтр на витрине меняет число карточек', changed, `${total}`)
-  await T(g, 'style-filter').selectOption('')
+  await pick(g, 'style-filter', '')
   await g.screenshot({ path: `${OUT}/showcase-1672.png` })
   // окно работы
   await T(g, 'post-card').first().click()
@@ -137,22 +138,24 @@ const text = (p, id) => T(p, id).first().innerText()
     const real = await (await route.fetch()).json()
     return route.fulfill({ json: [...created.slice().reverse(), ...real] })
   })
+  await t.route('**/api/teacher/assignments/900*/submissions', (r) => r.fulfill({ json: [] })) // подменённые задания: сдач у них нет
   await t.goto(BASE + '/teacher/tasks')
   await T(t, 'assignment-card').first().waitFor({ timeout: 20000 })
   const classes = await json(t, '/api/teacher/classes')
   const api0 = await json(t, `/api/teacher/classes/${classes[0].id}/assignments`)
   ok('список заданий = ответ API', (await T(t, 'assignment-card').count()) === api0.length, `${api0.length}`)
   ok('счётчик сдач первой карточки из API', (await text(t, 'assignment-count')).includes(String(api0[0].submissions)), await text(t, 'assignment-count'))
-  ok('заглушки tasks-empty нет, класс выбран', (await T(t, 'tasks-empty').count()) === 0 && (await T(t, 'task-class').inputValue()) === String(classes[0].id))
+  ok('заглушки tasks-empty нет, класс выбран', (await T(t, 'tasks-empty').count()) === 0 && (await T(t, 'task-class').getAttribute('data-value')) === String(classes[0].id))
   const title = 'Нарисуй осеннюю сказку ' + Math.random().toString(36).slice(2, 5)
   await T(t, 'task-title').fill(title)
   await T(t, 'task-description').fill('Лес, листья и ёжик')
-  await T(t, 'task-due').fill('2026-12-01')
-  await T(t, 'task-lang').selectOption('uz')
+  const dueDay = await optionValues(t, 'task-due').then((v) => v[1]) // пресет «Завтра»
+  await pick(t, 'task-due', dueDay)
   await T(t, 'task-create').click()
   await T(t, 'assignment-card').filter({ hasText: title }).waitFor({ timeout: 10000 })
-  const expDue = new Date(2026, 11, 1, 23, 59, 59).toISOString()
-  ok('POST: срок = конец дня местного времени в UTC, язык и название', bodies[0].due_at === expDue && bodies[0].lang === 'uz' && bodies[0].title === title, JSON.stringify(bodies[0]))
+  const [dy, dm, dd] = dueDay.split('-').map(Number)
+  const expDue = new Date(dy, dm - 1, dd, 23, 59, 59).toISOString()
+  ok('POST: срок = конец дня местного времени в UTC, язык и название', bodies[0].due_at === expDue && bodies[0].lang === 'ru' && bodies[0].title === title, JSON.stringify(bodies[0]))
   ok('новое задание в списке со счётчиком 0, форма очищена', (await T(t, 'task-title').inputValue()) === '' && (await T(t, 'assignment-card').filter({ hasText: title }).innerText()).includes('0'))
   await T(t, 'task-title').fill('Без срока')
   await T(t, 'task-create').click()
@@ -323,11 +326,12 @@ const text = (p, id) => T(p, id).first().innerText()
     // «Мои работы»: выбор задания и та же сдача
     await c.route('**/api/assignments/*/submit', (r) => r.fulfill(reply))
     await c.goto(BASE + '/my-works')
+    await T(c, 'work-share').first().click() // «Сдать» теперь в окне «Поделиться»
     await T(c, 'submit-from-works').first().waitFor({ timeout: 15000 })
     await T(c, 'submit-from-works').first().click()
     if (kid.open.length > 1) {
-      ok('submit-pick: столько вариантов, сколько открытых заданий', (await T(c, 'submit-pick').locator('option').count()) === kid.open.length)
-      await T(c, 'submit-pick').selectOption(String(kid.open[1].id))
+      ok('submit-pick: столько вариантов, сколько открытых заданий', (await optionValues(c, 'submit-pick')).length === kid.open.length)
+      await pick(c, 'submit-pick', String(kid.open[1].id))
       ok('выбор задания меняет подпись', (await text(c, 'submit-title')) === kid.open[1].title)
     } else skip('submit-pick', 'у ребёнка одно открытое задание')
     reply = { status: 200, json: { id: 4, status: 'accepted', support: false } }
@@ -335,6 +339,7 @@ const text = (p, id) => T(p, id).first().innerText()
     await T(c, 'submit-done').waitFor({ timeout: 5000 })
     ok('из «Мои работы»: «Сдано»', true)
     await c.goto(BASE + '/my-works')
+    await T(c, 'work-share').first().click()
     await T(c, 'submit-from-works').first().click()
     reply = { status: 200, json: { id: 5, status: 'held', support: true } }
     await T(c, 'submit-task').click()

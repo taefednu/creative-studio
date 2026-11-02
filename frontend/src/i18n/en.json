@@ -31,6 +31,19 @@
     "classHint": "Have a class code? Enter it after signing in"
   },
   "errors": {
+    "bad_audio": "We could not read that recording. Please try again.",
+    "audio_too_large": "That recording is too big. Try a shorter one.",
+    "audio_too_long": "That recording is too long: you can talk for up to 30 seconds.",
+    "length_required": "Could not send that. Please try again.",
+    "no_speech": "I didn't catch that, try once more.",
+    "asr_failed": "The voice helper is resting. Type your idea or pick a style.",
+    "asr_timeout": "The voice helper is taking a long time. Try again or type your idea.",
+    "mic_denied": "The microphone is off. Allow it in the browser or type your idea.",
+    "voice_unsupported": "This browser cannot record voice. Type your idea instead.",
+    "file_too_large": "The file is too big. Pick a smaller drawing, up to 5 MB.",
+    "image_too_large": "The picture is too big. Pick a smaller one.",
+    "unsupported_type": "Only PNG and JPG work. Pick another file.",
+    "upload_busy": "Upload is not available right now. Please try again in a bit.",
     "own_post": "This is your own picture: remix a friend's work.",
     "remix_not_allowed": "The author has turned off remixes for this picture.",
     "remix_class_only": "Remixes work only inside your class.",
@@ -75,6 +88,15 @@
     "empty": "Write something first."
   },
   "create": {
+    "uploadReadyTitle": "Drawing uploaded!",
+    "uploadHeldTitle": "We'll show a grown-up",
+    "uploadHeldText": "A grown-up will see the drawing first. You'll know as soon as they have looked.",
+    "blurred": {
+      "face": "We hid a face to keep it safe.",
+      "school_uniform": "We hid a uniform to keep it safe.",
+      "house_number": "We hid a number to keep it safe.",
+      "handwritten_name": "We hid a name to keep it safe."
+    },
     "title": "What shall we draw today?",
     "sub": "Not sure? Pick a style below",
     "chooseStyle": "Choose a style",
@@ -187,7 +209,7 @@
   },
   "shell": { "coinsUnknown": "Coins are not available right now", "nav": "Main menu", "account": "Profile" },
   "task": { "start": "Start", "overdue": "deadline passed", "today": "due today", "left_one": "{{count}} day left", "left_few": "{{count}} days left", "left_many": "{{count}} days left", "left_other": "{{count}} days left", "draw": "Draw", "noClass": "Tasks show up once you join a class: enter the class code from your teacher.", "empty": "No tasks yet. Check back later: your teacher will think of something soon!", "sentMark": "Handed in, your teacher will see it", "heldMark": "Sent to your teacher to look at", "submit": "Hand in", "submitFor": "Handing in to:", "submitComment": "Caption (optional)", "submitDone": "Handed in! Your teacher will see your picture.", "submitHeld": "Sent to your teacher to look at. They will answer once they have.", "pick": "Which task to hand in to" },
-  "panel": { "model": "Muse Image", "format": "1:1", "style": "Style", "uploadSoon": "Picture upload is coming soon", "allStyles": "All styles", "styleFilter": "Filter by style", "noStyleMatch": "No pictures in this style yet" },
+  "panel": { "voiceStart": "Speak your idea", "voiceStop": "Stop recording", "voiceListening": "Listening…", "uploadTitle": "Upload a drawing", "uploadHint": "PNG or JPG", "uploadSending": "Sending…", "uploadClose": "Close", "model": "Muse Image", "format": "1:1", "style": "Style", "uploadSoon": "Picture upload is coming soon", "allStyles": "All styles", "styleFilter": "Filter by style", "noStyleMatch": "No pictures in this style yet" },
   "templates": {
     "superhero": "I'm a superhero",
     "space_pet": "Pet in space",
@@ -437,5 +459,91 @@
     "4": "Thu",
     "5": "Fri",
     "6": "Sat"
+  },
+  "tp": {
+    "hero_one": "Your teacher has {{count}} task for you",
+    "hero_few": "Your teacher has {{count}} tasks for you",
+    "hero_many": "Your teacher has {{count}} tasks for you",
+    "hero_other": "Your teacher has {{count}} tasks for you",
+    "allDone": "All handed in! New tasks will show up here",
+    "handed": "Handed in",
+    "review": "Under review",
+    "sample": "Picture for the task"
+  },
+  "mw": {
+    "all": "All",
+    "shared": "Shared",
+    "waiting": "Waiting",
+    "inClass": "In class",
+    "inFamily": "In family",
+    "waitingAdult": "Waiting for grown-up",
+    "share": "Share",
+    "retry": "Let's try another way",
+    "showAdult": "We'll show a grown-up",
+    "failed": "It didn't work, let's try again",
+    "none": "Nothing here yet",
+    "close": "Close",
+    "draw": "Draw",
+    "filters": "Filter works"
+  },
+  "tt": {
+    "newTask": "New task",
+    "assigned": "Assigned tasks",
+    "recent": "Recent artwork",
+    "titleLabel": "Title",
+    "descLabel": "Description",
+    "dueLabel": "Due date",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "in3": "In 3 days",
+    "week": "In a week",
+    "none": "No due date",
+    "handedOf": "Handed in {{done}} of {{total}}",
+    "empty": "No tasks yet: create the first one on the left.",
+    "recentEmpty": "No artwork yet.",
+    "dueOn": "Due {{date}}",
+    "more": "+{{count}}"
+  },
+  "cl": {
+    "copy": "Copy code",
+    "copied": "Copied",
+    "copyFail": "Couldn't copy",
+    "joinCode": "Join code",
+    "kids_one": "{{count}} kid",
+    "kids_few": "{{count}} kids",
+    "kids_many": "{{count}} kids",
+    "kids_other": "{{count}} kids",
+    "close": "Close",
+    "noKids": "Nobody has joined yet."
+  },
+  "pl": {
+    "soonChip": "Buying coins is coming soon",
+    "word_one": "coin",
+    "word_few": "coins",
+    "word_many": "coins",
+    "word_other": "coins",
+    "lessonsTitle": "Coins earned in lessons",
+    "lessonsText": "Kids can earn coins by completing Mentorium lessons and creative activities."
+  },
+  "cal": {
+    "date": "{{wd}}, {{d}} {{m}}",
+    "month": {
+      "0": "Jan",
+      "1": "Feb",
+      "2": "Mar",
+      "3": "Apr",
+      "4": "May",
+      "5": "Jun",
+      "6": "Jul",
+      "7": "Aug",
+      "8": "Sep",
+      "9": "Oct",
+      "10": "Nov",
+      "11": "Dec"
+    }
+  },
+  "cl2": {
+    "new": "New class",
+    "kids": "Kids"
   }
 }

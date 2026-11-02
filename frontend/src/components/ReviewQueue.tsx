@@ -134,9 +134,12 @@ export default function ReviewQueue({
         </p>
       )}
       {items && items.length === 0 && (
-        <p data-testid="review-empty" className="text-muted">
-          {t('review.empty')}
-        </p>
+        <div className={compact ? '' : 'flex items-center gap-4 rounded-card border border-border bg-surface p-4 shadow-card'}>
+          {!compact && <img src="/art/robot-happy.webp" alt="" className="h-24 w-24 shrink-0 object-contain" />}
+          <p data-testid="review-empty" className={compact ? 'text-muted' : 'text-lg font-extrabold text-heading'}>
+            {t('review.empty')}
+          </p>
+        </div>
       )}
       {(compact ? items?.slice(0, 2) : items)?.map((it) => (
         <article

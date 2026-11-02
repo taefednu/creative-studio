@@ -12,6 +12,7 @@ export default {
         border: v('color-border'),
         primary: v('color-primary'),
         'primary-fg': v('color-primary-fg'),
+        'primary-light': v('color-primary-light'),
         'primary-soft': v('color-primary-soft'),
         heading: v('color-heading'),
         text: v('color-text'),
@@ -30,7 +31,8 @@ export default {
       },
       fontFamily: { sans: ['Nunito', 'system-ui', 'sans-serif'] },
       borderRadius: { card: 'var(--radius-card)' },
-      boxShadow: { card: 'var(--shadow-card)' },
+      boxShadow: { card: 'var(--shadow-card)', primary: 'var(--shadow-primary)', pop: 'var(--shadow-pop)' },
+      backgroundImage: { 'primary-grad': v('gradient-primary') },
     },
   },
 } satisfies Config

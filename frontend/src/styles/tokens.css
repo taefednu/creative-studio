@@ -5,6 +5,7 @@
   --color-border: #e0d9fb;
   --color-primary: #7c4dff;
   --color-primary-fg: #ffffff;
+  --color-primary-light: #9a78ff;
   --color-primary-soft: #ece6ff;
   --color-heading: #1f2a5c;
   --color-text: #2f3866;
@@ -21,5 +22,8 @@
   --color-urgent-border: #f0a04b;
   --color-scrim: rgba(31, 42, 92, 0.55);
   --radius-card: 20px;
+  --gradient-primary: linear-gradient(180deg, var(--color-primary-light), var(--color-primary));
+  --shadow-primary: 0 5px 12px rgba(124, 77, 255, 0.32);
+  --shadow-pop: 0 12px 32px rgba(31, 42, 92, 0.18);
   --shadow-card: 0 4px 16px rgba(124, 77, 255, 0.1);
 }

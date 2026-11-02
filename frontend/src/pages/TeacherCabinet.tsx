@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { api } from '../api'
 import CabinetHeader from '../components/CabinetHeader'
 import ChipSelect from '../components/ChipSelect'
@@ -34,6 +35,15 @@ export default function TeacherCabinet() {
             />
           )}
         </div>
+        {rooms && rooms.length === 0 && (
+          <div data-testid="no-classes" className="mb-4 flex flex-wrap items-center gap-4 rounded-card border border-border bg-surface p-4 shadow-card">
+            <img src="/art/robot-wave.webp" alt="" className="h-24 w-24 shrink-0 object-contain" />
+            <p className="min-w-[8rem] flex-1 text-lg font-extrabold text-heading">{t('teacher.noClasses')}</p>
+            <Link to="/teacher/classes" className="flex h-12 items-center rounded-full bg-primary px-6 font-extrabold uppercase text-primary-fg">
+              {t('cl2.new')}
+            </Link>
+          </div>
+        )}
         <ReviewQueue classFilter={cls} />
       </main>
     </div>

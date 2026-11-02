@@ -6,6 +6,8 @@ import type { TemplateInfo } from '../features/works/works'
 import type { ShellContext } from './AppShell'
 import ChipSelect from './ChipSelect'
 import ErrorText, { errorKey } from './ErrorText'
+import UploadPopup from './UploadPopup'
+import VoiceButton from './VoiceButton'
 
 type Props = {
   templates: TemplateInfo[]
@@ -21,7 +23,6 @@ type Props = {
 
 const chip = 'hidden h-11 items-center rounded-full border border-border bg-surface px-4 text-sm font-extrabold text-heading md:inline-flex md:h-12 md:text-base'
 const roundOn = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary md:h-12 md:w-12'
-const round = `${roundOn} opacity-50`
 
 /** Панель создания: одна на ленте (поверх) и на «Создать» (в потоке). Создаёт работу и ведёт на /create?work=<id>. */
 export default function CreatePanel({ templates, price, tpl, onTpl, floating, guest, assignmentId }: Props) {
@@ -97,24 +98,23 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
           </span>
         </button>
         <div className="flex min-w-0 items-center gap-2 md:gap-3">
-          <button type="button" data-testid="voice" disabled={!guest} onClick={() => guest && navigate('/login')} title={t(guest ? 'showcase.loginToCreate' : 'create.voiceSoon')} aria-label={t(guest ? 'showcase.loginToCreate' : 'create.voiceSoon')} className={guest ? roundOn : round}>
-            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <rect x="9" y="3" width="6" height="12" rx="3" />
-              <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
-            </svg>
-          </button>
-          <button type="button" data-testid="upload-open" disabled={!guest} onClick={() => guest && navigate('/login')} title={t(guest ? 'showcase.loginToCreate' : 'panel.uploadSoon')} aria-label={t(guest ? 'showcase.loginToCreate' : 'panel.uploadSoon')} className={guest ? roundOn : round}>
-            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </button>
+          <VoiceButton
+            guest={guest}
+            className={roundOn}
+            onError={setErr}
+            onText={(v) => {
+              setErr(null)
+              setText(v.slice(0, 200))
+            }}
+          />
+          <UploadPopup guest={guest} className={roundOn} />
           <span className={chip}>{t('panel.model')}</span>
           <ChipSelect
             testid="panel-style"
             label={t('panel.style')}
             value={tpl ?? ''}
             onChange={onTpl}
-            options={templates.map((x) => ({ value: x.id, label: t(`templates.${x.id}`) }))}
+            options={templates.map((x) => ({ value: x.id, label: t(`templates.${x.id}`), thumb: x.image_url }))}
             className="h-11 min-w-0 flex-1 md:h-12 md:flex-none"
           />
           <span className={chip}>{t('panel.format')}</span>

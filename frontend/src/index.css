@@ -9,3 +9,82 @@ body {
   color: var(--color-text);
   font-family: 'Nunito', system-ui, sans-serif;
 }
+
+/* Единый вид основных кнопок и вкладок (menus.jpg): градиент, мягкая тень, ховер, фокус, нажатие.
+   Берёт любую кнопку или ссылку с bg-primary, поэтому новые экраны подхватывают его сами. */
+@layer components {
+  button.bg-primary,
+  a.bg-primary {
+    background-image: var(--gradient-primary);
+    box-shadow: var(--shadow-primary);
+  }
+  button.bg-primary:disabled {
+    box-shadow: none;
+  }
+  button,
+  a {
+    transition: filter 0.15s, scale 0.12s, border-color 0.15s, box-shadow 0.15s;
+  }
+  button.bg-primary:not(:disabled):hover,
+  a.bg-primary:hover {
+    filter: brightness(1.07);
+  }
+  button.border-border:not(:disabled):hover,
+  a.border-border:hover {
+    border-color: var(--color-primary);
+  }
+  button:not(:disabled):active,
+  a.rounded-full:active,
+  a.rounded-2xl:active {
+    scale: 0.97;
+  }
+  button:focus-visible,
+  a:focus-visible,
+  [role='option']:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.chip-pop {
+  animation: chip-pop-in 0.16s ease-out;
+}
+@keyframes chip-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-4px);
+  }
+}
+.chip-pop[data-up='true'] {
+  animation-name: chip-pop-in-up;
+}
+@keyframes chip-pop-in-up {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chip-pop,
+  button,
+  a {
+    animation: none;
+    transition: none;
+  }
+}
+
+.voice-bar {
+  height: 6px;
+  animation: voice-wave 0.9s ease-in-out infinite;
+}
+@keyframes voice-wave {
+  50% {
+    height: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .voice-bar {
+    animation: none;
+    height: 14px;
+  }
+}

@@ -1,6 +1,7 @@
 // Браузерный сквозной прогон по настоящим экранам: живой бэкенд и модели, синтетические данные.
 // Нужны бэкенд на 8100 с временной базой и фронт на 5180. Запуск из frontend/: node scripts/e2e_ui.cjs
 const { chromium } = require('playwright')
+const { pick, optionValues } = require('./ui_helpers.cjs')
 const BASE = 'http://localhost:5180'
 const OUT = '/tmp/ui-e2e'
 const tag = Math.random().toString(16).slice(2, 6)
@@ -74,6 +75,7 @@ async function main() {
 
   await register(teacher, 'teacher', `t${tag}@example.com`)
   await teacher.goto(BASE + '/teacher/classes') // создание класса переехало на вкладку «Классы»
+  await T(teacher, 'new-class').click()
   await T(teacher, 'class-name').fill('5B')
   await T(teacher, 'class-create').click()
   await T(teacher, 'class-code').first().waitFor({ timeout: 30000 })
@@ -157,24 +159,24 @@ async function main() {
 
   // Новые контролы первой партии: настоящие клики и видимое следствие
   const total = await T(b, 'post-card').count()
-  await T(b, 'style-filter').selectOption('clay')
+  await pick(b, 'style-filter', 'clay')
   await b.waitForTimeout(300)
   ok('style-filter меняет число карточек', (await T(b, 'post-card').count()) !== total, `${total} -> ${await T(b, 'post-card').count()}`)
-  await T(b, 'style-filter').selectOption('')
+  await pick(b, 'style-filter', '')
   ok('style-filter «Все стили» возвращает карточки', (await T(b, 'post-card').count()) === total)
-  await T(b, 'panel-style').selectOption('paper')
-  ok('panel-style на ленте меняет выбор', (await T(b, 'panel-style').inputValue()) === 'paper')
+  await pick(b, 'panel-style', 'paper')
+  ok('panel-style на ленте меняет выбор', (await T(b, 'panel-style').getAttribute('data-value')) === 'paper')
   await T(b, 'tab-create').click()
   await T(b, 'tpl-clay').click()
-  ok('panel-style следует за плиткой на «Создать»', (await T(b, 'panel-style').inputValue()) === 'clay')
-  await T(b, 'panel-style').selectOption('paper')
+  ok('panel-style следует за плиткой на «Создать»', (await T(b, 'panel-style').getAttribute('data-value')) === 'clay')
+  await pick(b, 'panel-style', 'paper')
   ok('panel-style меняет выбранную плитку', (await T(b, 'tpl-paper').getAttribute('aria-pressed')) === 'true')
   // Задание через экран учителя (живая проверка текста), не через fetch
   const taskTitle = `Нарисуй героя сказки ${tag}`
   await teacher.goto(BASE + '/teacher/tasks')
   await T(teacher, 'task-title').fill(taskTitle)
   await T(teacher, 'task-description').fill('Герой из сказки на уроке')
-  await T(teacher, 'task-due').fill('2030-01-15')
+  await pick(teacher, 'task-due', (await optionValues(teacher, 'task-due'))[3]) // пресет «Через неделю»
   await T(teacher, 'task-create').click()
   await T(teacher, 'assignment-card').filter({ hasText: taskTitle }).waitFor({ timeout: 60000 })
   ok('учитель создал задание на экране «Задания»', true)

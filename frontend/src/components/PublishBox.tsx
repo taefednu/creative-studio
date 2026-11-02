@@ -61,7 +61,7 @@ export default function PublishBox({ workId, grid, onSupport }: { workId: number
   return (
     <Wrap {...(grid ? {} : { className: 'flex flex-col gap-2' })}>
       {open && (
-        <div data-testid="publish-form" className={`flex flex-col gap-3 rounded-2xl border border-border bg-bg p-3 ${grid ? 'col-span-2 md:col-span-3' : ''}`}>
+        <div data-testid="publish-form" className={`chip-pop flex flex-col gap-3 rounded-3xl border border-border bg-surface p-4 shadow-pop ${grid ? 'col-span-2 md:col-span-3' : ''}`}>
           <div className="flex flex-wrap gap-2">
             {options.map((o) => (
               <button
@@ -78,15 +78,20 @@ export default function PublishBox({ workId, grid, onSupport }: { workId: number
               </button>
             ))}
           </div>
+          <label htmlFor="caption-input" className="-mb-1 text-xs font-extrabold uppercase text-primary">
+            {t('publish.caption')}
+          </label>
           <input
+            id="caption-input"
             data-testid="caption-input"
             value={caption}
             maxLength={200}
             onChange={(e) => setCaption(e.target.value)}
             placeholder={t('publish.caption')}
             aria-label={t('publish.caption')}
-            className="w-full rounded-full border border-border bg-surface px-4 py-3 text-heading outline-none focus:border-primary"
+            className="w-full rounded-2xl border border-border bg-bg px-4 py-3 text-heading outline-none focus:border-primary"
           />
+          <span aria-hidden="true" className="-mt-2 self-end text-xs font-bold text-muted">{caption.length}/200</span>
           <ErrorText code={err} />
           <button
             type="button"
