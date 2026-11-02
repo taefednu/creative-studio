@@ -53,7 +53,7 @@ export default function StoryBook({ title, pages, compact, children }: { title: 
   // В карточке работы места мало: текст лежит на картинке, чтобы ребёнок читал не прокручивая
   if (compact) {
     return (
-      <div data-testid="story-book" className="relative h-full min-h-[320px] w-full overflow-hidden">
+      <div data-testid="story-book" className="relative h-full w-full overflow-hidden">
         {picture}
         {buttons}
         <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 rounded-2xl bg-surface p-3 shadow-card">

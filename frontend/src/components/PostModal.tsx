@@ -283,12 +283,12 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
         </button>
         <div className="relative overflow-hidden rounded-2xl bg-primary-soft lg:min-h-0">
           {post?.story && (
-            <div className="p-2">
+            <div className="aspect-square w-full lg:absolute lg:inset-0 lg:aspect-auto">
               <StoryBook compact title={post.story.title} pages={post.story.pages.map((p, i) => ({ text: p.text, url: `/api/posts/${post.id}/story/${i + 1}` }))} />
             </div>
           )}
           {post && !post.story && <img src={post.image_url} alt="" className="aspect-square w-full object-cover lg:aspect-auto lg:h-full" data-testid="modal-image" />}
-          <span className="absolute bottom-3 left-3 rounded-full bg-success-soft px-3 py-1 text-sm font-extrabold text-success lg:bottom-4 lg:left-4 lg:text-xl">
+          <span className={`absolute left-3 rounded-full ${post?.story ? 'top-3' : 'bottom-3'} bg-success-soft px-3 py-1 text-sm font-extrabold text-success lg:bottom-4 lg:left-4 lg:text-xl`}>
             {t('create.checkedByAi')}
           </span>
         </div>
