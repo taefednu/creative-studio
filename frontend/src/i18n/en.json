@@ -275,6 +275,8 @@
     "moreCoins": "More coins for lessons: sign in with Mentorium"
   },
   "review": {
+    "zoom": "Open larger",
+    "effect": {"prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
     "title": "Held for review",
     "badge": "Held: {{count}}",
     "okTitle": "Waiting for your OK",

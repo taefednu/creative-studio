@@ -5,7 +5,7 @@
 
 @media (min-width: 1024px) {
   html {
-    scrollbar-gutter: stable;
+    overflow-y: scroll; /* полоса есть всегда: контент не прыгает между экранами и нет пустой щели справа от шапки */
   }
 }
 

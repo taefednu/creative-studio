@@ -20,7 +20,7 @@ export default function TabPill({ to, icon, label, testid, end, badge, className
       {!!badge && (
         <span
           data-testid={`${testid}-badge`}
-          className="absolute right-1 top-0 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-[11px] font-extrabold leading-none text-primary-fg"
+          className="absolute right-1 top-0 flex h-5 min-w-5 lg:-right-1 lg:-top-1 items-center justify-center rounded-full bg-danger px-1 text-[11px] font-extrabold leading-none text-primary-fg"
         >
           {badge}
         </span>

@@ -8,6 +8,10 @@ import Avatar from './Avatar'
 
 const btnMain =
   'rounded-full bg-primary px-5 py-2 text-sm font-extrabold uppercase text-primary-fg disabled:opacity-50'
+const btnApprove = 'rounded-full bg-success-soft px-3 py-2 text-sm font-extrabold text-success transition-colors duration-150 hover:bg-success hover:text-primary-fg disabled:opacity-50'
+const btnReject = 'rounded-full bg-danger-soft px-3 py-2 text-sm font-extrabold text-danger transition-colors duration-150 hover:bg-danger hover:text-primary-fg disabled:opacity-50'
+// Типы, у которых есть своя подпись «что будет после одобрения»; остальным общая
+const EFFECTS = ['prompt', 'image', 'post', 'comment', 'upload', 'submission']
 const btnSide =
   'rounded-full border border-border bg-surface px-5 py-2 text-sm font-extrabold text-heading disabled:opacity-50'
 
@@ -30,6 +34,14 @@ export default function ReviewQueue({
   const [open, setOpen] = useState<ReviewItem | null>(null)
   const [busy, setBusy] = useState<number | null>(null)
   const [failed, setFailed] = useState(false)
+  const [zoom, setZoom] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!zoom) return
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setZoom(null)
+    document.addEventListener('keydown', esc)
+    return () => document.removeEventListener('keydown', esc)
+  }, [zoom])
 
   const load = useCallback(() => {
     api<ReviewItem[]>('/api/review/queue')
@@ -62,58 +74,6 @@ export default function ReviewQueue({
         : t('review.where.classNoName')
       : t(`review.where.${it.where}`)
 
-  const thumb = (it: ReviewItem) => {
-    const size = compact ? 'h-20 w-24' : 'h-[90px] w-full xl:h-20 xl:w-[200px]'
-    if (it.urgent) {
-      return (
-        <button
-          type="button"
-          data-testid="review-open"
-          onClick={() => setOpen(it)}
-          className={`flex items-center justify-center rounded-2xl border border-urgent-border bg-surface text-sm font-extrabold uppercase text-urgent ${size}`}
-        >
-          <span className="flex flex-col items-center gap-1">
-            <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-            {t('review.open')}
-          </span>
-        </button>
-      )
-    }
-    if (it.original_url) {
-      const pair: [string, string | null | undefined, string][] = [
-        ['original', it.original_url, t('cab.upload.original')],
-        ['blurred', it.blurred_url, t('cab.upload.blurred')],
-      ]
-      return (
-        <div className={`flex gap-1 ${compact ? 'w-24' : 'w-full xl:w-[200px]'}`} data-testid="review-pair">
-          {pair
-            .filter(([, url]) => url || !compact)
-            .map(([k, url, cap]) => (
-              <figure key={k} className="min-w-0 flex-1 text-center">
-                {url ? (
-                  <img src={url} alt="" data-testid={`review-${k}`} className="h-20 w-full rounded-lg object-contain bg-primary-soft xl:h-16" />
-                ) : (
-                  <div data-testid={`review-${k}-none`} className="flex h-20 items-center justify-center rounded-lg bg-primary-soft px-1 text-[10px] font-bold text-muted xl:h-16">
-                    {t('cab.upload.noBlur')}
-                  </div>
-                )}
-                <figcaption className="text-[11px] text-muted">{cap}</figcaption>
-              </figure>
-            ))}
-        </div>
-      )
-    }
-    if (it.image_url) return <img src={it.image_url} alt="" className={`rounded-2xl object-contain bg-primary-soft ${size}`} />
-    return (
-      <div className={`flex items-center rounded-2xl bg-primary-soft p-3 text-sm font-bold text-heading ${compact ? 'h-20 w-24' : 'h-24 xl:h-20 xl:w-[200px]'}`}>
-        <span className="line-clamp-3 break-words">{it.preview_text}</span>
-      </div>
-    )
-  }
-
   const kind = (it: ReviewItem) => t(`review.types.${it.item_type}`)
 
   return (
@@ -141,71 +101,156 @@ export default function ReviewQueue({
           </p>
         </div>
       )}
-      {(compact ? items?.slice(0, 2) : items)?.map((it) => (
-        <article
-          key={it.id}
-          data-testid={it.urgent ? 'review-urgent' : 'review-item'}
-          className={`grid items-center gap-3 rounded-card border p-3 shadow-card ${
-            compact
-              ? 'grid-cols-[auto_1fr_auto]'
-              : 'xl:grid-cols-[200px_auto_minmax(0,1fr)_auto_auto] xl:gap-4 xl:px-3 xl:py-2'
-          } ${it.urgent ? 'border-urgent-border bg-urgent-soft' : 'border-border bg-surface'}`}
-        >
-          {thumb(it)}
-          {!compact && <Avatar nick={it.nick} className="hidden h-12 w-12 xl:block" />}
-          <div className="flex min-w-0 flex-col gap-1">
-            <p className="flex flex-wrap items-baseline gap-x-2">
-              <span data-testid="review-nick" className="text-lg font-extrabold text-heading">
-                {it.nick}
-              </span>
-              <span className="text-xs font-extrabold uppercase text-primary">{kind(it)}</span>
-            </p>
-            {it.urgent ? (
-              <p data-testid="review-urgent-note" className="font-extrabold text-urgent">
-                {t('review.urgentNote')}
-              </p>
-            ) : (
-              <>
-                {it.image_url && it.preview_text && (
-                  <p className="line-clamp-2 break-words text-sm text-text">{it.preview_text}</p>
-                )}
-                <p className="flex flex-wrap gap-2">
-                  {reasonKeys(it.reason_codes).map((k) => (
-                    <span key={k} data-testid="review-reason" className="rounded-full bg-danger-soft px-3 py-1 text-xs font-bold text-danger">
-                      {t(k)}
-                    </span>
-                  ))}
-                </p>
-              </>
-            )}
-            {compact && (
-              <span className="text-xs text-muted">{agoText(it.created_at, t)}</span>
-            )}
-          </div>
-          {!compact && (
-            <span className="whitespace-nowrap text-sm text-muted xl:text-base">
-              {where(it)} · {agoText(it.created_at, t)}
-            </span>
-          )}
-          {!it.urgent && (
-            <div className={compact ? 'flex flex-col gap-2' : 'grid grid-cols-2 gap-2 xl:flex xl:gap-2'}>
-              <button type="button" data-testid="review-approve" disabled={busy === it.id} className={`${btnMain} ${compact ? '' : 'h-12 xl:h-11 xl:w-[130px]'}`} onClick={() => void act(it, 'approve')}>
-                {t('review.approve')}
-              </button>
-              <button type="button" data-testid="review-reject" disabled={busy === it.id} className={`${btnSide} ${compact ? '' : 'h-12 xl:h-11 xl:w-[120px]'}`} onClick={() => void act(it, 'reject')}>
-                {t('review.reject')}
-              </button>
+      {compact
+        ? items?.slice(0, 2).map((it) => (
+            <CompactRow key={it.id} it={it} kind={kind(it)} busy={busy === it.id} onOpen={() => setOpen(it)} onAct={(w) => void act(it, w)} />
+          ))
+        : items && items.length > 0 && (
+            <div data-testid="review-grid" className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {items.map((it) => (
+                <ReviewCard key={it.id} it={it} kind={kind(it)} where={where(it)} busy={busy === it.id} onOpen={() => setOpen(it)} onZoom={setZoom} onAct={(w) => void act(it, w)} />
+              ))}
             </div>
           )}
-        </article>
-      ))}
       {compact && items && items.length > 2 && (
         <Link to="/parent/review" data-testid="review-all" className="self-start text-sm font-extrabold text-primary underline">
           {t('cab.allReview', { count: items.length })}
         </Link>
       )}
+      {zoom && (
+        <button
+          type="button"
+          data-testid="review-zoom"
+          aria-label={t('review.close')}
+          onClick={() => setZoom(null)}
+          className="modal-bg fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm"
+        >
+          <img src={zoom} alt="" className="modal-in max-h-full max-w-full rounded-2xl object-contain shadow-pop" />
+        </button>
+      )}
       {open && <UrgentModal item={open} busy={busy === open.id} failed={failed} onClose={() => setOpen(null)} onSeen={() => void act(open, 'seen')} />}
     </section>
+  )
+}
+
+type RowProps = { it: ReviewItem; kind: string; busy: boolean; onOpen: () => void; onAct: (w: 'approve' | 'reject') => void }
+
+/** Узкая колонка кабинета родителя. */
+function CompactRow({ it, kind, busy, onOpen, onAct }: RowProps) {
+  const { t } = useTranslation()
+  const size = 'h-20 w-24'
+  const preview = it.urgent ? (
+    <button type="button" data-testid="review-open" onClick={onOpen} className={`rounded-2xl border border-urgent-border bg-surface text-sm font-extrabold text-urgent ${size}`}>
+      {t('review.open')}
+    </button>
+  ) : it.original_url || it.image_url ? (
+    <img src={(it.original_url ?? it.image_url) as string} alt="" className={`rounded-2xl bg-primary-soft object-contain ${size}`} />
+  ) : (
+    <div className={`flex items-center rounded-2xl bg-primary-soft p-2 text-xs font-bold text-heading ${size}`}>
+      <span className="line-clamp-3 break-words">{it.preview_text}</span>
+    </div>
+  )
+  return (
+    <article
+      data-testid={it.urgent ? 'review-urgent' : 'review-item'}
+      className={`grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-card border p-3 shadow-card ${it.urgent ? 'border-urgent-border bg-urgent-soft' : 'border-border bg-surface'}`}
+    >
+      {preview}
+      <div className="flex min-w-0 flex-col gap-1">
+        <p className="flex flex-wrap items-baseline gap-x-2">
+          <span data-testid="review-nick" className="text-base font-extrabold text-heading">{it.nick}</span>
+          <span className="text-xs font-bold text-muted">{kind}</span>
+        </p>
+        {it.urgent ? (
+          <p data-testid="review-urgent-note" className="text-sm font-extrabold text-urgent">{t('review.urgentNote')}</p>
+        ) : (
+          <p className="flex flex-wrap gap-1">
+            {reasonKeys(it.reason_codes).map((k) => (
+              <span key={k} data-testid="review-reason" className="rounded-full bg-danger-soft px-2 py-0.5 text-xs font-bold text-danger">{t(k)}</span>
+            ))}
+          </p>
+        )}
+        <span className="text-xs text-muted">{agoText(it.created_at, t)}</span>
+      </div>
+      {!it.urgent && (
+        <div className="flex flex-col gap-2">
+          <button type="button" data-testid="review-approve" disabled={busy} className={btnApprove} onClick={() => onAct('approve')}>{t('review.approve')}</button>
+          <button type="button" data-testid="review-reject" disabled={busy} className={btnReject} onClick={() => onAct('reject')}>{t('review.reject')}</button>
+        </div>
+      )}
+    </article>
+  )
+}
+
+/**
+ * Карточка решения: сверху то, о чём решаем, крупно и целиком; причина поверх него; ниже кто и где; внизу равные кнопки.
+ * Кнопки одного веса: одобрение не должно быть действием по умолчанию, особенно на «Обидных словах».
+ */
+function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps & { where: string; onZoom: (url: string) => void }) {
+  const { t } = useTranslation()
+  const ago = agoText(it.created_at, t)
+  const who = (
+    <div className="flex min-w-0 items-center gap-2">
+      <Avatar nick={it.nick} className="h-9 w-9 shrink-0" />
+      <p className="min-w-0 text-sm text-muted">
+        <span data-testid="review-nick" className="block truncate text-base font-extrabold text-heading">{it.nick}</span>
+        <span className="block truncate">{kind}, {where}, {ago}</span>
+      </p>
+    </div>
+  )
+  if (it.urgent) {
+    return (
+      <article data-testid="review-urgent" className="col-span-full flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[22px] border border-urgent-border bg-urgent-soft px-4 py-3">
+        {who}
+        <p data-testid="review-urgent-note" className="min-w-[200px] flex-1 text-base font-extrabold text-urgent">{t('review.urgentNote')}</p>
+        <button type="button" data-testid="review-open" onClick={onOpen} className="h-11 w-full rounded-full bg-urgent px-6 text-sm font-extrabold text-primary-fg sm:w-auto">
+          {t('review.open')}
+        </button>
+      </article>
+    )
+  }
+  const picture = (url: string, testid?: string) => (
+    <button type="button" aria-label={t('review.zoom')} onClick={() => onZoom(url)} className="h-full min-w-0 flex-1 cursor-zoom-in">
+      <img src={url} alt="" data-testid={testid} className="h-full w-full object-contain" />
+    </button>
+  )
+  return (
+    <article data-testid="review-item" className="feed-card flex flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-card">
+      <div className="relative flex h-44 bg-primary-soft">
+        {it.original_url ? (
+          <div data-testid="review-pair" className="flex h-full w-full gap-0.5">
+            {([['original', it.original_url, t('cab.upload.original')], ['blurred', it.blurred_url, t('cab.upload.blurred')]] as const).map(([k, url, cap]) => (
+              <figure key={k} className="relative flex h-full min-w-0 flex-1">
+                {url ? picture(url, `review-${k}`) : (
+                  <div data-testid={`review-${k}-none`} className="flex h-full w-full items-center justify-center p-2 text-center text-xs font-bold text-muted">{t('cab.upload.noBlur')}</div>
+                )}
+                <figcaption className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-surface px-2 py-0.5 text-xs font-bold text-heading">{cap}</figcaption>
+              </figure>
+            ))}
+          </div>
+        ) : it.image_url ? (
+          picture(it.image_url)
+        ) : (
+          <p data-testid="review-text" className="m-auto line-clamp-5 break-words px-5 text-center text-lg font-bold leading-6 text-heading">
+            «{it.preview_text}»
+          </p>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col gap-2.5 p-3">
+        <p className="flex flex-wrap gap-1.5">
+          {reasonKeys(it.reason_codes).map((k) => (
+            <span key={k} data-testid="review-reason" className="rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-extrabold text-danger">{t(k)}</span>
+          ))}
+        </p>
+        {it.image_url && it.preview_text && <p className="line-clamp-2 break-words text-sm text-text">«{it.preview_text}»</p>}
+        {who}
+        <p data-testid="review-effect" className="mt-auto text-xs text-muted">{t(`review.effect.${EFFECTS.includes(it.item_type) ? it.item_type : 'other'}`)}</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" data-testid="review-reject" disabled={busy} className={`${btnReject} h-11`} onClick={() => onAct('reject')}>{t('review.reject')}</button>
+          <button type="button" data-testid="review-approve" disabled={busy} className={`${btnApprove} h-11`} onClick={() => onAct('approve')}>{t('review.approve')}</button>
+        </div>
+      </div>
+    </article>
   )
 }
 
