@@ -29,7 +29,7 @@ async function openCard(p, match) {
   const i = items.findIndex(match)
   if (i < 0) return null
   await p.goto(BASE + '/'); await T(p, 'post-card').first().waitFor()
-  await p.locator(`[data-post-id=\"${items[i].id}\"]`).click(); await T(p, 'modal-image').waitFor()
+  await p.locator(`[data-post-id="${items[i].id}"]`).click(); await T(p, 'modal-image').waitFor()
   return items[i]
 }
 const noScroll = (p) => p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)

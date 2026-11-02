@@ -2,6 +2,7 @@
   "app": { "name": "Creative Studio" },
   "nav": { "feed": "Lenta", "create": "Yaratish", "tasks": "Topshiriqlar", "mine": "Mening ishlarim" },
   "lang": { "label": "Til" },
+  "ideas": {"open": "O'ylab topishga yordam ber", "close": "Yopish", "ready": "Mana sening g'oyang!", "again": "Boshidan", "done": "Tayyor", "lesson": "Yaxshi so'rov uchta savolga javob beradi: kim, qayerda va nima qilyapti. O'zing ham shunday yoza olasan!", "phrase": "{{where}} {{who}} {{what}}", "ask": {"who": "Rasmda kim bo'ladi?", "where": "U qayerda bo'ladi?", "what": "U nima qilyapti?"}, "slot": {"who": "Kim?", "where": "Qayerda?", "what": "Nima qilyapti?"}, "who": {"cat": "mushuk", "dragon": "ajdar", "robot": "robot", "puppy": "kuchukcha", "bunny": "quyoncha", "penguin": "pingvin", "dino": "dinozavr", "fox": "tulkicha"}, "where": {"moon": "oyda", "castle": "qasrda", "forest": "o'rmonda", "sea": "suv ostida", "clouds": "bulutlar ustida", "space": "koinotda", "candy": "shirinliklar shahrida", "samarkand": "Samarqandda"}, "what": {"watermelon": "tarvuz yeyapti", "fly": "uchyapti", "dance": "raqs tushyapti", "paint": "rasm chizyapti", "bake": "tort pishiryapti", "sing": "qo'shiq aytyapti", "ball": "to'p o'ynayapti", "swim": "suzyapti"}},
   "showcase": { "title": "Vitrina", "login": "Kirish", "reactHint": "Rasmlarga munosabat bildirish uchun kir.", "loginToCreate": "Chizish uchun kir", "fromLogin": "Bolalar ishlarini ko‘rish" },
   "pages": {
     "feed": "Bu yerda sinf lentasi bo‘ladi",

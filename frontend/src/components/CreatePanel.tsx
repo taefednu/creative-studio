@@ -6,6 +6,8 @@ import type { TemplateInfo } from '../features/works/works'
 import type { ShellContext } from './AppShell'
 import ChipSelect from './ChipSelect'
 import ErrorText, { errorKey } from './ErrorText'
+import Icon from './Icon'
+import PromptHelper from './PromptHelper'
 import UploadPopup from './UploadPopup'
 import VoiceButton from './VoiceButton'
 
@@ -21,7 +23,6 @@ type Props = {
   assignmentId?: number | null
 }
 
-const chip = 'hidden h-11 items-center rounded-full border border-border bg-surface px-4 text-sm font-extrabold text-heading md:inline-flex md:h-12 md:text-base'
 const roundOn = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary md:h-12 md:w-12'
 
 /** Панель создания: одна на ленте (поверх) и на «Создать» (в потоке). Создаёт работу и ведёт на /create?work=<id>. */
@@ -32,6 +33,7 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [helping, setHelping] = useState(false)
   const requestId = useRef<string | null>(null)
 
   // тот же запрос с теми же полями — тот же request_id (двойной клик, сеть); правка полей — новый запрос
@@ -108,7 +110,16 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
             }}
           />
           <UploadPopup guest={guest} className={roundOn} assignmentId={assignmentId} />
-          <span className={chip}>{t('panel.model')}</span>
+          <button
+            type="button"
+            data-testid="prompt-help"
+            aria-label={t('ideas.open')}
+            onClick={() => (guest ? navigate('/login') : setHelping(true))}
+            className={`${roundOn} md:w-auto md:gap-2 md:px-4 md:text-sm md:font-extrabold`}
+          >
+            <Icon name="wand" />
+            <span className="hidden md:inline">{t('ideas.open')}</span>
+          </button>
           <ChipSelect
             testid="panel-style"
             label={t('panel.style')}
@@ -117,9 +128,18 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
             options={templates.map((x) => ({ value: x.id, label: t(`templates.${x.id}`), thumb: x.image_url }))}
             className="h-11 min-w-0 flex-1 md:h-12 md:flex-none"
           />
-          <span className={chip}>{t('panel.format')}</span>
         </div>
       </div>
+      {helping && (
+        <PromptHelper
+          onClose={() => setHelping(false)}
+          onDone={(phrase) => {
+            setErr(null)
+            setText(phrase.slice(0, 200))
+            setHelping(false)
+          }}
+        />
+      )}
     </div>
   )
 }
