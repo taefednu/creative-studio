@@ -26,6 +26,7 @@ def open_for_remix(post: Post) -> bool:
         and post.audience == "class"
         and not post.best
         and post.remix_allowed
+        and post.work_kind != "page"  # обложка сказки: ремикс страницы не нужен
     )
 
 

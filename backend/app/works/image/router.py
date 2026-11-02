@@ -55,6 +55,7 @@ def _view(w: Work, adult_notified: bool = True) -> dict:
 def list_templates():
     return {
         "price": get_settings().IMAGE_PRICE,
+        "story_price": get_settings().STORY_PRICE,
         "templates": [{"id": t.id, "image_url": f"/templates/{t.id}.webp"} for t in TEMPLATES],
     }
 

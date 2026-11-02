@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # Картинки (#6). Цена и таймаут — конфиг (spec §3).
     IMAGE_PRICE: int = 1
     IMAGE_TIMEOUT: float = 60.0
+    # Оживи рисунок и сказка: цена сказки и таймаут Muse Spark (на странице картинки — IMAGE_TIMEOUT).
+    STORY_PRICE: int = 3
+    STORY_TEXT_TIMEOUT: float = 60.0
     UPLOAD_DIR: str = "data/uploads"
     # Загрузки (#15): лимиты и SAM. Перекодирование режет метаданные (EXIF с геолокацией).
     UPLOAD_MAX_BYTES: int = 5_000_000

@@ -26,5 +26,7 @@ class Work(Base):
     reason_codes: Mapped[list] = mapped_column(JSON, default=list)
     # Ремикс (#10): пост, из картинки которого сделана работа. Сама картинка не хранится.
     remix_of_post_id: Mapped[int | None] = mapped_column(ForeignKey("posts.id"), nullable=True)
+    # «Оживи» (kind="alive"): своя готовая загрузка, из её размытого файла сделан герой.
+    hero_of_work_id: Mapped[int | None] = mapped_column(ForeignKey("works.id"), nullable=True)
     attempt: Mapped[int] = mapped_column(default=1)  # новая попытка = новые ref_id списания и возврата
     created_at: Mapped[datetime] = mapped_column(DateTime, default=clock.now)

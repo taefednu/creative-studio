@@ -22,6 +22,7 @@ from app.feed.models import Comment, Post
 from app.moderation.models import HeldItem
 from app.moderation.service import close_urgent, decide
 from app.works.image.models import Work
+from app.works.story.models import Story
 
 router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
@@ -133,6 +134,8 @@ def _view(db: Session, item: HeldItem, nick: str, class_name: str | None, full: 
         "status": item.status,
         "created_at": item.created_at.isoformat(),
         "preview_text": item.preview_text if show else None,
+        # сказка: взрослый открывает GET /api/stories/{story_id} и читает все страницы
+        "story_id": int(item.target_id) if show and item.item_type == "story" else None,
         "image_url": f"/api/review/items/{item.id}/image"
         if show and item.item_type in IMAGE_TYPES and _has_image(db, item)
         else None,
@@ -266,7 +269,7 @@ def held_mine(c: Annotated[Child, Depends(current_child)], db: Db):
             HeldItem.child_id == c.id,
             HeldItem.status == "rejected",
             HeldItem.urgent.is_(False),
-            HeldItem.item_type.in_(("post", "comment", "prompt", "image", "upload")),
+            HeldItem.item_type.in_(("post", "comment", "prompt", "image", "upload", "story")),
         )
         .order_by(HeldItem.id.desc())
         .limit(20)
@@ -278,6 +281,9 @@ def held_mine(c: Annotated[Child, Depends(current_child)], db: Db):
             text = p.caption if p is not None else None
         elif i.item_type == "upload":
             text = None  # у загрузки нет текста ребёнка
+        elif i.item_type == "story":
+            st = db.get(Story, int(i.target_id))
+            text = st.idea if st is not None else None  # его же слова, не текст модели
         elif i.item_type in ("prompt", "image"):
             w = db.get(Work, int(i.target_id))
             text = w.child_text if w is not None else None
