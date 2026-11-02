@@ -20,6 +20,7 @@ from app.moderation.models import HeldItem
 from app.works.image.models import Work
 from app.works.image.thumbs import thumb_response
 from app.works.remix.source import alive, hide_remixes, open_for_remix
+from app.works.story.models import Story
 
 router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
@@ -240,6 +241,15 @@ def _views(db: Session, v: Viewer, posts: list[Post]) -> list[dict]:
     for op in db.scalars(select(Post).where(Post.id.in_(set(origin.values())))):
         if service.access(db, v, op) is not None:
             origin_nick[op.id] = db.scalar(select(Child.nick).where(Child.id == op.child_id))
+    # сказка: обложка поста = работа kind="page"; книжку читателю отдаём только готовую
+    stories = {
+        s.cover_work_id: s
+        for s in db.scalars(
+            select(Story).where(
+                Story.cover_work_id.in_({p.work_id for p in posts}), Story.status == "ready"
+            )
+        )
+    }
     my_class = service.class_of(db, v.id) if v.role == "child" else None
     urgent = _urgent_targets(db, "post", ids)
     out = []
@@ -256,6 +266,15 @@ def _views(db: Session, v: Viewer, posts: list[Post]) -> list[dict]:
                 "remix_of": (
                     {"post_id": origin[p.work_id], "nick": origin_nick[origin[p.work_id]]}
                     if origin.get(p.work_id) in origin_nick
+                    else None
+                ),
+                "story": (
+                    {
+                        "id": stories[p.work_id].id,
+                        "title": stories[p.work_id].title,
+                        "pages": [{"text": pg["text"]} for pg in stories[p.work_id].pages],
+                    }
+                    if p.work_id in stories
                     else None
                 ),
                 "remix_allowed": p.remix_allowed,
@@ -342,6 +361,19 @@ def post_image(post_id: int, request: Request, db: Db, v: Guest, thumb: bool = F
     if thumb:
         return thumb_response(w.file_path, request)
     return FileResponse(w.file_path, media_type="image/webp", headers={"Cache-Control": "private"})
+
+
+@router.get("/posts/{post_id}/story/{n}")
+def post_story_page(post_id: int, n: int, request: Request, db: Db, v: Guest, thumb: bool = False):
+    """Страница сказки читателю: доступ как к самому посту, готовая сказка, страница прошла проверку."""
+    p, _ = _get_post(db, v, post_id)
+    s = db.scalar(select(Story).where(Story.cover_work_id == p.work_id, Story.status == "ready"))
+    page = s.pages[n - 1] if s is not None and 1 <= n <= len(s.pages) else None
+    if page is None or not page["ok"] or not page["file"] or not Path(page["file"]).is_file():
+        raise HTTPException(404, "not_found")
+    if thumb:
+        return thumb_response(page["file"], request)
+    return FileResponse(page["file"], media_type="image/webp", headers={"Cache-Control": "private"})
 
 
 @router.delete("/posts/{post_id}")

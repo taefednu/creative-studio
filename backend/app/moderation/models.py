@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app import clock
 from app.db import Base
 
-ITEM_TYPES = ("prompt", "image", "post", "comment", "nickname", "assignment", "submission", "upload")
+ITEM_TYPES = ("prompt", "image", "post", "comment", "nickname", "assignment", "submission", "upload", "story")
 REVIEWERS = ("parent", "teacher", "both")
 
 

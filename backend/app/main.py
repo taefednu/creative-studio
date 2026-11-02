@@ -22,6 +22,9 @@ from app.voice.router import router as voice_router
 from app.works.image import pipeline
 from app.works.image.router import router as image_router
 from app.works.remix.router import router as remix_router
+from app.works.story import models as _story_models  # noqa: F401  (таблицы)
+from app.works.story import pipeline as story_pipeline
+from app.works.story.router import router as story_router
 from app.works.upload.router import router as upload_router
 
 
@@ -31,6 +34,7 @@ async def lifespan(_: FastAPI):
     init_db()
     if get_settings().DEMO_LOGIN:
         warm_thumbs()
+    story_pipeline.recover_stuck()  # до картинок: их recover затем повторит возвраты платформы
     pipeline.recover_stuck(platform_in_background=True)  # процесс мог упасть посреди генерации: вернуть монеты
     yield
 
@@ -44,6 +48,7 @@ app.include_router(moderation_router)
 app.include_router(assignments_router)
 app.include_router(voice_router)
 app.include_router(remix_router)
+app.include_router(story_router)
 app.include_router(parent_router)
 app.include_router(platform_router)
 app.include_router(demo_router)

@@ -69,3 +69,12 @@ def build_prompt(template: Template, text: str | None) -> str:
     """Шаблон + проверенный текст как данные; сырой ввод сюда не попадает."""
     subject = text.strip() if text and text.strip() else template.default_theme
     return f"A friendly children's illustration, safe for kids, {template.style}. Subject: {subject}"
+
+
+def build_alive_prompt() -> str:
+    """«Оживи»: постоянный промпт, текста ребёнка в нём нет."""
+    return (
+        "Turn this child's drawing into a charming 3D animated movie character. Keep the exact "
+        "shape, proportions and colors of the drawing, including its wobbly lines and imperfections. "
+        "Soft studio lighting, plain light background, friendly and safe for kids, no text."
+    )

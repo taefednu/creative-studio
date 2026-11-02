@@ -20,8 +20,14 @@ from app.config import get_settings
 from app.meta.client import ContentPolicyViolation
 from app.moderation import hold
 from app.works.image.models import Work
-from app.works.image.templates import BY_ID, build_prompt, build_remix_prompt
+from app.works.image.templates import (
+    BY_ID,
+    build_alive_prompt,
+    build_prompt,
+    build_remix_prompt,
+)
 from app.works.remix import source as remix_source
+from app.works.story import source as hero_source
 
 log = logging.getLogger("app.works.image")
 
@@ -57,6 +63,15 @@ def edit_image(source: bytes, prompt: str, user: str, timeout: float) -> bytes:
 
         _client_cache = client_from_settings()
     return _client_cache.edit_image(source, prompt, user, timeout)
+
+
+def chat_json(messages: list[dict], schema: dict, timeout: float) -> str:
+    global _client_cache
+    if _client_cache is None:
+        from app.meta.client import client_from_settings
+
+        _client_cache = client_from_settings()
+    return _client_cache.chat_json(messages, schema, timeout)
 
 
 def spawn(work_id: int, skip_text_check: bool = False) -> None:
@@ -241,6 +256,12 @@ def _run(db: Session, work: Work, skip_text_check: bool) -> None:
         if source is None:
             _set(db, work, "failed", ["remix_source_gone"])
             return
+    elif work.kind == "alive":
+        # Герой — размытый file_path своей готовой загрузки, не оригинал.
+        source = hero_source.load(db, work.hero_of_work_id, work.child_id, ("upload",))
+        if source is None:
+            _set(db, work, "failed", ["alive_source_gone"])
+            return
 
     outcome = wallet_for(child).charge(db, child, s.IMAGE_PRICE, "generation", gen_ref(work))
     if outcome != "ok":  # нет монет, платформа молчит или это уже списанная попытка: не генерируем
@@ -254,7 +275,9 @@ def _run(db: Session, work: Work, skip_text_check: bool) -> None:
         else:
             db.rollback()
         return
-    if source is not None:
+    if work.kind == "alive":
+        work.safe_prompt = build_alive_prompt()
+    elif source is not None:
         work.safe_prompt = build_remix_prompt(template, text)
     else:
         assert template is not None
