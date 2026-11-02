@@ -356,7 +356,7 @@ function WorkView({
           <span className="absolute bottom-3 left-3 rounded-full bg-success-soft px-3 py-1 text-sm font-extrabold text-success lg:text-base">{t('create.checkedByAi')}</span>
         </div>
         <aside data-testid="result-side" className="mt-3 flex min-w-0 flex-col gap-2.5 rounded-[28px] border border-border bg-surface p-4 shadow-card lg:mt-0 lg:w-[420px] lg:p-5">
-          <img src="/art/robot-brush.webp" alt="" className="mx-auto hidden h-[clamp(64px,12vh,160px)] object-contain lg:block" />
+          <img data-testid="side-robot" src="/art/robot-brush.webp" alt="" className="mx-auto hidden h-[clamp(64px,12vh,160px)] object-contain lg:block" />
           <h1 data-testid="result-title" className="text-[28px] font-extrabold leading-9 text-heading">{t(upload ? 'create.uploadReadyTitle' : 'create.readyTitle')}</h1>
           {tpl && <p data-testid="style-chip" className="text-sm font-bold text-muted">{t('create.styleLabel')}: {t(`templates.${tpl.id}`)}</p>}
           {work.rewrite_text && <SideText>{t('create.rewrite', { text: work.rewrite_text })}</SideText>}

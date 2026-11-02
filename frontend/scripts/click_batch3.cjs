@@ -176,6 +176,7 @@ const adult = (p, who) =>
   await T(c, 'avatar-me').click()
   ok('ребёнок больше не видит parent-code', (await T(c, 'parent-code').count()) === 0)
   // добавление ребёнка в окне
+  await T(p, 'add-kid-close').click()
   await T(p, 'add-child-tile').click()
   await T(p, 'add-kid-modal').waitFor()
   const scrim = await T(p, 'add-kid-modal').evaluate((e) => getComputedStyle(e).backgroundColor)
@@ -200,8 +201,8 @@ const adult = (p, who) =>
   await T(p, 'tab-plans').click()
   await p.waitForURL('**/parent/plans')
   const plans = await api('/api/parent/tariffs')
-  await T(p, 'plan-' + plans.packs[0].id).waitFor()
-  ok('тарифы: карточки из данных, кнопки disabled, цена из данных', (await T(p, 'plan-' + plans.packs[0].id).isDisabled()) && (await T(p, 'plans').innerText()).includes(String(plans.packs[0].coins)), await T(p, 'plans').innerText().then((x) => x.replace(/\n/g, ' ')))
+  await T(p, 'plan-card').first().waitFor()
+  ok('тарифы: карточки из данных, кнопок покупки нет, цена из данных', (await T(p, 'plans').locator('button').count()) === 0 && (await T(p, 'plans').innerText()).includes(String(plans.packs[0].coins)), await T(p, 'plans').innerText().then((x) => x.replace(/\n/g, ' ')))
   ok('платёжных полей нет', (await p.locator('input').count()) === 0)
   await p.screenshot({ path: OUT + '/plans-1672.png' })
   await T(p, 'tab-kids').click()
