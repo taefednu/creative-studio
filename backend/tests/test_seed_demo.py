@@ -96,3 +96,13 @@ def test_feed_thumb_small_fresh_and_gated(seeded):
     assert px[2] > 200 and px[0] < 60
     # превью закрыто так же, как картинка: гость не видит пост класса
     assert TestClient(app).get(f"/api/posts/{pid}/image?thumb=1").status_code in (401, 403, 404)
+    # повтор без скачивания, но с проверкой доступа: скрытый пост не отдаёт 304 из кэша браузера
+    r = kid.get(f"/api/posts/{pid}/image?thumb=1")
+    etag = {"If-None-Match": r.headers["etag"]}
+    assert "no-cache" in r.headers["cache-control"]
+    assert kid.get(f"/api/posts/{pid}/image?thumb=1", headers=etag).status_code == 304
+    s = db.new_session()
+    s.get(Post, pid).status = "hidden"
+    s.commit()
+    s.close()
+    assert kid.get(f"/api/posts/{pid}/image?thumb=1", headers=etag).status_code == 404

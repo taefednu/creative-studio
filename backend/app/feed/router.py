@@ -3,7 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Query
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
 from PIL import Image
 from pydantic import BaseModel, Field
@@ -348,15 +348,18 @@ def _thumb(path: str, mtime_ns: int) -> bytes:
 
 
 @router.get("/posts/{post_id}/image")
-def post_image(post_id: int, db: Db, v: Guest, thumb: bool = False):
+def post_image(post_id: int, request: Request, db: Db, v: Guest, thumb: bool = False):
     p, _ = _get_post(db, v, post_id)
     w = db.get(Work, p.work_id)
     if w is None or not w.file_path or not Path(w.file_path).is_file():
         raise HTTPException(404, "not_found")
     if thumb:
-        data = _thumb(w.file_path, Path(w.file_path).stat().st_mtime_ns)
-        # ponytail: час в кэше браузера, скрытый пост ещё виден тому, кто уже загрузил его превью; короче, если важнее свежесть
-        return Response(data, media_type="image/webp", headers={"Cache-Control": "private, max-age=3600"})
+        # no-cache: браузер спрашивает каждый раз, доступ выше проверен до ответа; скрытый пост сразу даёт 404
+        mtime = Path(w.file_path).stat().st_mtime_ns
+        headers = {"Cache-Control": "private, no-cache", "ETag": f'"{mtime}"', "Vary": "Cookie"}
+        if request.headers.get("if-none-match") == headers["ETag"]:
+            return Response(status_code=304, headers=headers)
+        return Response(_thumb(w.file_path, mtime), media_type="image/webp", headers=headers)
     return FileResponse(w.file_path, media_type="image/webp", headers={"Cache-Control": "private"})
 
 
