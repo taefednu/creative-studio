@@ -1,13 +1,18 @@
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.accounts.router import router as accounts_router
 from app.assignments import models as _assignment_models  # noqa: F401  (таблицы)
 from app.assignments.router import router as assignments_router
 from app.config import get_settings
 from app.db import init_db
+from app.demo import router as demo_router
+from app.demo import warm_thumbs
 from app.feed import models as _feed_models  # noqa: F401  (таблицы)
 from app.feed.router import router as feed_router
 from app.moderation.router import router as moderation_router
@@ -24,6 +29,8 @@ from app.works.upload.router import router as upload_router
 async def lifespan(_: FastAPI):
     get_settings()  # без ключа и id моделей падаем сразу, с понятной ошибкой
     init_db()
+    if get_settings().DEMO_LOGIN:
+        warm_thumbs()
     pipeline.recover_stuck(platform_in_background=True)  # процесс мог упасть посреди генерации: вернуть монеты
     yield
 
@@ -39,6 +46,7 @@ app.include_router(voice_router)
 app.include_router(remix_router)
 app.include_router(parent_router)
 app.include_router(platform_router)
+app.include_router(demo_router)
 
 
 @app.get("/api/health")
@@ -66,3 +74,18 @@ async def limit_upload_body(request: Request, call_next):
         if not length.isdigit() or int(length) > limit + MULTIPART_SLACK:
             return JSONResponse({"detail": detail}, status_code=413)
     return await call_next(request)
+
+
+# Последним: маршрут-ловушка не должен перекрывать ручки API. Из окружения, не из настроек: импорт не требует ключей
+static_dir = os.environ.get("STATIC_DIR")
+if static_dir:
+    app.mount("/assets", StaticFiles(directory=f"{static_dir}/assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str) -> FileResponse:
+        """Файл из public или index.html для маршрутов приложения; /api сюда не попадает: неизвестная ручка остаётся 404."""
+        if path.startswith("api/"):
+            raise HTTPException(404, "not_found")
+        root = Path(static_dir).resolve()
+        file = (root / path).resolve()
+        return FileResponse(file if file.is_file() and file.is_relative_to(root) else root / "index.html")

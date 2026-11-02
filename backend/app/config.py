@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     SESSION_SECRET: str = Field(min_length=32)  # пустой ключ = любой подделает cookie
     SESSION_DAYS: int = 30
     COOKIE_SECURE: bool = False  # True на https-проде
+    DEMO_LOGIN: bool = False  # вход в один клик: только демо-стенд с синтетикой
     COIN_START: int = 20
     COIN_DAILY: int = 5
     COIN_CAP: int = 20

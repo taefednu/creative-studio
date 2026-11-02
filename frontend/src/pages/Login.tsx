@@ -250,6 +250,30 @@ function PlatformForm({ onDone, onClose }: { onDone: (r: Role) => void; onClose:
   )
 }
 
+/** Демо-стенд для жюри: вход без паролей. Обычный стенд отвечает enabled=false, и кнопок нет. */
+function DemoButtons() {
+  const { t } = useTranslation()
+  const [enabled, setEnabled] = useState(false)
+  useEffect(() => {
+    api<{ enabled: boolean }>('/api/demo').then((r) => setEnabled(r.enabled)).catch(() => {})
+  }, [])
+  if (!enabled) return null
+  async function go(role: 'child' | 'parent' | 'teacher') {
+    await api('/api/demo/login', 'POST', { role })
+    window.location.assign(role === 'child' ? '/create' : `/${role}`)
+  }
+  return (
+    <div data-testid="demo-login" className="flex flex-wrap items-center justify-center gap-1.5 rounded-full bg-primary-soft p-1 text-sm font-extrabold text-primary">
+      <span className="px-2">{t('demo.try')}</span>
+      {(['child', 'parent', 'teacher'] as const).map((r) => (
+        <button key={r} type="button" data-testid={`demo-${r}`} onClick={() => void go(r)} className="rounded-full bg-surface px-3 py-1.5 text-heading shadow-card">
+          {t(`demo.${r}`)}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export default function Login() {
   const { t } = useTranslation()
   const { role: current, refresh } = useSession()
@@ -268,10 +292,12 @@ export default function Login() {
     <div className="flex min-h-dvh flex-col bg-bg bg-cover bg-center" style={{ backgroundImage: 'url(/art/login-bg.webp)' }}>
       <header data-testid="login-header" className="flex h-[60px] items-center justify-between border-b border-border bg-surface px-3 lg:h-16 lg:px-8">
         <Logo />
+        <div className="hidden lg:block"><DemoButtons /></div>
         <div className="rounded-full border border-border bg-surface px-2 shadow-card">
           <LangSwitch />
         </div>
       </header>
+      <div className="flex justify-center px-3 pt-3 lg:hidden"><DemoButtons /></div>
       <main className="mx-auto w-full max-w-[719px] px-3 pb-10 pt-3 lg:flex lg:max-w-[600px] lg:flex-1 lg:flex-col lg:justify-center lg:py-2">
         <div data-testid="login-card" className="rounded-card border border-border bg-surface p-3 shadow-card md:p-[29px] short:p-4">
           <div className="mb-3 grid grid-cols-3 gap-2 md:gap-3" role="tablist">
