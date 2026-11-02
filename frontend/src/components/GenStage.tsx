@@ -103,7 +103,7 @@ function useScene(
         const r = 95 + Math.sin(t * 0.6 + i) * 20
         const grad = g.createRadialGradient(x, y, 0, x, y, r)
         grad.addColorStop(0, ink)
-        grad.addColorStop(1, ink.startsWith('hsl') ? ink.replace(')', ' / 0)') : 'rgba(255, 255, 255, 0)')
+        grad.addColorStop(1, ink.startsWith('hsl') ? ink.replace(')', ' / 0)') : 'transparent')
         g.fillStyle = grad
         g.fillRect(0, 0, 160, 160)
       })

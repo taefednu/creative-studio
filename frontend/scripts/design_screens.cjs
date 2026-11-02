@@ -52,7 +52,7 @@ module.exports = {
   // партия 4в: экраны по макетам mine, classes, plans
   mine: async (p) => { await child(p); await go(p, '/my-works', 'work-card') },
   classes: async (p) => { await adult(p, 'teacher'); await go(p, '/teacher/classes', 'class-code') },
-  plans: async (p) => { await adult(p, 'parent'); await go(p, '/parent/plans', 'plan-small') },
+  plans: async (p) => { await adult(p, 'parent'); await go(p, '/parent/plans', 'plan-card') },
   login: async (p) => { await go(p, '/login', 'role-child') },
   parent: async (p) => { await adult(p, 'parent'); await go(p, '/parent', 'kid-card') },
   teacher: async (p) => { await adult(p, 'teacher'); await go(p, '/teacher', 'review-urgent') },
