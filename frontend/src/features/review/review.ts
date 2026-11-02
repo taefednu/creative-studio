@@ -15,6 +15,8 @@ export type ReviewItem = {
   image_url: string | null
   original_url?: string | null
   blurred_url?: string | null
+  /** Сказка: взрослый читает страницы перед решением. */
+  story_id?: number | null
 }
 
 const EVENT = 'review:changed'

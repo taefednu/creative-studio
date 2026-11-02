@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { agoText, filterByClass, notifyReview, reasonKeys } from '../features/review/review'
+import { loadStory } from '../features/story/story'
+import type { Story } from '../features/story/story'
 import type { ReviewItem } from '../features/review/review'
 import Avatar from './Avatar'
 
@@ -11,7 +13,7 @@ const btnMain =
 const btnApprove = 'rounded-full bg-success-soft px-3 py-2 text-sm font-extrabold text-success transition-colors duration-150 hover:bg-success hover:text-primary-fg disabled:opacity-50'
 const btnReject = 'rounded-full bg-danger-soft px-3 py-2 text-sm font-extrabold text-danger transition-colors duration-150 hover:bg-danger hover:text-primary-fg disabled:opacity-50'
 // Типы, у которых есть своя подпись «что будет после одобрения»; остальным общая
-const EFFECTS = ['prompt', 'image', 'post', 'comment', 'upload', 'submission']
+const EFFECTS = ['prompt', 'image', 'post', 'comment', 'upload', 'submission', 'story']
 const btnSide =
   'rounded-full border border-border bg-surface px-5 py-2 text-sm font-extrabold text-heading disabled:opacity-50'
 
@@ -189,6 +191,7 @@ function CompactRow({ it, kind, busy, onOpen, onAct }: RowProps) {
 function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps & { where: string; onZoom: (url: string) => void }) {
   const { t } = useTranslation()
   const ago = agoText(it.created_at, t)
+  const [reading, setReading] = useState<number | null>(null)
   const who = (
     <div className="flex min-w-0 items-center gap-2">
       <Avatar nick={it.nick} className="h-9 w-9 shrink-0" />
@@ -216,6 +219,7 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
   )
   return (
     <article data-testid="review-item" className="feed-card flex flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-card">
+      {reading !== null && <StoryReview id={reading} onClose={() => setReading(null)} />}
       <div className="relative flex h-44 bg-primary-soft">
         {it.original_url ? (
           <div data-testid="review-pair" className="flex h-full w-full gap-0.5">
@@ -230,6 +234,11 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
           </div>
         ) : it.image_url ? (
           picture(it.image_url)
+        ) : it.story_id ? (
+          <button type="button" data-testid="review-story-open" onClick={() => setReading(it.story_id ?? null)} className="m-auto flex flex-col items-center gap-2 px-4 text-center font-extrabold text-primary">
+            <img src="/art/tab-tasks.webp" alt="" className="h-14 w-14 object-contain" />
+            {t('review.readStory')}
+          </button>
         ) : (
           <p data-testid="review-text" className="m-auto line-clamp-5 break-words px-5 text-center text-lg font-bold leading-6 text-heading">
             «{it.preview_text}»
@@ -251,6 +260,40 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
         </div>
       </div>
     </article>
+  )
+}
+
+/** Сказка целиком для взрослого: всё, что написано, и всё, что уже нарисовано, чтобы решать не вслепую. */
+function StoryReview({ id, onClose }: { id: number; onClose: () => void }) {
+  const { t } = useTranslation()
+  const [story, setStory] = useState<Story | null>(null)
+  const [failed, setFailed] = useState(false)
+  useEffect(() => {
+    let alive = true
+    loadStory(id).then((s) => alive && setStory(s)).catch(() => alive && setFailed(true))
+    return () => {
+      alive = false
+    }
+  }, [id])
+  return (
+    <div data-testid="review-story" role="dialog" aria-modal="true" className="modal-bg fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-scrim p-4 backdrop-blur-sm">
+      <div className="modal-in my-auto flex w-full max-w-3xl flex-col gap-3 rounded-card bg-surface p-5 shadow-pop">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-xl font-extrabold text-heading">{story?.title ?? t('review.readStory')}</h2>
+          <button type="button" data-testid="review-story-close" onClick={onClose} className={btnSide}>{t('review.close')}</button>
+        </div>
+        {failed && <p role="alert" className="rounded-xl bg-danger-soft px-3 py-2 text-sm font-bold text-danger">{t('review.modalFailed')}</p>}
+        {story?.idea && <p className="text-sm text-muted">{t('review.storyIdea', { text: story.idea })}</p>}
+        <div className="grid gap-3 md:grid-cols-2">
+          {story?.pages.map((p) => (
+            <div key={p.n} data-testid="review-story-page" className="flex flex-col gap-2 rounded-2xl bg-primary-soft p-2">
+              {p.image_url ? <img src={p.image_url} alt="" className="aspect-square w-full rounded-xl object-cover" /> : <div className="flex aspect-square items-center justify-center rounded-xl bg-surface p-3 text-center text-sm font-bold text-muted">{t('review.storyNoImage')}</div>}
+              <p className="px-1 pb-1 text-sm font-bold text-heading">{p.text}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 

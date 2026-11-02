@@ -278,8 +278,11 @@
     "moreCoins": "Darslar uchun ko‘proq tanga: Mentorium orqali kir"
   },
   "review": {
+    "readStory": "Ertakni oʻqish",
+    "storyIdea": "Bolaning gʻoyasi: «{{text}}»",
+    "storyNoImage": "Rasm hali yoʻq",
     "zoom": "Kattaroq ochish",
-    "effect": {"prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
+    "effect": {"story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
     "title": "Ushlab turilganlar",
     "badge": "Ushlab turilgan: {{count}}",
     "okTitle": "Sizning ruxsatingizni kutmoqda",
@@ -299,7 +302,7 @@
     "now": "hozirgina",
     "childRejected": "Kattalar buni eʻlon qilmaslikka qaror qildi: «{{text}}»",
     "childRejectedNoText": "Kattalar buni eʻlon qilmaslikka qaror qildi.",
-    "types": { "prompt": "Soʻrov", "image": "Rasm", "post": "Post", "comment": "Izoh", "nickname": "Taxallus", "assignment": "Topshiriq", "submission": "Topshirilgan ish", "upload": "Yuklash" },
+    "types": { "story": "Ertak", "prompt": "Soʻrov", "image": "Rasm", "post": "Post", "comment": "Izoh", "nickname": "Taxallus", "assignment": "Topshiriq", "submission": "Topshirilgan ish", "upload": "Yuklash" },
     "where": { "class": "{{name}} sinfida", "classNoName": "Sinfda", "family": "Oila", "personal": "Shaxsiy" },
     "reasons": {
       "personal_info": "Shaxsiy maʻlumot",

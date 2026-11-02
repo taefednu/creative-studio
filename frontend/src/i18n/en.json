@@ -278,8 +278,11 @@
     "moreCoins": "More coins for lessons: sign in with Mentorium"
   },
   "review": {
+    "readStory": "Read the story",
+    "storyIdea": "The child's idea: “{{text}}”",
+    "storyNoImage": "No picture yet",
     "zoom": "Open larger",
-    "effect": {"prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
+    "effect": {"story": "Approve and the child will see the story; missing pages will be painted.", "prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
     "title": "Held for review",
     "badge": "Held: {{count}}",
     "okTitle": "Waiting for your OK",
@@ -299,7 +302,7 @@
     "now": "just now",
     "childRejected": "A grown-up decided not to publish: “{{text}}”",
     "childRejectedNoText": "A grown-up decided not to publish this.",
-    "types": { "prompt": "Prompt", "image": "Picture", "post": "Post", "comment": "Comment", "nickname": "Nickname", "assignment": "Assignment", "submission": "Submission", "upload": "Upload" },
+    "types": { "story": "Story", "prompt": "Prompt", "image": "Picture", "post": "Post", "comment": "Comment", "nickname": "Nickname", "assignment": "Assignment", "submission": "Submission", "upload": "Upload" },
     "where": { "class": "In class {{name}}", "classNoName": "In class", "family": "Family", "personal": "Personal" },
     "reasons": {
       "personal_info": "Personal info",
