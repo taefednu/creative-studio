@@ -254,6 +254,13 @@ function PlatformForm({ onDone, onClose }: { onDone: (r: Role) => void; onClose:
 }
 
 /** Демо-стенд для жюри: вход без паролей. Обычный стенд отвечает enabled=false, и кнопок нет. */
+// Пары как в жизни: семья (ребёнок и родитель) и школа (ребёнок и учитель)
+const DEMO_GROUPS = [
+  { key: 'family', roles: ['family', 'parent'] },
+  { key: 'school', roles: ['school', 'teacher'] },
+] as const
+type DemoRole = (typeof DEMO_GROUPS)[number]['roles'][number]
+
 function DemoButtons() {
   const { t } = useTranslation()
   const [enabled, setEnabled] = useState(false)
@@ -261,18 +268,34 @@ function DemoButtons() {
     api<{ enabled: boolean }>('/api/demo').then((r) => setEnabled(r.enabled)).catch(() => {})
   }, [])
   if (!enabled) return null
-  async function go(role: 'child' | 'parent' | 'teacher') {
+  async function go(role: DemoRole) {
     await api('/api/demo/login', 'POST', { role })
-    window.location.assign(role === 'child' ? '/create' : `/${role}`)
+    window.location.assign(role === 'parent' || role === 'teacher' ? `/${role}` : '/create')
   }
   return (
-    <div data-testid="demo-login" className="flex flex-wrap items-center gap-1.5 rounded-2xl bg-primary-soft p-1 text-sm font-extrabold text-primary">
-      <span className="px-2">{t('demo.try')}</span>
-      {(['child', 'parent', 'teacher'] as const).map((r) => (
-        <button key={r} type="button" data-testid={`demo-${r}`} onClick={() => void go(r)} className="rounded-full border border-border bg-surface px-3 py-1.5 text-heading">
-          {t(`demo.${r}`)}
-        </button>
-      ))}
+    <div data-testid="demo-login" className="rounded-card bg-primary-soft p-3">
+      <p className="text-base font-extrabold leading-tight text-heading">{t('demo.title')}</p>
+      <p className="mb-2 mt-0.5 text-[13px] font-semibold leading-snug text-text">{t('demo.note')}</p>
+      <div className="grid grid-cols-2 gap-3">
+        {DEMO_GROUPS.map((group) => (
+          <div key={group.key} data-testid={`demo-group-${group.key}`} className="min-w-0">
+            <p className="mb-1 text-xs font-extrabold text-primary">{t(`demo.group.${group.key}`)}</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {group.roles.map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  data-testid={`demo-${role}`}
+                  onClick={() => void go(role)}
+                  className="h-10 min-w-0 rounded-[12px] bg-primary px-0.5 text-[13px] font-extrabold leading-tight text-primary-fg"
+                >
+                  {t(role === 'family' || role === 'school' ? 'auth.roles.child' : `auth.roles.${role}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

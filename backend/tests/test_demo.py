@@ -38,7 +38,7 @@ def seeded(tmp_path, monkeypatch):
 def test_off_by_default_no_bypass(seeded):
     c = TestClient(app)
     assert c.get("/api/demo").json() == {"enabled": False}
-    for role in ("child", "parent", "teacher"):
+    for role in ("school", "family", "parent", "teacher"):
         assert c.post("/api/demo/login", json={"role": role}).status_code == 404
     assert c.get("/api/child/me").status_code == 401
 
@@ -47,8 +47,14 @@ def test_on_logs_in_and_tops_up(seeded):
     seeded.setenv("DEMO_LOGIN", "true")
     get_settings.cache_clear()
     c = TestClient(app)
-    assert c.post("/api/demo/login", json={"role": "child"}).json()["role"] == "child"
+    assert c.post("/api/demo/login", json={"role": "school"}).json()["role"] == "child"
     me = c.get("/api/child/me").json()
-    assert me["nick"] == "StarFox" and me["coins"] >= 20
+    assert me["nick"] == "SkyFox" and me["coins"] >= 20
+    assert me["class"] is not None and me["has_parent"] is False  # школьник: класс без родителя
+    kid = TestClient(app)
+    assert kid.post("/api/demo/login", json={"role": "family"}).json()["role"] == "child"
+    me = kid.get("/api/child/me").json()
+    assert me["nick"] == "Bunny" and me["coins"] >= 20
+    assert me["class"] is None and me["has_parent"] is True  # домашний: родитель без класса
     assert c.post("/api/demo/login", json={"role": "admin"}).status_code == 422
     assert TestClient(app).post("/api/demo/login", json={"role": "teacher"}).status_code == 200
