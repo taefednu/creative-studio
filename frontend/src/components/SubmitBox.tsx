@@ -14,10 +14,12 @@ type Props = {
   onDone?: () => void
   /** Большая кнопка на экране результата (в сетке карточки) или компактная в «Мои работы». */
   big?: boolean
+  /** Экран результата: одна главная кнопка, подпись можно добавить из «Мои работы». */
+  main?: boolean
 }
 
 /** «Сдать в задание»: необязательная подпись и одна кнопка; повторный клик не шлёт второй запрос. */
-export default function SubmitBox({ workId, assignment, onSupport, onDone, big }: Props) {
+export default function SubmitBox({ workId, assignment, onSupport, onDone, big, main }: Props) {
   const { t } = useTranslation()
   const [comment, setComment] = useState('')
   const [busy, setBusy] = useState(false)
@@ -58,6 +60,19 @@ export default function SubmitBox({ workId, assignment, onSupport, onDone, big }
       >
         {t({ accepted: 'task.submitDone', held: 'task.submitHeld', rejected: 'task.submitRejected' }[res])}
       </p>
+    )
+  }
+  if (main) {
+    return (
+      <div data-testid="submit-box" className="flex flex-col gap-1.5">
+        <p className="line-clamp-2 text-sm font-bold text-muted">
+          {t('task.submitFor')} <span data-testid="submit-title" className="font-extrabold text-heading">{assignment.title}</span>
+        </p>
+        <ErrorText code={err} />
+        <button type="button" data-testid="submit-task" disabled={busy} onClick={() => void send()} className="btn-press h-14 rounded-2xl bg-primary px-4 text-lg font-extrabold text-primary-fg disabled:opacity-60">
+          {t('task.submit')}
+        </button>
+      </div>
     )
   }
   return (

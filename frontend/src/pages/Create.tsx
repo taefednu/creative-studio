@@ -127,7 +127,6 @@ export default function Create() {
       <WorkView
         work={work}
         onAgain={() => navigate(paramTask ? `/create?assignment=${paramTask}` : '/create')}
-        onMine={() => navigate('/my-works')}
         onChoose={setLoaded}
         templates={withCustom}
         assignmentId={assignmentId}
@@ -221,8 +220,6 @@ type DrawingFlow = { drawing?: string; auto?: boolean }
 
 const ICON = 'h-6 w-6 shrink-0 lg:h-9 lg:w-9'
 const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
-const btnOutline =
-  'flex h-[52px] items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-3 text-base font-extrabold text-heading shadow-card lg:h-11 lg:text-sm whitespace-nowrap'
 
 /** Правая колонка: робот, подпись, заголовок, текст. Одна на готовую работу, «Давай так», отказ, задержку и сбой. */
 function Side({ children }: { children: ReactNode }) {
@@ -273,7 +270,6 @@ function StyleSample({ tpl, fill, children }: { tpl: TemplateInfo | undefined; f
 function WorkView({
   work,
   onAgain,
-  onMine,
   onChoose,
   coinLine,
   templates,
@@ -281,7 +277,6 @@ function WorkView({
 }: {
   work: Work
   onAgain: () => void
-  onMine: () => void
   onChoose: (w: Work) => void
   coinLine: string
   templates: TemplateInfo[] | undefined
@@ -410,8 +405,8 @@ function WorkView({
 
   if (s === 'ready' && work.image_url) {
     return (
-      <div data-testid="work-ready" className="mx-auto max-w-[1672px] lg:flex lg:justify-center lg:gap-5">
-        <div data-testid="result-image" className="relative mt-3 overflow-hidden rounded-3xl border-4 border-primary bg-surface lg:mt-0 lg:aspect-square lg:h-[calc(100dvh-112px)] lg:max-h-[700px] lg:shrink-0">
+      <div data-testid="work-ready" className="mx-auto -mb-7 max-w-[1672px] lg:mb-0 lg:flex lg:items-center lg:justify-center lg:gap-10">
+        <div data-testid="result-image" className="relative mt-1 overflow-hidden rounded-[28px] bg-surface shadow-pop lg:mt-0 lg:aspect-square lg:h-[calc(100dvh-112px)] lg:max-h-[700px] lg:shrink-0">
           <img data-testid="result-img" src={work.image_url} alt="" className={`aspect-square w-full object-cover lg:h-full ${sawDrawing && !revealed ? 'gen-reveal' : ''}`} />
           <span className={`absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-success-soft py-1 pl-2 pr-3 text-sm font-extrabold text-success lg:text-base ${sawDrawing ? 'gen-badge' : ''}`}><Icon name="check" />{t('create.checkedByAi')}</span>
           {work.hero_of_work_id && (
@@ -421,31 +416,25 @@ function WorkView({
             </figure>
           )}
         </div>
-        <aside data-testid="result-side" className="mt-3 flex min-w-0 flex-col gap-2.5 rounded-[28px] border border-border bg-surface p-4 shadow-card lg:mt-0 lg:w-[420px] lg:p-5">
-          <img data-testid="side-robot" src="/art/robot-brush.webp" alt="" className="mx-auto hidden h-[clamp(64px,12vh,160px)] object-contain lg:block" />
-          <h1 data-testid="result-title" className="text-[28px] font-extrabold leading-9 text-heading">{t(upload ? 'create.uploadReadyTitle' : work.kind === 'alive' ? 'create.aliveTitle' : 'create.readyTitle')}</h1>
-          {tpl && <p data-testid="style-chip" className="text-sm font-bold text-muted">{t('create.styleLabel')}: {t(`templates.${tpl.id}`)}</p>}
-          {work.rewrite_text && <SideText>{t('create.rewrite', { text: work.rewrite_text })}</SideText>}
-          {blurred.map((c) => <SideText key={c} testid={`blurred-${c}`}>{t(`create.blurred.${c}`)}</SideText>)}
-          <div className="flex-1" />
+        <section data-testid="result-side" className="mt-3 flex min-w-0 flex-col gap-2 lg:mt-0 lg:w-[400px] lg:gap-3">
+          <h1 data-testid="result-title" className="text-balance text-[28px] font-black leading-8 tracking-tight text-heading lg:mb-3 lg:text-5xl lg:leading-[52px]">{t(upload ? 'create.uploadReadyTitle' : work.kind === 'alive' ? 'create.aliveTitle' : 'create.readyTitle')}</h1>
+          {work.rewrite_text && <p className="text-base text-muted lg:text-lg">{t('create.rewrite', { text: work.rewrite_text })}</p>}
+          {blurred.map((c) => <p key={c} data-testid={`blurred-${c}`} className="text-base text-muted lg:text-lg">{t(`create.blurred.${c}`)}</p>)}
           {upload && (
-            <button type="button" data-testid="hero-go" disabled={heroBusy} onClick={() => void bringAlive(heroRid)} className="hero-cta flex h-14 items-center justify-center gap-2 rounded-full bg-primary text-lg font-extrabold text-primary-fg shadow-card disabled:opacity-60">
+            <button type="button" data-testid="hero-go" disabled={heroBusy} onClick={() => void bringAlive(heroRid)} className="btn-press flex h-14 items-center justify-center gap-2 rounded-2xl bg-primary text-lg font-extrabold text-primary-fg disabled:opacity-60">
               {t('story.hero')}
               <img src="/art/coin.webp" alt="" className="h-7 w-7" />
               {price}
             </button>
           )}
           {err && <ErrorText code={err} />}
+          {task && <SubmitBox main workId={work.id} assignment={task} onSupport={() => setSupportFor(work.id)} />}
+          <PublishBox main second={!!task} workId={work.id} onSupport={() => setSupportFor(work.id)} />
           {(work.kind === 'alive' || work.kind === 'image' || !work.kind) && (
             <StoryForm heroId={work.id} price={storyPrice} onCreated={(id) => navigate(`/story/${id}`)} />
           )}
-          {task && <SubmitBox workId={work.id} assignment={task} onSupport={() => setSupportFor(work.id)} />}
-          <PublishBox workId={work.id} onSupport={() => setSupportFor(work.id)} />
-          <div className="grid grid-cols-2 gap-2">
-            <button type="button" data-testid="draw-more" onClick={onAgain} className={btnOutline}>{t('create.drawMore')}</button>
-            <button type="button" data-testid="to-mine" onClick={onMine} className={btnOutline}>{t('create.toMine')}</button>
-          </div>
-        </aside>
+          <button type="button" data-testid="draw-more" onClick={onAgain} className="py-2 text-base font-extrabold text-muted hover:text-heading">{t('create.drawMore')}</button>
+        </section>
       </div>
     )
   }
