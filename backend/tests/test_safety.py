@@ -97,7 +97,7 @@ def _bad_payloads():
 @pytest.mark.parametrize("payload", _bad_payloads())
 @pytest.mark.parametrize("kind", ["prompt", "comment", "caption", "nickname", "assignment"])
 def test_invalid_response_holds(payload, kind):
-    d, _ = run(kind, payload, payload)  # сбой повторяется один раз
+    d, _ = run(kind, payload)
     assert d.action == "hold" and d.model_error and d.reason_codes == ["invalid_response"]
 
 
@@ -490,17 +490,14 @@ class Flaky(Script):
         return httpx.Response(200, json=_chat(json.dumps(self.answers.pop(0))))
 
 
-def test_failed_check_retried_once_and_real_answer_used():
+def test_failed_check_is_not_retried_goes_to_adult():
+    # Evals 04.11: сбой падает почти только на опасное, повтор один раз вернул «можно» и пропустил его
     s = Flaky(verdicts())
-    assert check_image(b"\xff\xd8jpg", "upload", "ru", client=client_for(s)).action == "allow"
-    assert len(s.requests) == 2
-
-
-def test_two_failures_still_hold():
-    s = Flaky()
-    s.handler = lambda request: (s.requests.append(1), httpx.Response(400, json={"error": {"code": "x"}}))[1]
     d = check_image(b"\xff\xd8jpg", "upload", "ru", client=client_for(s))
-    assert d.action == "hold" and d.model_error and len(s.requests) == 2
+    assert d.action == "hold" and d.model_error and len(s.requests) == 1
+    s = Flaky(verdicts())
+    d = check_text("привет", "comment", "ru", client=client_for(s))
+    assert d.action == "hold" and d.model_error and len(s.requests) == 1
 
 
 def test_real_unsafe_answer_is_never_asked_again():

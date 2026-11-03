@@ -85,7 +85,8 @@ def _log(d: Decision, kind: str, lang: str) -> Decision:
 
 def check_text(text: str, kind: Kind, lang: str, *, client: MetaClient | None = None) -> Decision:
     try:
-        d = _with_retry(lambda: _run(text_messages(text, kind, lang), kind, lang, client, True, text))
+        # Сбой не повторяем: он падает почти только на опасное, повтор пропускал его к ребёнку (evals 04.11)
+        d = _run(text_messages(text, kind, lang), kind, lang, client, True, text)
     except Exception:  # noqa: BLE001
         d = hold_error(kind)
     return _log(d, kind, lang)
@@ -127,19 +128,12 @@ def no_readable_text(image_bytes: bytes, *, client: MetaClient | None = None) ->
         return False
 
 
-def _with_retry(run: Callable[[], Decision]) -> Decision:
-    """Сбой модели (чаще таймаут) повторяем один раз: иначе проверка уходит взрослому зря.
-    Настоящий ответ не переспрашиваем: иначе «небезопасно» можно было бы выпросить повтором."""
-    d = run()
-    return run() if d.model_error else d
-
-
 def check_image(
     image_bytes: bytes, kind: Kind, lang: str, *, client: MetaClient | None = None
 ) -> Decision:
     try:
         url = _data_url(image_bytes)
-        d = _with_retry(lambda: _run(image_messages(url, kind, lang), kind, lang, client, False))
+        d = _run(image_messages(url, kind, lang), kind, lang, client, False)
     except Exception:  # noqa: BLE001
         d = hold_error(kind)
     return _log(d, kind, lang)
