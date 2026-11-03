@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { CSSProperties, FormEvent, ReactNode } from 'react'
-import { flushSync } from 'react-dom'
+import { createPortal, flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
 import Avatar from '../components/Avatar'
@@ -266,11 +266,13 @@ function KidWorks({ kid }: { kid: Kid }) {
           </button>
         ))}
       </div>
-      {post !== null && <PostModal postId={post} isChild={false} onClose={() => setPost(null)} onChanged={reload} />}
-      {zoom && (
+      {/* Окна в body: галерея лежит в своём слое (плавная смена ребёнка), и окно осталось бы под соседями */}
+      {post !== null && createPortal(<PostModal postId={post} isChild={false} onClose={() => setPost(null)} onChanged={reload} />, document.body)}
+      {zoom && createPortal(
         <button type="button" data-testid="kid-work-zoom" aria-label={t('review.close')} onClick={() => setZoom(null)} className="modal-bg fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm">
           <img src={zoom} alt="" className="modal-in max-h-full max-w-full rounded-2xl object-contain shadow-pop" />
-        </button>
+        </button>,
+        document.body,
       )}
     </>
   )

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
 import { agoText, effectKey, filterByClass, notifyReview, nothingBlurred, reasonKeys, stackOrder } from '../features/review/review'
@@ -138,7 +139,8 @@ export default function ReviewQueue({
           ))}
         </div>
       )}
-      {zoom && (
+      {/* Окна в body: блок может лежать в своём слое (плавная смена ребёнка), и окно осталось бы под шапкой и соседями */}
+      {zoom && createPortal(
         <button
           type="button"
           data-testid="review-zoom"
@@ -147,9 +149,10 @@ export default function ReviewQueue({
           className="modal-bg fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm"
         >
           <img src={zoom} alt="" className="modal-in max-h-full max-w-full rounded-2xl object-contain shadow-pop" />
-        </button>
+        </button>,
+        document.body,
       )}
-      {open && <UrgentModal item={open} busy={busy === open.id} failed={failed} onClose={() => setOpen(null)} onSeen={() => void act(open, 'seen')} />}
+      {open && createPortal(<UrgentModal item={open} busy={busy === open.id} failed={failed} onClose={() => setOpen(null)} onSeen={() => void act(open, 'seen')} />, document.body)}
     </section>
   )
 }
@@ -199,7 +202,7 @@ function ReviewCard({ it, kind, where, busy, big = false, onOpen, onZoom, onAct 
   )
   return (
     <article data-testid="review-item" className={big ? 'grid gap-2 md:gap-3 lg:grid-cols-4 xl:grid-cols-5' /* сетка галереи работ под блоком: края совпадают с плитками */ : 'feed-card flex flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-card'}>
-      {reading !== null && <StoryReview id={reading} onClose={() => setReading(null)} />}
+      {reading !== null && createPortal(<StoryReview id={reading} onClose={() => setReading(null)} />, document.body)}
       <div className={`relative flex bg-primary-soft ${big ? 'h-[34dvh] min-h-[220px] overflow-hidden rounded-[22px] border border-border shadow-card lg:col-span-2 lg:aspect-square lg:h-auto xl:col-span-3 xl:aspect-[3/2]' : 'h-44'}`}>
         {big && it.original_url && blurred ? (
           <CompareSlider original={it.original_url} blurred={blurred} onZoom={onZoom} />
