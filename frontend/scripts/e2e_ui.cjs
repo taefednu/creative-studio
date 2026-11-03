@@ -31,15 +31,23 @@ async function register(p, role, email) {
   await T(p, 'email').fill(email)
   await T(p, 'password').fill(PW)
   await T(p, 'email-submit').click()
-  await p.waitForURL(`**/${role}`, { timeout: 20000 })
+  await p.waitForURL(new RegExp(`/${role}(/|$)`), { timeout: 20000 })
 }
 
 async function addKid(p, nick) {
-  if (await T(p, 'kid-nick').count() === 0) await T(p, 'add-child-tile').click()
+  await T(p, 'add-child-tile').click() // окно добавления ребёнка (вкладка «Новый»)
   await T(p, 'kid-nick').fill(nick)
   for (const i of [3, 7, 1]) await T(p, `pic-${i}`).click()
   await T(p, 'kid-submit').click()
-  await T(p, `kid-${nick}`).waitFor({ timeout: 40000 })
+  await T(p, 'add-kid-modal').waitFor({ state: 'detached', timeout: 40000 })
+  await selectKid(p, nick)
+}
+
+// Выбранный ребёнок виден в заголовке kid-panel; остальные кружками в kid-list (кнопка с title = ник)
+async function selectKid(p, nick) {
+  const title = T(p, 'kid-panel').getByTestId('page-title')
+  if ((await title.count()) === 0 || (await title.innerText()).trim() !== nick) await T(p, 'kid-list').locator(`[title="${nick}"]`).click()
+  await p.waitForFunction((n) => document.querySelector('[data-testid=kid-panel] [data-testid=page-title]')?.textContent?.trim() === n, nick, { timeout: 15000 })
 }
 
 async function childLogin(p, nick) {
@@ -48,14 +56,17 @@ async function childLogin(p, nick) {
   await T(p, 'nick').fill(nick)
   for (const i of [3, 7, 1]) await T(p, `pic-${i}`).click()
   await T(p, 'child-submit').click()
-  await T(p, 'create-title').waitFor({ timeout: 20000 })
+  await T(p, 'coins').waitFor({ timeout: 20000 }) // ребёнок попадает на ленту, не на «Создать»
 }
 
+// Ребёнок с родителем вступает в класс только ручкой (формы кода в меню у него больше нет)
 async function joinClass(p, code) {
-  await T(p, 'class-code-input').fill(code)
-  await T(p, 'class-code-input').press('Enter')
+  const r = await p.request.post(BASE + '/api/child/join-class', { data: { code } })
+  ok('ребёнок вступил в класс ручкой', r.ok(), r.status())
+  await p.goto(BASE + '/')
   await T(p, 'avatar-me').click()
   await T(p, 'my-class').waitFor({ timeout: 15000 })
+  ok('в меню аватара нет формы кода у семейного ребёнка', (await T(p, 'join-class').count()) === 0)
   await p.keyboard.press('Escape')
 }
 
@@ -74,12 +85,13 @@ async function main() {
   const B = `MoonCat${tag}`
 
   await register(teacher, 'teacher', `t${tag}@example.com`)
-  await teacher.goto(BASE + '/teacher/classes') // создание класса переехало на вкладку «Классы»
+  ok('учитель после входа на вкладке «Классы»', teacher.url().includes('/teacher/classes'), teacher.url())
   await T(teacher, 'new-class').click()
   await T(teacher, 'class-name').fill('5B')
   await T(teacher, 'class-create').click()
+  await T(teacher, 'room-inside').waitFor({ timeout: 30000 }) // новый класс открывается сразу, код внутри
   await T(teacher, 'class-code').first().waitFor({ timeout: 30000 })
-  const code = (await T(teacher, 'class-code').first().innerText()).trim()
+  const code = ((await T(teacher, 'class-code').first().getAttribute('aria-label')) || '').trim()
   ok('учитель создал класс на экране', code.length === 6, code)
 
   await register(parent, 'parent', `p${tag}@example.com`)
@@ -88,13 +100,17 @@ async function main() {
   ok('родитель завёл двух детей', true)
 
   // QR настоящим кликом: токен из ответа сервера, вход во втором браузере
+  await selectKid(parent, B)
   const qrResp = parent.waitForResponse((r) => r.url().includes('/qr') && r.request().method() === 'POST')
   await T(parent, `qr-${B}`).click()
   const token = (await (await qrResp).json()).token
+  await T(parent, 'qr-modal').waitFor({ timeout: 10000 })
   await T(parent, 'qr-box').waitFor({ timeout: 10000 })
-  ok('QR показан родителю', true)
+  ok('QR показан родителю в окне', true)
+  await parent.keyboard.press('Escape')
+  await T(parent, 'qr-modal').waitFor({ state: 'detached', timeout: 5000 })
   await b.goto(`${BASE}/qr?token=${encodeURIComponent(token)}`)
-  await T(b, 'create-title').waitFor({ timeout: 20000 })
+  await T(b, 'coins').waitFor({ timeout: 20000 }) // после входа ребёнок на ленте
   ok('вход ребёнка по QR настоящим переходом', true)
   const c2 = await ctx(browser)
   await c2.goto(`${BASE}/qr?token=${encodeURIComponent(token)}`)
@@ -120,30 +136,34 @@ async function main() {
   await a.screenshot({ path: `${OUT}/a-result-1672.png` })
   ok('баланс 19 после картинки', (await T(a, 'coins').innerText()).includes('19'), await T(a, 'coins').innerText())
 
-  // Публикация с контактом → задержано → учитель одобряет
-  await T(a, 'publish-class').click()
-  await T(a, 'audience-class').click().catch(() => {})
+  // Публикация с контактом: строка «В класс» действует сразу, подпись пишется до неё → задержано → учитель одобряет
   await T(a, 'caption-input').fill('пиши мне в тг @fake_cat_00')
-  await T(a, 'publish-send').click()
-  await T(a, 'publish-form').waitFor({ state: 'detached', timeout: 40000 }).catch(() => {})
-  await a.waitForTimeout(500)
+  await T(a, 'publish-class').click()
+  await a.locator('[data-testid=publish-class][data-state=waiting]').waitFor({ timeout: 40000 })
+  ok('у ребёнка строка «В класс» ждёт учителя, а не «выложено»', true)
   await a.screenshot({ path: `${OUT}/a-held-1672.png` })
   await b.goto(BASE + '/')
+  await T(b, 'feed-class').click() // лента по умолчанию «Общая», пост класса лежит на вкладке «Мой класс»
   await T(b, 'feed-empty').waitFor({ timeout: 15000 })
   ok('одноклассник задержанный пост не видит: лента загружена и пуста', (await T(b, 'post-card').count()) === 0, await T(b, 'post-card').count())
   await b.goto(BASE + '/no-such-page')
   await T(b, 'feed-empty').waitFor({ timeout: 15000 })
   ok('неверный адрес ведёт на главную, а не на пустой экран', true, b.url())
 
-  await teacher.goto(BASE + '/teacher') // очередь на вкладке «Проверка»
-  await T(teacher, 'review-approve').first().waitFor({ timeout: 15000 })
-  ok('у учителя карточка «Задержано»', true, await T(teacher, 'review-reason').first().innerText())
+  await teacher.goto(BASE + '/teacher/classes')
+  await T(teacher, 'room-5B').waitFor({ timeout: 15000 })
+  ok('у класса плашка «ждут проверки»', (await teacher.locator('[data-testid^=room-waiting-]').count()) === 1)
+  await T(teacher, 'room-5B').click()
+  await T(teacher, 'review-stack').waitFor({ timeout: 15000 })
+  ok('у учителя в классе стопка «Задержано»', true, await T(teacher, 'review-reason').first().innerText())
+  ok('в классе нет «всё чисто», пока есть что решить', (await T(teacher, 'room-clear').count()) === 0)
   await teacher.screenshot({ path: `${OUT}/teacher-1672.png` })
   await T(teacher, 'review-approve').first().click()
-  await T(teacher, 'review-empty').waitFor({ timeout: 15000 })
-  ok('«Одобрить» убрал карточку', true)
+  await T(teacher, 'room-clear').waitFor({ timeout: 15000 })
+  ok('«Одобрить» убрал карточку: в классе «всё чисто»', (await T(teacher, 'review-stack').count()) === 0)
 
   await b.reload()
+  await T(b, 'feed-class').click()
   try {
     await T(b, 'post-card').first().waitFor({ timeout: 15000 })
   } catch (e) {
@@ -168,40 +188,50 @@ async function main() {
   ok('panel-style на ленте меняет выбор', (await T(b, 'panel-style').getAttribute('data-value')) === 'paper')
   await T(b, 'tab-create').click()
   await T(b, 'tpl-clay').click()
-  ok('panel-style следует за плиткой на «Создать»', (await T(b, 'panel-style').getAttribute('data-value')) === 'clay')
-  await pick(b, 'panel-style', 'paper')
-  ok('panel-style меняет выбранную плитку', (await T(b, 'tpl-paper').getAttribute('aria-pressed')) === 'true')
+  ok('плитка стиля на «Создать» выбирается кликом', (await T(b, 'tpl-clay').getAttribute('aria-pressed')) === 'true')
+  ok('на «Создать» нет выбора стиля panel-style: стиль выбирают плиткой', (await T(b, 'panel-style').count()) === 0, await T(b, 'panel-style').count())
   // Задание через экран учителя (живая проверка текста), не через fetch
   const taskTitle = `Нарисуй героя сказки ${tag}`
-  await teacher.goto(BASE + '/teacher/tasks')
+  await teacher.goto(BASE + '/teacher/classes')
+  await T(teacher, 'room-5B').click()
+  await T(teacher, 'class-tasks').waitFor({ timeout: 15000 })
+  await T(teacher, 'task-new').click()
+  await T(teacher, 'task-form').waitFor({ timeout: 10000 })
   await T(teacher, 'task-title').fill(taskTitle)
   await T(teacher, 'task-description').fill('Герой из сказки на уроке')
   await pick(teacher, 'task-due', (await optionValues(teacher, 'task-due'))[3]) // пресет «Через неделю»
   await T(teacher, 'task-create').click()
   await T(teacher, 'assignment-card').filter({ hasText: taskTitle }).waitFor({ timeout: 60000 })
-  ok('учитель создал задание на экране «Задания»', true)
-  await b.goto(BASE + '/')
-  await T(b, 'task-start').click()
+  ok('учитель создал задание внутри класса', true)
+  await b.goto(BASE + '/create')
+  await T(b, 'task-ribbon').waitFor({ timeout: 10000 })
+  await T(b, 'task-pill').filter({ hasText: taskTitle }).click()
   await b.waitForURL('**/create?assignment=*', { timeout: 10000 })
-  ok('task-start ведёт на /create?assignment', /assignment=\d+/.test(b.url()), b.url())
-  await T(b, 'task-strip').waitFor({ timeout: 10000 })
-  ok('на «Создать» строка задания без кнопки', (await T(b, 'task-start').count()) === 0)
+  ok('task-pill ведёт на /create?assignment', /assignment=\d+/.test(b.url()), b.url())
+  await b.waitForFunction((t) => document.querySelector('[data-testid=create-title]')?.textContent?.includes(t), taskTitle, { timeout: 10000 })
+  ok('на «Создать» в заголовке название задания', true)
   await b.goto(BASE + '/tasks')
   await T(b, 'task-card').filter({ hasText: taskTitle }).getByTestId('task-draw').click()
   await T(b, 'tpl-clay').click()
   await T(b, 'draw').click()
   await T(b, 'submit-task').waitFor({ timeout: 120000 })
-  await T(b, 'submit-comment').fill('мой герой')
   await T(b, 'submit-task').click()
   await Promise.race([T(b, 'submit-done').waitFor({ timeout: 60000 }), T(b, 'submit-held').waitFor({ timeout: 60000 })])
   ok('ребёнок нарисовал и сдал в задание: «Сдано» или «на проверке»', true, await b.getByTestId('submit-box').count() === 0 ? 'итог показан' : '')
-  await teacher.goto(BASE + '/teacher/tasks')
+  await teacher.goto(BASE + '/teacher/classes')
+  await T(teacher, 'room-5B').click()
   await T(teacher, 'assignment-card').filter({ hasText: taskTitle }).click()
   await T(teacher, 'submission').filter({ hasText: B }).first().waitFor({ timeout: 15000 })
   ok('учитель видит сдачу ребёнка в галерее', true)
   await b.goto(BASE + '/')
   await T(b, 'avatar-me').click()
-  ok('меню аватара: ник, класс и выход', (await T(b, 'my-nick').isVisible()) && (await T(b, 'my-class').isVisible()) && (await T(b, 'logout').isVisible()))
+  ok('меню аватара: ник, профиль, класс и выход', (await T(b, 'my-nick').isVisible()) && (await T(b, 'profile-open').isVisible()) && (await T(b, 'my-class').isVisible()) && (await T(b, 'logout').isVisible()))
+  await T(b, 'profile-open').click()
+  await T(b, 'profile-window').waitFor({ timeout: 10000 })
+  ok('«Профиль» открывает окно с ником', (await T(b, 'profile-nick').inputValue()) === B)
+  await b.keyboard.press('Escape')
+  ok('Esc закрывает окно профиля', (await T(b, 'profile-window').count()) === 0)
+  await T(b, 'avatar-me').click()
   await b.keyboard.press('Escape')
   ok('Esc закрывает меню аватара', (await T(b, 'my-nick').count()) === 0)
   const c3 = await ctx(browser)
@@ -215,6 +245,8 @@ async function main() {
   await noScroll(b, 'лента 390')
 
   // Реакция и «Скажи добрее?» настоящими кликами
+  await b.goto(BASE + '/')
+  await T(b, 'feed-class').click()
   await T(b, 'post-card').first().click()
   await T(b, 'post-modal').waitFor({ timeout: 10000 })
   await T(b, 'react-heart').click()
@@ -234,7 +266,7 @@ async function main() {
 
   // Самоповреждение: тёплый экран, срочная карточка взрослым
   await b.goto(BASE + '/create')
-  await T(b, 'prompt-input').fill('я хочу себя поранить')
+  await T(b, 'prompt-input').fill('мне очень грустно, я не хочу жить')
   await T(b, 'tpl-clay').click()
   await T(b, 'draw').click()
   await b.waitForTimeout(500)
@@ -242,12 +274,15 @@ async function main() {
   const warm = await T(b, 'work-support').innerText()
   ok('ребёнку тёплый ответ без «заблокировано»', !/заблок|ошибк|нельзя|дружеская|иначе/i.test(warm), warm)
   await b.screenshot({ path: `${OUT}/b-support-390.png` })
-  await teacher.goto(BASE + '/teacher') // очередь на вкладке «Проверка»
+  await teacher.goto(BASE + '/teacher/classes') // срочное над экраном любой страницы учителя
   await T(teacher, 'review-urgent-note').first().waitFor({ timeout: 15000 })
   ok('у учителя срочная карточка', true)
   ok('в срочной карточке нет «Одобрить»', (await T(teacher, 'review-approve').count()) === 0, await T(teacher, 'review-approve').count())
-  const tText = await T(teacher, 'review').innerText()
-  ok('текста ребёнка в списке нет', !tText.includes('поранить'))
+  const tText = await T(teacher, 'review').first().innerText()
+  ok('текста ребёнка в списке нет', !tText.includes('не хочу жить'))
+  await T(teacher, 'room-5B').click()
+  await T(teacher, 'room-urgent-note').waitFor({ timeout: 15000 })
+  ok('в классе при одном срочном нет «всё чисто»', (await T(teacher, 'room-clear').count()) === 0)
   await parent.reload()
   await T(parent, 'review-urgent-note').first().waitFor({ timeout: 15000 })
   ok('у родителя срочная карточка', true)
