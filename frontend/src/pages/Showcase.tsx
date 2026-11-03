@@ -61,7 +61,7 @@ export default function Showcase() {
             kinds={['best']}
             title={t('showcase.title')}
             guest
-            child={templates ? { templates, onStyle: setPicked } : undefined}
+            child={{ templates: templates ?? [], onStyle: setPicked }}
           />
           {templates && <CreatePanel guest floating templates={templates} price={tplData?.price} tpl={tpl} onTpl={setPicked} />}
         </main>

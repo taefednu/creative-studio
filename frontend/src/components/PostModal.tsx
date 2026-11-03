@@ -8,6 +8,7 @@ import type { CommentResult, Post, PostComment, ReactionKey } from '../features/
 import { loadTemplates } from '../features/works/works'
 import { useLoad } from '../useLoad'
 import Avatar from './Avatar'
+import FeedImage from './FeedImage'
 import StoryBook from './StoryBook'
 import ChipSelect from './ChipSelect'
 import ErrorText, { errorKey } from './ErrorText'
@@ -287,7 +288,14 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
               <StoryBook compact title={post.story.title} pages={post.story.pages.map((p, i) => ({ text: p.text, url: `/api/posts/${post.id}/story/${i + 1}` }))} />
             </div>
           )}
-          {post && !post.story && <img src={post.image_url} alt="" className="aspect-square w-full object-cover lg:aspect-auto lg:h-full" data-testid="modal-image" />}
+          {!post && <span className="skeleton block aspect-square w-full lg:absolute lg:inset-0 lg:aspect-auto" />}
+          {post && !post.story && (
+            <div className="relative aspect-square w-full lg:absolute lg:inset-0 lg:aspect-auto">
+              {/* превью уже есть из ленты: окно не пустое, пока идёт большая картинка */}
+              <img src={`${post.image_url}?thumb=1`} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <FeedImage src={post.image_url} alt="" eager testid="modal-image" className="relative h-full w-full object-cover" />
+            </div>
+          )}
           <span className={`absolute left-3 rounded-full ${post?.story ? 'top-3' : 'bottom-3'} bg-success-soft px-3 py-1 text-sm font-extrabold text-success lg:bottom-4 lg:left-4 lg:text-xl`}>
             {t('create.checkedByAi')}
           </span>

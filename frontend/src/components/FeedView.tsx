@@ -5,6 +5,7 @@ import { REACTIONS, byStyle, captionOf, cardRatio, feedUrl, toColumns } from '..
 import type { FeedKind, FeedPage, Post } from '../features/feed/feed'
 import type { TemplateInfo } from '../features/works/works'
 import Avatar from './Avatar'
+import FeedImage from './FeedImage'
 import ChipSelect from './ChipSelect'
 import PostModal from './PostModal'
 import TeacherTask from './TeacherTask'
@@ -17,20 +18,6 @@ type Props = {
   child?: { templates: TemplateInfo[]; onStyle: (id: string) => void }
   /** Витрина для гостя: та же сетка, но без строки задания, комментариев и реакций. */
   guest?: boolean
-}
-
-/** Первые ряды грузим сразу, остальные при подходе к экрану; картинка проявляется, а не выскакивает. */
-function CardImage({ src, alt, eager, className }: { src: string; alt: string; eager: boolean; className: string }) {
-  return (
-    <img
-      src={src}
-      alt={alt}
-      loading={eager ? 'eager' : 'lazy'}
-      decoding="async"
-      className={`feed-img ${className}`}
-      onLoad={(e) => e.currentTarget.classList.add('feed-img-on')}
-    />
-  )
 }
 
 // Ширина экрана → число колонок, снизу вверх: как брейкпоинты md, lg, xl
@@ -48,6 +35,25 @@ function useColumnCount() {
     return () => window.removeEventListener('resize', onResize)
   }, [])
   return count
+}
+
+const SKELETON_ROWS = 4
+
+/** Места под ещё не пришедшие карточки: той же формы, что настоящие, чтобы лента не прыгала. */
+export function FeedSkeleton({ square }: { square?: boolean }) {
+  const count = useColumnCount()
+  const fake = Array.from({ length: count * SKELETON_ROWS }, (_, i) => ({ id: i + 1 }) as Post)
+  return (
+    <div data-testid="feed-skeleton" aria-hidden="true" className="mt-2 flex items-start gap-2 lg:gap-3">
+      {toColumns(fake, count).map((col, c) => (
+        <div key={c} className="flex min-w-0 flex-1 flex-col gap-2 lg:gap-3">
+          {col.map((p) => (
+            <div key={p.id} className="skeleton rounded-card" style={{ aspectRatio: square ? '1 / 1' : cardRatio(p.id) }} />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 /** Лента (docs/design/feed.jpg): «кирпичная» сетка, клик по карточке — работа поверх. Новые страницы подгружаются при прокрутке. */
@@ -76,11 +82,13 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
 
   const count = useColumnCount()
   const loading = useRef(false)
+  const [fetching, setFetching] = useState(false)
   const moreRef = useRef<HTMLButtonElement>(null)
 
   const more = useCallback(async () => {
     if (loading.current) return
     loading.current = true
+    setFetching(true)
     try {
       const p = await api<FeedPage>(feedUrl(kind, classId, cursor))
       setPage((x) => (x?.key === key ? { ...x, items: [...x.items, ...p.items], cursor: p.next_cursor } : x))
@@ -88,6 +96,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
       // кнопка остаётся: ребёнок может нажать ещё раз
     } finally {
       loading.current = false
+      setFetching(false)
     }
   }, [kind, classId, cursor, key])
 
@@ -172,6 +181,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
           {t('panel.noStyleMatch')}
         </p>
       )}
+      {!loaded && <FeedSkeleton square={!child} />}
       <div data-testid="feed-grid" className="mt-2 flex items-start gap-2 lg:gap-3">
         {toColumns(shown, count).map((col, c) => (
         <div key={c} className="flex min-w-0 flex-1 flex-col gap-2 lg:gap-3">
@@ -185,7 +195,9 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
               onClick={() => setOpen(p.id)}
               className="feed-card block w-full overflow-hidden rounded-card border border-border bg-primary-soft text-left shadow-card"
             >
-              <CardImage src={`${p.image_url}?thumb=1`} alt={captionOf(p, i18n.language) ?? ''} eager={row < 3} className="w-full object-cover" />
+              <span className="relative block aspect-square">
+                <FeedImage src={`${p.image_url}?thumb=1`} alt={captionOf(p, i18n.language) ?? ''} eager={row < 3} className="h-full w-full object-cover" />
+              </span>
               <div className="px-3 py-2">
                 <p className="truncate text-sm font-extrabold text-heading">{p.nick}</p>
                 {p.caption && <p className="text-sm text-text">{captionOf(p, i18n.language)}</p>}
@@ -207,10 +219,10 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
             aria-label={p.caption ? `${p.nick}: ${captionOf(p, i18n.language)}` : p.nick}
             title={p.nick}
             onClick={() => setOpen(p.id)}
-            style={{ aspectRatio: cardRatio(p.id), animationDelay: row < 2 ? `${(row * count + c) * 40}ms` : undefined }}
+            style={{ aspectRatio: cardRatio(p.id) }}
             className="feed-card group relative block w-full overflow-hidden rounded-card bg-primary-soft text-left shadow-card"
           >
-            <CardImage src={`${p.image_url}?thumb=1`} alt={captionOf(p, i18n.language) ?? ''} eager={row < 3} className="h-full w-full object-cover group-hover:scale-105" />
+            <FeedImage src={`${p.image_url}?thumb=1`} alt={captionOf(p, i18n.language) ?? ''} eager={row < 3} className="h-full w-full object-cover group-hover:scale-105" />
             {p.status === 'held' && !p.support && (
               <span className="absolute inset-x-2 top-2 rounded-xl bg-scrim px-3 py-1.5 text-xs font-bold text-primary-fg">
                 {t('feed.heldMark')}
@@ -238,6 +250,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
         </div>
         ))}
       </div>
+      {fetching && <FeedSkeleton square={!child} />}
       {cursor !== null && (
         <button
           ref={moreRef}
