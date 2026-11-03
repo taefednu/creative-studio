@@ -291,9 +291,7 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
           {!post && <span className="skeleton block aspect-square w-full lg:absolute lg:inset-0 lg:aspect-auto" />}
           {post && !post.story && (
             <div className="relative aspect-square w-full lg:absolute lg:inset-0 lg:aspect-auto">
-              {/* превью уже есть из ленты: окно не пустое, пока идёт большая картинка */}
-              <img src={`${post.image_url}?thumb=1`} alt="" className="absolute inset-0 h-full w-full object-cover" />
-              <FeedImage src={post.image_url} alt="" eager testid="modal-image" className="relative h-full w-full object-cover" />
+              <FeedImage src={post.image_url} preview={`${post.image_url}?thumb=1`} alt="" eager testid="modal-image" className="relative h-full w-full object-cover" />
             </div>
           )}
           <span className={`absolute left-3 rounded-full ${post?.story ? 'top-3' : 'bottom-3'} bg-success-soft px-3 py-1 text-sm font-extrabold text-success lg:bottom-4 lg:left-4 lg:text-xl`}>

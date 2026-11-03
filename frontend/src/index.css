@@ -77,6 +77,13 @@ body {
     transform: translateX(100%);
   }
 }
+/* Значки карточки появляются вместе с картинкой, а не висят на заглушке */
+.feed-card > * {
+  transition: opacity 0.3s var(--ease-out);
+}
+[data-testid='image-wait'] ~ * {
+  opacity: 0;
+}
 .feed-img {
   opacity: 0;
   filter: blur(10px);
