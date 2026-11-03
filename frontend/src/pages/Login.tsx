@@ -23,7 +23,7 @@ const label = 'mb-1 block text-xs font-extrabold uppercase text-primary'
 const primaryBtn =
   'btn-press w-full rounded-[14px] bg-primary px-6 h-[52px] lg:h-14 text-xl short:h-12 short:text-lg font-extrabold text-primary-fg shadow-press disabled:opacity-50 disabled:shadow-none'
 
-function ChildForm({ onDone }: { onDone: (r: Role) => void }) {
+function ChildForm({ onDone, onNew }: { onDone: (r: Role) => void; onNew: () => void }) {
   const { t } = useTranslation()
   const [nick, setNick] = useState('')
   const [pics, setPics] = useState<number[]>([])
@@ -75,13 +75,16 @@ function ChildForm({ onDone }: { onDone: (r: Role) => void }) {
         {t('auth.childLogin')}
       </button>
       <p className="text-center text-sm font-bold leading-5 text-primary underline">{t('auth.qrHelp')}</p>
+      <button type="button" data-testid="child-new" onClick={onNew} className="text-center text-sm font-extrabold leading-5 text-heading underline">
+        {t('auth.noAccount')}
+      </button>
     </form>
   )
 }
 
-function EmailForm({ role, onDone }: { role: 'parent' | 'teacher'; onDone: (r: Role) => void }) {
+function EmailForm({ role, onDone, startMode = 'login' }: { role: 'parent' | 'teacher'; onDone: (r: Role) => void; startMode?: 'login' | 'register' }) {
   const { t } = useTranslation()
-  const [mode, setMode] = useState<'login' | 'register'>('login')
+  const [mode, setMode] = useState<'login' | 'register'>(startMode)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [err, setErr] = useState<string | null>(null)
@@ -280,6 +283,7 @@ export default function Login() {
   const navigate = useNavigate()
   const [role, setRole] = useState<Role>('child')
   const [platform, setPlatform] = useState(false)
+  const [startMode, setStartMode] = useState<'login' | 'register'>('login')
 
   if (current) return <Navigate to={HOME[current]} replace />
 
@@ -318,6 +322,7 @@ export default function Login() {
                 data-testid={`role-${r.role}`}
                 onClick={() => {
                   setRole(r.role)
+                  setStartMode('login')
                   setPlatform(false)
                 }}
                 className={`relative flex h-[76px] flex-col items-center justify-center gap-0.5 rounded-2xl border-2 px-1 text-sm font-extrabold text-heading transition-colors duration-150 short:h-[68px] ${
@@ -338,9 +343,16 @@ export default function Login() {
           </div>
 
           {role === 'child' ? (
-            <ChildForm onDone={(r) => void done(r)} />
+            <ChildForm
+              onDone={(r) => void done(r)}
+              onNew={() => {
+                // ребёнок не заводит себя сам: аккаунт создаёт взрослый
+                setRole('parent')
+                setStartMode('register')
+              }}
+            />
           ) : (
-            <EmailForm key={role} role={role} onDone={(r) => void done(r)} />
+            <EmailForm key={role} role={role} startMode={startMode} onDone={(r) => void done(r)} />
           )}
 
           <div className="my-1 flex items-center gap-3 text-base leading-5 text-muted">

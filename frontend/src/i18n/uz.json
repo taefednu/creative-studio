@@ -16,7 +16,7 @@
     "tasks": "Bu yerda o‘qituvchining topshiriqlari bo‘ladi",
     "mine": "Bu yerda sening ishlaring bo‘ladi"
   },
-  "auth": { "who": "Kim kiryapti?",
+  "auth": { "noAccount": "Hali akkaunt yo'qmi? Uni kattalar bir daqiqada yaratadi", "who": "Kim kiryapti?",
     "roles": { "child": "Men bolaman", "parent": "Men ota-onaman", "teacher": "Men o‘qituvchiman" },
     "nick": "Sening nikning",
     "picturePassword": "Rasmli parol: 3 ta rasmni ketma-ket tanla",

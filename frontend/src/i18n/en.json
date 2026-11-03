@@ -16,7 +16,7 @@
     "tasks": "Your teacher's tasks will be here",
     "mine": "Your works will be here"
   },
-  "auth": { "who": "Who's signing in?",
+  "auth": { "noAccount": "No account yet? A grown-up can create one in a minute", "who": "Who's signing in?",
     "roles": { "child": "I'm a kid", "parent": "I'm a parent", "teacher": "I'm a teacher" },
     "nick": "Your nickname",
     "picturePassword": "Picture password: tap 3 in order",
