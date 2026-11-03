@@ -19,10 +19,8 @@ const TABS: Record<'parent' | 'teacher', Tab[]> = {
     { to: '/parent/plans', icon: 'coin.webp', key: 'plans' },
   ],
   teacher: [
-    { to: '/teacher', icon: 'feed', key: 'feed', end: true },
-    { to: '/teacher/review', icon: 'shield.webp', key: 'review', review: true },
-    { to: '/teacher/tasks', icon: 'tasks', key: 'tasks' },
-    { to: '/teacher/classes', icon: 'classes.webp', key: 'classes' },
+    { to: '/teacher/feed', icon: 'feed', key: 'feed', end: true },
+    { to: '/teacher/classes', icon: 'classes.webp', key: 'classes', review: true },
   ],
 }
 

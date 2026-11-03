@@ -510,6 +510,8 @@
     "more": "+{{count}}"
   },
   "cl": {
+    "waiting": "Waiting: {{count}}",
+    "clearText": "All good: nothing in {{name}} is waiting for your decision.",
     "copy": "Copy code",
     "copied": "Copied",
     "copyFail": "Couldn't copy",

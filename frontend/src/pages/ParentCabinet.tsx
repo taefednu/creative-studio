@@ -400,7 +400,7 @@ export default function ParentCabinet() {
             <div className="flex min-w-0 flex-col lg:order-1 lg:col-span-4 xl:col-span-5">
               {waiting && (
                 <div style={vt('kid-right')} className="kid-swap">
-                  <ReviewQueue stackOf={sel.nick} title={t('review.okTitle')} />
+                  <ReviewQueue stackOf={(x) => x.nick === sel.nick} title={t('review.okTitle')} />
                 </div>
               )}
               {/* Только когда точно пусто: очередь загрузилась и по ребёнку нет ничего, срочного тоже */}

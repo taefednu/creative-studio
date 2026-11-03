@@ -14,9 +14,7 @@ import ParentPlans from './pages/ParentPlans'
 import QrLanding from './pages/QrLanding'
 import Showcase from './pages/Showcase'
 import Tasks from './pages/Tasks'
-import TeacherCabinet from './pages/TeacherCabinet'
-import TeacherClasses from './pages/TeacherClasses'
-import TeacherTasks from './pages/TeacherTasks'
+import TeacherClasses, { TeacherClass } from './pages/TeacherClasses'
 import SharedWork from './pages/SharedWork'
 
 /** Роутинг по роли: чужой кабинет не открывается, без входа — на экран входа. */
@@ -48,10 +46,12 @@ export default function App() {
       <Route path="/parent/kids" element={<Guard role="parent"><ParentCabinet /></Guard>} />
       <Route path="/parent/review" element={<Navigate to="/parent/kids" replace />} />
       <Route path="/parent/plans" element={<Guard role="parent"><ParentPlans /></Guard>} />
-      <Route path="/teacher" element={<Guard role="teacher"><AdultFeed /></Guard>} />
-      <Route path="/teacher/review" element={<Guard role="teacher"><TeacherCabinet /></Guard>} />
-      <Route path="/teacher/tasks" element={<Guard role="teacher"><TeacherTasks /></Guard>} />
+      <Route path="/teacher" element={<Navigate to="/teacher/classes" replace />} />
+      <Route path="/teacher/review" element={<Navigate to="/teacher/classes" replace />} />
+      <Route path="/teacher/tasks" element={<Navigate to="/teacher/classes" replace />} />
+      <Route path="/teacher/feed" element={<Guard role="teacher"><AdultFeed /></Guard>} />
       <Route path="/teacher/classes" element={<Guard role="teacher"><TeacherClasses /></Guard>} />
+      <Route path="/teacher/classes/:classId" element={<Guard role="teacher"><TeacherClass /></Guard>} />
       <Route path="/teacher/feed/:classId" element={<Guard role="teacher"><AdultFeed /></Guard>} />
       <Route path="/parent/feed" element={<Navigate to="/parent/kids" replace />} />
       <Route element={<ChildArea />}>

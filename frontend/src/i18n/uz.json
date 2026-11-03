@@ -510,6 +510,8 @@
     "more": "+{{count}}"
   },
   "cl": {
+    "waiting": "Kutmoqda: {{count}}",
+    "clearText": "Hammasi joyida: {{name}} sinfida qaroringizni kutayotgan narsa yoʻq.",
     "copy": "Kodni nusxalash",
     "copied": "Nusxalandi",
     "copyFail": "Nusxalab bo‘lmadi",

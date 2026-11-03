@@ -3,10 +3,8 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
 import Avatar from '../components/Avatar'
-import CabinetHeader from '../components/CabinetHeader'
 import ChipSelect from '../components/ChipSelect'
 import ErrorText, { errorKey } from '../components/ErrorText'
-import { BigHeads } from '../components/FeedView'
 import Icon from '../components/Icon'
 import { dueIso, notHanded, showErrorCode, taskDescription, taskErrorCode, taskTitle } from '../features/assignments/assignments'
 import type { TaskI18n } from '../features/assignments/assignments'
@@ -16,25 +14,19 @@ import { parseUtc } from '../features/review/review'
 import { loadTemplates } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
-type Room = { id: number; name: string }
 type Task = { id: number; title: string; description: string; due_at: string | null; cover_url: string | null; text_i18n?: TaskI18n; submissions: number }
 type Sub = { id: number; nick: string; status: 'accepted' | 'held'; shown_in_feed: boolean; image_url: string; comment: string | null }
 
-const loadRooms = () => api<Room[]>('/api/teacher/classes')
 const field =
   'w-full rounded-2xl border border-border bg-bg px-4 text-heading outline-none placeholder:text-muted focus:border-primary big:text-[22px]'
 const label = 'mb-1 mt-3 block text-base font-extrabold text-heading big:mb-2.5 big:mt-7 big:text-[22px]'
 const SHOWN = 4 // аватаров сдавших в строке задания; остальные — «+N»
 
-/** Задания учителя (#13): создать с картинкой, список класса; открытое задание раскрывается: сдачи, кто не сдал, завершить. */
-export default function TeacherTasks() {
+/** Задания класса (#13): создать с картинкой, список; открытое задание раскрывается: сдачи, кто не сдал, завершить. */
+export default function ClassTasks({ classId, nicks }: { classId: number; nicks: string[] }) {
   const { t, i18n } = useTranslation()
-  const [rooms, reloadRooms, roomsFailed] = useLoad(loadRooms)
   const [tpl] = useLoad(loadTemplates)
-  const [picked, setPicked] = useState<number | null>(null)
-  const classId = picked ?? rooms?.[0]?.id ?? null
   const [tasks, setTasks] = useState<{ cls: number; items: Task[]; subs: Record<number, Sub[]> } | null>(null)
-  const [kids, setKids] = useState<{ cls: number; nicks: string[] } | null>(null)
   const [tick, setTick] = useState(0)
   const [failed, setFailed] = useState(false)
   const [open, setOpen] = useState<number | null>(null)
@@ -49,7 +41,6 @@ export default function TeacherTasks() {
   const lock = useRef(false)
 
   useEffect(() => {
-    if (classId === null) return
     let alive = true
     api<Task[]>(`/api/teacher/classes/${classId}/assignments`)
       .then(async (items) => {
@@ -63,18 +54,7 @@ export default function TeacherTasks() {
       alive = false
     }
   }, [classId, tick])
-  useEffect(() => {
-    if (classId === null) return
-    let alive = true
-    api<{ nick: string }[]>(`/api/teacher/classes/${classId}/children`)
-      .then((k) => alive && setKids({ cls: classId, nicks: k.map((x) => x.nick) }))
-      .catch(() => alive && setKids({ cls: classId, nicks: [] }))
-    return () => {
-      alive = false
-    }
-  }, [classId])
   const items = tasks?.cls === classId ? tasks.items : null
-  const nicks = kids?.cls === classId ? kids.nicks : []
   const total = nicks.length
   const styles = tpl?.templates ?? []
   const style = cover ?? styles[0]?.id ?? null
@@ -92,7 +72,7 @@ export default function TeacherTasks() {
 
   async function create(e: FormEvent) {
     e.preventDefault()
-    if (classId === null || !title.trim() || lock.current) return
+    if (!title.trim() || lock.current) return
     lock.current = true
     setBusy(true)
     setErr(null)
@@ -120,52 +100,23 @@ export default function TeacherTasks() {
   }
 
   return (
-    <div className="min-h-screen bg-bg pb-24 lg:pb-6">
-      <CabinetHeader role="teacher" />
-      <main className="px-4 py-4 md:px-8">
-        <div className="flex min-h-10 items-center gap-x-3 md:min-h-14">
-          {rooms && rooms.length > 0 ? (
-            <BigHeads
-              heads={rooms.map((r) => ({
-                id: String(r.id),
-                label: r.name,
-                active: r.id === classId,
-                onPick: () => {
-                  setPicked(r.id)
-                  setOpen(null)
-                },
-              }))}
-            />
-          ) : (
-            <h1 data-testid="page-title" className="text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">{t('cab.tasks.title')}</h1>
-          )}
-          {classId !== null && (
-            <button type="button" data-testid="task-new" aria-label={t('tt.newTask')} onClick={() => setFormOpen(true)} className="ml-auto flex h-11 shrink-0 items-center gap-2 rounded-2xl bg-primary px-3 font-extrabold text-primary-fg sm:h-12 sm:px-5">
-              <Icon name="plus" className="h-5 w-5" />
-              <span className="hidden sm:inline">{t('tt.newTask')}</span>
-            </button>
-          )}
+    <section data-testid="class-tasks">
+      <div className="flex min-h-10 items-center gap-x-3">
+        <h2 data-testid="tasks-title" className="text-[28px] font-black leading-9 tracking-tight text-heading lg:text-4xl lg:leading-[44px]">{t('cab.tasks.title')}</h2>
+        <button type="button" data-testid="task-new" aria-label={t('tt.newTask')} onClick={() => setFormOpen(true)} className="btn-press ml-auto flex h-11 shrink-0 items-center gap-2 rounded-2xl bg-primary px-3 font-extrabold text-primary-fg sm:h-12 sm:px-5">
+          <Icon name="plus" className="h-5 w-5" />
+          <span className="hidden sm:inline">{t('tt.newTask')}</span>
+        </button>
+      </div>
+      {failed && (
+        <div data-testid="tasks-load-error" className="mt-3 flex flex-col items-start gap-2">
+          <ErrorText code="generic" />
+          <button type="button" data-testid="tasks-retry" onClick={reload} className="h-10 rounded-full bg-primary px-6 font-extrabold text-primary-fg">
+            {t('create.retry')}
+          </button>
         </div>
-        {(roomsFailed || (failed && classId !== null)) && (
-          <div data-testid="tasks-load-error" className="mt-3 flex flex-col items-start gap-2">
-            <ErrorText code="generic" />
-            <button
-              type="button"
-              data-testid="tasks-retry"
-              onClick={() => (roomsFailed ? reloadRooms() : reload())}
-              className="h-10 rounded-full bg-primary px-6 font-extrabold text-primary-fg"
-            >
-              {t('create.retry')}
-            </button>
-          </div>
-        )}
-        {rooms && rooms.length === 0 && (
-          <p data-testid="tasks-empty" className="mt-3 text-muted">
-            {t('cab.tasks.noClasses')}
-          </p>
-        )}
-        {classId !== null && (
-          <div className="mt-3">
+      )}
+      <div className="mt-3">
             {formOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-scrim p-3" onPointerDown={(e) => e.target === e.currentTarget && !busy && setFormOpen(false)}>
             <form
@@ -262,10 +213,8 @@ export default function TeacherTasks() {
                 ))}
               </div>
             </section>
-          </div>
-        )}
-      </main>
-    </div>
+      </div>
+    </section>
   )
 }
 

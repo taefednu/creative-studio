@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
-import { agoText, effectKey, filterByClass, notifyReview, nothingBlurred, reasonKeys, stackOrder } from '../features/review/review'
+import { agoText, effectKey, notifyReview, nothingBlurred, reasonKeys, stackOrder } from '../features/review/review'
 import { loadStory } from '../features/story/story'
 import type { Story } from '../features/story/story'
 import type { ReviewItem } from '../features/review/review'
@@ -21,10 +21,10 @@ const btnSide =
  */
 export default function ReviewQueue({
   title,
-  classFilter = null,
   hideEmpty = false,
   urgentOnly = false,
   stackOf,
+  withWho = false,
 }: {
   title?: string
   /** Решений нет: секции нет вовсе. */
@@ -32,20 +32,20 @@ export default function ReviewQueue({
   /** Над лентой: только срочное, обычные решения ждут на своей вкладке. */
   urgentOnly?: boolean
   /** Стопка одного ребёнка: по одной работе за раз. Срочное она не показывает, его держит urgentOnly над экраном. */
-  stackOf?: string
-  classFilter?: string | null
+  stackOf?: (it: ReviewItem) => boolean
+  /** Детей много: на работе показать, чья она. */
+  withWho?: boolean
 }) {
   const { t } = useTranslation()
   const [all, setItems] = useState<ReviewItem[] | null>(null)
-  const filtered = all && filterByClass(all, classFilter)
-  const items = urgentOnly ? filtered && filtered.filter((x) => x.urgent) : filtered
+  const items = urgentOnly ? all && all.filter((x) => x.urgent) : all
   const [open, setOpen] = useState<ReviewItem | null>(null)
   const [busy, setBusy] = useState<number | null>(null)
   const [failed, setFailed] = useState(false)
   const [zoom, setZoom] = useState<string | null>(null)
   const [skipped, setSkipped] = useState(0)
   const [leaving, setLeaving] = useState<{ id: number; to: 'left' | 'right' } | null>(null)
-  const pile = stackOrder(stackOf ? items?.filter((x) => !x.urgent && x.nick === stackOf) ?? [] : [], skipped)
+  const pile = stackOrder(stackOf ? items?.filter((x) => !x.urgent && stackOf(x)) ?? [] : [], skipped)
   useEffect(() => {
     if (!zoom) return
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && setZoom(null)
@@ -128,7 +128,7 @@ export default function ReviewQueue({
       {stackOf && pile[0] && (
         <div data-testid="review-stack" className="flex w-full flex-col gap-4">
           <div key={pile[0].id} className={leaving?.id === pile[0].id ? `stack-${leaving.to}` : 'stack-in'}>
-            <ReviewCard big it={pile[0]} kind={kind(pile[0])} where={where(pile[0])} busy={busy === pile[0].id} onOpen={() => setOpen(pile[0])} onZoom={setZoom} onAct={(w) => void act(pile[0], w)} />
+            <ReviewCard big withWho={withWho} it={pile[0]} kind={kind(pile[0])} where={where(pile[0])} busy={busy === pile[0].id} onOpen={() => setOpen(pile[0])} onZoom={setZoom} onAct={(w) => void act(pile[0], w)} />
           </div>
         </div>
       )}
@@ -163,7 +163,7 @@ type RowProps = { it: ReviewItem; kind: string; busy: boolean; onOpen: () => voi
  * Карточка решения: сверху то, о чём решаем, крупно и целиком; причина поверх него; ниже кто и где; внизу равные кнопки.
  * Кнопки одного веса: одобрение не должно быть действием по умолчанию, особенно на «Обидных словах».
  */
-function ReviewCard({ it, kind, where, busy, big = false, onOpen, onZoom, onAct }: RowProps & { where: string; big?: boolean; onZoom: (url: string) => void }) {
+function ReviewCard({ it, kind, where, busy, big = false, withWho = false, onOpen, onZoom, onAct }: RowProps & { where: string; big?: boolean; withWho?: boolean; onZoom: (url: string) => void }) {
   const { t } = useTranslation()
   const ago = agoText(it.created_at, t)
   const [reading, setReading] = useState<number | null>(null)
@@ -234,7 +234,7 @@ function ReviewCard({ it, kind, where, busy, big = false, onOpen, onZoom, onAct 
         <div className="mt-2 flex min-w-0 flex-col gap-1 lg:col-span-2 lg:mt-0">
           <p data-testid="review-reason" className="text-2xl font-black leading-7 tracking-tight text-heading">{reasonKeys(it.reason_codes).map((k) => t(k)).join(', ')}</p>
           {it.image_url && it.preview_text && <p className="line-clamp-2 break-words text-sm text-text">«{it.preview_text}»</p>}
-          <p className="text-sm font-semibold text-muted">{kind}, {where}, {ago}</p>
+          {withWho ? <div className="mt-1">{who}</div> : <p className="text-sm font-semibold text-muted">{kind}, {where}, {ago}</p>}
           {/* Что значат кнопки: без этой строки взрослый не знает, что решает */}
           <p data-testid="review-effect" className="mt-2 text-base font-semibold leading-6 text-text">{t(effectKey(it))}</p>
           {/* Кнопки одного веса внизу колонки, по нижнему краю картинки: одобрение не должно быть действием по умолчанию */}

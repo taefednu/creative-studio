@@ -132,6 +132,7 @@ def _view(db: Session, item: HeldItem, nick: str, class_name: str | None, full: 
         "item_type": item.item_type,
         "nick": nick,
         "where": _where(item),
+        "class_id": item.class_id,
         "class_name": class_name,
         "reason_codes": item.reason_codes or [],
         "urgent": item.urgent,

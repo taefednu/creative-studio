@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import i18n from '../../i18n'
-import { agoText, effectKey, filterByClass, firstKid, nothingBlurred, parseUtc, reasonKey, reasonKeys, stackOrder, waitingByNick } from './review'
+import { agoText, effectKey, firstKid, forClass, nothingBlurred, parseUtc, reasonKey, reasonKeys, stackOrder, waitingByNick } from './review'
 
 describe('review', () => {
   it('effectKey: размытая загрузка уже у ребёнка, задержанная ещё нет; у каждого ключа есть текст', () => {
@@ -10,6 +10,11 @@ describe('review', () => {
     expect(effectKey({ item_type: 'upload', reason_codes: ['cleared_word'] })).toBe('review.effect.cleared_word')
     expect(effectKey({ item_type: 'post', reason_codes: ['blurred_face'] })).toBe('review.effect.post')
     for (const lang of ['ru', 'en', 'uz']) expect(i18n.exists('review.effect.blurred', { lng: lang, fallbackLng: [] })).toBe(true)
+  })
+  it('forClass: записи своего класса и без класса, чужие нет', () => {
+    const items = [{ id: 1, class_id: 1 }, { id: 2, class_id: 2 }, { id: 3, class_id: null }, { id: 4 }]
+    expect(forClass(items, 1).map((i) => i.id)).toEqual([1, 3, 4])
+    expect(forClass(items, 2).map((i) => i.id)).toEqual([2, 3, 4])
   })
   it('waitingByNick считает всё, что ждёт, по детям', () => {
     expect(waitingByNick([{ nick: 'A' }, { nick: 'B' }, { nick: 'A' }])).toEqual({ A: 2, B: 1 })
@@ -44,20 +49,6 @@ describe('review', () => {
     expect(nothingBlurred(['drawn_face', 'blurred_written_word'])).toBe(false)
     expect(nothingBlurred(['blurred_face'])).toBe(false)
     expect(nothingBlurred([])).toBe(false)
-  })
-  it('class filter keeps only the chosen class, null keeps all', () => {
-    const a = [{ class_name: '4B' }, { class_name: '5A' }, { class_name: null }]
-    expect(filterByClass(a, '4B')).toEqual([{ class_name: '4B' }, { class_name: null }])
-    expect(filterByClass(a, null)).toHaveLength(3)
-  })
-  it('urgent and class-less items survive a class filter (self-harm card must not vanish)', () => {
-    const a = [
-      { class_name: '4B', urgent: false },
-      { class_name: null, urgent: true },
-      { class_name: '5A', urgent: true },
-      { class_name: '5A', urgent: false },
-    ]
-    expect(filterByClass(a, '4B')).toEqual([a[0], a[1], a[2]])
   })
   it('agoText speaks uz, ru plural and en without Intl (Chromium has no uz relative format)', () => {
     const now = Date.parse('2026-11-01T12:00:00Z')

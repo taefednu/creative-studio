@@ -9,7 +9,7 @@ import FeedImage, { Skeleton } from './FeedImage'
 import ChipSelect from './ChipSelect'
 import PostModal from './PostModal'
 
-export type FeedHead = { id: string; label: string; active: boolean; onPick: () => void }
+export type FeedHead = { id: string; label: string; active: boolean; onPick: () => void; count?: number }
 
 type Props = {
   kinds: FeedKind[]
@@ -64,6 +64,7 @@ export function BigHeads({ heads, Title = 'h1' }: { heads: FeedHead[]; Title?: '
             className={`${HEAD_CLS} shrink-0 transition-colors ${x.active ? 'text-heading' : 'text-muted hover:text-heading'}`}
           >
             {x.label}
+            {!!x.count && <span data-testid={`feed-${x.id}-count`} className="ml-2 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-danger px-1.5 align-middle text-xs font-extrabold leading-none tracking-normal text-primary-fg md:h-7 md:min-w-7 md:text-sm">{x.count}</span>}
           </button>
         ))}
       </div>

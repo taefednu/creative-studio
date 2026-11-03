@@ -6,6 +6,7 @@ export type ReviewItem = {
   item_type: string
   nick: string
   where: 'class' | 'family' | 'personal'
+  class_id?: number | null
   class_name: string | null
   reason_codes: string[]
   urgent: boolean
@@ -131,9 +132,9 @@ export function reasonKeys(codes: string[]): string[] {
   return out.length ? out : ['review.reasons.unknown']
 }
 
-/** Фильтр очереди учителя по имени класса; null — все классы. Срочное и без класса видно всегда: его нельзя спрятать. */
-export function filterByClass<T extends { class_name: string | null; urgent?: boolean }>(items: T[], className: string | null): T[] {
-  return className === null ? items : items.filter((i) => i.urgent || i.class_name === null || i.class_name === className)
+/** Записи класса. Запись без класса показываем в каждом: иначе она пропала бы с экрана учителя. */
+export function forClass<T extends { class_id?: number | null }>(items: T[], classId: number): T[] {
+  return items.filter((i) => i.class_id == null || i.class_id === classId)
 }
 
 const CABINET = 'cabinet:changed'
