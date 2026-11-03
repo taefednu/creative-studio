@@ -54,6 +54,21 @@ def teacher_owns(db: Session, teacher_id: int, class_id: int | None) -> bool:
     return room is not None and room.teacher_id == teacher_id
 
 
+def knows(db: Session, v: Viewer, c: Child) -> bool:
+    """Свои: сам ребёнок, его взрослые, брат или сестра, одноклассники. Только им — своя картинка на аватарке."""
+    if v.role == "child":
+        if v.id == c.id or (c.parent_id is not None and v.obj.parent_id == c.parent_id):  # type: ignore[union-attr]
+            return True
+        room = class_of(db, c.id)
+        return room is not None and class_of(db, v.id) == room
+    if v.role == "parent":
+        return c.parent_id == v.id
+    if v.role == "teacher":
+        room = class_of(db, c.id)
+        return room is not None and teacher_owns(db, v.id, room)
+    return False
+
+
 def access(db: Session, v: Viewer, post: Post) -> str | None:
     """'author' | 'reader' | 'reviewer' | None. None = для этого человека поста нет (404)."""
     if post.status in ("deleted", "hidden", "rejected"):

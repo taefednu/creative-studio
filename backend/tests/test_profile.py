@@ -155,6 +155,17 @@ def test_guest_never_gets_own_picture(w, fake):
     assert avatar_of(TestClient(app), nick).status_code == 302
 
 
+def test_own_picture_only_for_own_people(w, fake):
+    nick = me(w)[0]
+    real_png(w, w.work)
+    w.a.post("/api/child/avatar-work", json={"work_id": w.work})
+    w.parent.post(f"/api/review/items/{held(w, 'avatar').id}/approve")
+    for own in (w.a, w.b, w.parent, w.teacher):
+        assert avatar_of(own, nick).status_code == 200
+    for outsider in (w.c, w.d, w.teacher2, w.parent2):
+        assert avatar_of(outsider, nick).status_code == 302
+
+
 def test_refusal_leaves_animal(w, fake):
     nick = me(w)[0]
     w.a.post("/api/child/avatar-work", json={"work_id": w.work})
@@ -176,9 +187,26 @@ def test_cannot_use_foreign_upload_or_unfinished_work(w, fake):
     assert w.b.post("/api/child/avatar-work", json={"work_id": w.work}).status_code == 404
     other = _work(w.a_id, w.tmp, status="held")
     assert w.a.post("/api/child/avatar-work", json={"work_id": other}).status_code == 404
-    up = _work(w.a_id, w.tmp)
+    for kind in ("upload", "alive", "page"):  # в них может быть настоящий ребёнок
+        up = _work(w.a_id, w.tmp)
+        with db.new_session() as s:
+            s.get(Work, up).kind = kind
+            s.commit()
+        assert w.a.post("/api/child/avatar-work", json={"work_id": up}).status_code == 404
+        assert up not in [x["id"] for x in w.a.get("/api/child/profile").json()["works"]]
+    remix = _work(w.a_id, w.tmp)
+    pid = w.a.post("/api/posts", json={"work_id": w.work, "audience": "class"}).json()["id"]
     with db.new_session() as s:
-        s.get(Work, up).kind = "upload"
+        s.get(Work, remix).remix_of_post_id = pid
         s.commit()
-    assert w.a.post("/api/child/avatar-work", json={"work_id": up}).status_code == 404
-    assert [x["id"] for x in w.a.get("/api/child/profile").json()["works"]].count(up) == 0
+    assert w.a.post("/api/child/avatar-work", json={"work_id": remix}).status_code == 404
+
+
+def test_approved_then_work_became_ineligible_falls_back(w, fake):
+    nick = me(w)[0]
+    w.a.post("/api/child/avatar-work", json={"work_id": w.work})
+    w.parent.post(f"/api/review/items/{held(w, 'avatar').id}/approve")
+    with db.new_session() as s:
+        s.get(Work, w.work).status = "refused"
+        s.commit()
+    assert avatar_of(w.b, nick).status_code == 302

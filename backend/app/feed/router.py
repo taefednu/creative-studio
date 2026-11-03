@@ -70,7 +70,7 @@ def avatar_image(nick: str, request: Request, db: Db, v: Guest):
     """Картинка аватара по нику: один адрес для всех экранов. Гость получает зверька только по нику: иначе без входа
     можно проверять, есть ли ребёнок с таким ником. У вошедшего остаётся: выбранный зверёк виден своим и одноклассникам."""
     who = None if v.role == "guest" else db.scalar(select(Child).where(Child.nick_norm == nick.strip().lower()))
-    w = db.get(Work, who.avatar_work_id) if who is not None and who.avatar_work_id else None
+    w = db.get(Work, who.avatar_work_id) if who is not None and who.avatar_work_id and service.knows(db, v, who) else None
     if w is not None and avatar_allowed(db, w):
         return thumb_response(w.file_path, request)
     animal = (who.avatar if who is not None else None) or animal_for(nick)

@@ -2,7 +2,8 @@
 
 Ник: та же проверка, что при регистрации. Сбой проверки уходит взрослому, ребёнок ждёт его решения.
 Картинка: только своя готовая работа и только после «да» взрослого: аватарку видит весь класс, а работа
-в класс и так идёт через взрослого. Загрузка и герой из неё не подходят: в них может быть настоящий ребёнок.
+в класс и так идёт через взрослого. Подходит только нарисованное по запросу (`avatar_allowed`): в загрузке,
+герое и страницах сказки из неё может быть настоящий ребёнок, ремикс зависит от чужой работы.
 """
 
 from typing import Annotated
@@ -27,8 +28,6 @@ router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
 ChildDep = Annotated[Child, Depends(current_child)]
 
-NOT_FOR_AVATAR = ("upload", "alive")
-
 
 def _hold_for_adult(db: Session, c: Child, item_type: str, target_id: int, codes: list[str], text: str | None = None, urgent: bool = False) -> None:
     class_id = db.scalar(select(ClassMembership.class_id).where(ClassMembership.child_id == c.id))
@@ -47,7 +46,7 @@ def _hold_for_adult(db: Session, c: Child, item_type: str, target_id: int, codes
 
 def avatar_allowed(db: Session, w: Work | None) -> bool:
     """Отказ взрослого сильнее всего: скрытая или отклонённая работа на аватарке не живёт."""
-    if w is None or w.status != "ready" or not w.file_path or w.kind in NOT_FOR_AVATAR:
+    if w is None or w.status != "ready" or not w.file_path or w.kind != "image" or w.remix_of_post_id is not None:
         return False
     return db.scalar(select(Post.id).where(Post.work_id == w.id, Post.status.in_(("rejected", "hidden"))).limit(1)) is None
 
@@ -116,7 +115,7 @@ def profile(c: ChildDep, db: Db) -> dict:
     pending_avatar = _pending(db, c, "avatar")
     works = db.scalars(
         select(Work.id)
-        .where(Work.child_id == c.id, Work.status == "ready", Work.file_path.is_not(None), Work.kind.not_in(NOT_FOR_AVATAR))
+        .where(Work.child_id == c.id, Work.status == "ready", Work.file_path.is_not(None), Work.kind == "image", Work.remix_of_post_id.is_(None))
         .order_by(Work.id.desc())
         .limit(12)
     ).all()
