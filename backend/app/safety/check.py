@@ -2,6 +2,7 @@
 
 import base64
 import logging
+import time
 from collections.abc import Callable
 from functools import lru_cache
 
@@ -38,7 +39,13 @@ def _thresholds() -> tuple[Thresholds, float]:
     from app.config import get_settings
 
     s = get_settings()
-    return Thresholds(s.ALLOW_THRESHOLD, s.PRESENT_MIN, s.SELF_HARM_MIN), s.SAFETY_TIMEOUT
+    return Thresholds(s.ALLOW_THRESHOLD, s.PRESENT_MIN, s.SELF_HARM_MIN), s.SAFETY_WAIT
+
+
+def _trust_seconds() -> float:
+    from app.config import get_settings
+
+    return get_settings().SAFETY_TIMEOUT
 
 
 LANGS = {"ru", "en", "uz"}
@@ -58,7 +65,9 @@ def _run(
     try:
         c = client or _default_client()
         th, timeout = _thresholds()
+        started = time.monotonic()
         raw = c.chat_json(messages, SCHEMA, timeout)
+        late = time.monotonic() - started > _trust_seconds()
         cls = Classification.model_validate_json(raw)  # extra=forbid, строгие типы, [0,1]
 
         verify: Callable[[str], bool] | None = None
@@ -70,7 +79,10 @@ def _run(
                 d = _run(text_messages(text, sub_kind, lang), sub_kind, lang, c, False)
                 return d.action == "allow"
 
-        return decide(cls, kind, th, verify, original)
+        d = decide(cls, kind, th, verify, original)
+        # Опасное модель обдумывает дольше: самоповреждение успевает только за SAFETY_WAIT, поэтому ждём.
+        # Но поздний ответ только поднимает тревогу: «можно» и «перепиши» после SAFETY_TIMEOUT уходят взрослому (evals 04.11).
+        return hold_error(kind) if late and d.action in ("allow", "rewrite", "kinder") else d
     except ValidationError:
         return hold_error(kind, "invalid_response")
     except Exception:  # noqa: BLE001

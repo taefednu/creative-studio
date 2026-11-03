@@ -504,3 +504,42 @@ def test_real_unsafe_answer_is_never_asked_again():
     s = Script(resp(unsafe_content=0.9), verdicts())
     d = check_image(b"\xff\xd8jpg", "upload", "ru", client=client_for(s))
     assert d.action != "allow" and len(s.requests) == 1
+
+
+def _slow(monkeypatch, seconds):
+    from app.safety import check
+
+    ticks = iter([0.0, seconds])
+    monkeypatch.setattr(check.time, "monotonic", lambda: next(ticks, seconds))
+
+
+def test_late_allow_goes_to_adult(monkeypatch):
+    _slow(monkeypatch, 25.0)
+    d, _ = run("prompt", resp())
+    assert d.action == "hold" and d.model_error
+
+
+def test_late_self_harm_still_raises_alarm(monkeypatch):
+    _slow(monkeypatch, 25.0)
+    d, _ = run("prompt", resp(self_harm=0.95))
+    assert d.action == "support" and d.urgent and not d.model_error
+
+
+def test_on_time_allow_stays(monkeypatch):
+    _slow(monkeypatch, 5.0)
+    d, _ = run("prompt", resp())
+    assert d.action == "allow"
+
+
+def test_waits_longer_than_it_trusts():
+    from app.config import get_settings
+
+    s = get_settings()
+    assert s.SAFETY_WAIT > s.SAFETY_TIMEOUT
+
+
+def test_late_rewrite_goes_to_adult(monkeypatch):
+    _slow(monkeypatch, 25.0)
+    d, _ = run("prompt", resp(rewrite="кот в космосе", unsafe_content=0.9), resp())
+    assert d.action == "hold" and d.model_error
+
