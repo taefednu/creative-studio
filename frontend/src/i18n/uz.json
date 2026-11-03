@@ -157,6 +157,7 @@
       "best": "Eng yaxshilari"
     },
     "empty": "Hozircha bu yerda hech narsa yo'q. Rasmingni ulash!",
+    "emptyAdult": "Bolalar hali hech narsa ko'rsatmagan.",
     "more": "Yana ko'rsatish",
     "close": "Yopish",
     "about": "Ish haqida",
@@ -188,7 +189,6 @@
     "kinderEdit": "O'zgartirish",
     "kinderCancel": "Bekor qilish",
     "classFeed": "Sinf lentasi",
-    "familyFeed": "Oila lentasi",
     "model": "Model",
     "made": "Yaratilgan",
     "today": "bugun",
@@ -362,7 +362,7 @@
       "plans": "Tariflar",
       "tasks": "Topshiriqlar",
       "classes": "Sinflar",
-      "classfeed": "Sinf lentasi"
+      "feed": "Lenta"
     },
     "meParent": "{{nick}} ota-onasi",
     "meParentNoKid": "Ota-ona",
@@ -441,8 +441,7 @@
     },
     "upload": {
       "original": "Asl nusxa",
-      "blurred": "Xiralashtirilgan",
-      "noBlur": "Xiralashtirilgan nusxa hali yo‘q"
+      "blurred": "Xiralashtirilgan"
     },
     "child": {
       "parentCode": "Kodni ota-onaga ko‘rsatish",

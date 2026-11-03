@@ -181,7 +181,7 @@ export default function FeedView({ kinds, classId, title, classes, child, guest 
       </div>
       {loaded && items.length === 0 && (
         <p data-testid="feed-empty" className="mt-6 text-text">
-          {t('feed.empty')}
+          {t(child ? 'feed.empty' : 'feed.emptyAdult')}
         </p>
       )}
       {loaded && items.length > 0 && shown.length === 0 && cursor === null && (

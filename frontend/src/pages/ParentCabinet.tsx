@@ -8,7 +8,6 @@ import CabinetHeader from '../components/CabinetHeader'
 import ChipSelect from '../components/ChipSelect'
 import ErrorText, { errorKey } from '../components/ErrorText'
 import Icon from '../components/Icon'
-import NavIcon from '../components/NavIcon'
 import LinkCard from '../components/LinkCard'
 import PictureGrid from '../components/PictureGrid'
 import QrBox from '../components/QrBox'
@@ -174,9 +173,6 @@ export default function ParentCabinet() {
   const [pick, setPick] = useState<number | null>(null)
   const [stats, setStats] = useState<Record<number, Analytics>>({})
   const [adding, setAdding] = useState(false)
-  // Решений мало: они слева, дети рядом, чтобы экран не пустовал. Решений много: сетка на всю ширину
-  const [waiting, setWaiting] = useState(0)
-  const few = waiting <= 1
 
   const ids = kids?.map((k) => k.id).join(',') ?? ''
   useEffect(() => {
@@ -201,19 +197,14 @@ export default function ParentCabinet() {
     setQr({ id: k.id, nick: k.nick, token: r.token })
   }
 
-  const h2 = 'text-2xl font-black tracking-tight text-heading md:text-3xl'
   return (
     <div className="min-h-screen bg-bg pb-24 lg:pb-6">
       <CabinetHeader role="parent" />
       <main className="px-4 py-4 md:px-8">
-        <h1 data-testid="page-title" className="mb-3 text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">
-          {t('review.okTitle')}
-        </h1>
-        <div className={few ? 'lg:grid lg:grid-cols-[400px_minmax(0,1fr)] lg:items-start lg:gap-8' : ''}>
-        <ReviewQueue single={few} onCount={setWaiting} limit={window.matchMedia('(min-width: 768px)').matches ? 4 : 2} />
-        <div className="min-w-0">
-        <section data-testid="kids" className={`mt-8 ${few ? 'lg:mt-0' : ''}`}>
-          <h2 className={h2}>{t('cab.myKids')}</h2>
+        <section data-testid="kids">
+          <h1 data-testid="page-title" className="text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">
+            {t('cab.myKids')}
+          </h1>
           {kids && kids.length === 0 && <p className="mt-2 text-muted">{t('parent.noChildren')}</p>}
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
             {kids?.map((k) => {
@@ -251,8 +242,11 @@ export default function ParentCabinet() {
             </button>
           </div>
           {sel?.locked && <p className="mt-2 text-sm font-bold text-danger">{t('parent.locked')}</p>}
+          <div className="mt-6 empty:hidden">
+            <ReviewQueue hideEmpty title={t('review.okTitle')} limit={window.matchMedia('(min-width: 768px)').matches ? 4 : 2} />
+          </div>
           {sel && (
-            <div data-testid="week" className="mt-4 flex flex-col gap-3">
+            <div data-testid="week" className="mt-6 flex flex-col gap-3">
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 {st && !st.has_data ? (
                   <p data-testid="week-empty" className="font-bold text-muted">{t('cab.week.noData', { nick: sel.nick })}</p>
@@ -265,22 +259,16 @@ export default function ParentCabinet() {
                     <span data-testid="week-held">{t('cab.week.held')}: {dash(st?.held)}</span>
                   </p>
                 )}
-                <div className="flex flex-wrap items-center gap-2">
-                  <Link to="/parent/feed" data-testid="family-feed-link" className="flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-extrabold text-primary-fg">
-                    <NavIcon name="feed" className="h-5 w-5" />
-                    {t('feed.familyFeed')}
-                  </Link>
-                  <button type="button" data-testid={`qr-${sel.nick}`} onClick={() => void showQr(sel)} className="flex h-11 items-center gap-2 rounded-full border-2 border-primary bg-primary-soft px-5 text-sm font-extrabold text-primary">
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 20h2M20 14v2" />
-                    </svg>
-                    {t('parent.qrButton')}
-                  </button>
-                </div>
+                <button type="button" data-testid={`qr-${sel.nick}`} onClick={() => void showQr(sel)} className="flex h-11 items-center gap-2 rounded-full border-2 border-primary bg-primary-soft px-5 text-sm font-extrabold text-primary">
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 20h2M20 14v2" />
+                  </svg>
+                  {t('parent.qrButton')}
+                </button>
               </div>
               {qr?.id === sel.id && <QrBox token={qr.token} nick={qr.nick} />}
               {latest.length > 0 && (
-                <Link to="/parent/feed" data-testid="latest-link" className="grid grid-cols-3 gap-2 md:grid-cols-6 md:gap-3">
+                <Link to="/parent" data-testid="latest-link" className="grid grid-cols-3 gap-2 md:grid-cols-6 md:gap-3">
                   {latest.map((p) => (
                     <img key={p.id} src={p.image_url} alt="" className="aspect-square w-full rounded-2xl object-cover" />
                   ))}
@@ -304,8 +292,6 @@ export default function ParentCabinet() {
 
         <OpenLinks role="parent" />
         <ParentNotes />
-        </div>
-        </div>
       </main>
       {adding && <AddKidModal onClose={() => setAdding(false)} onAdded={load} />}
     </div>

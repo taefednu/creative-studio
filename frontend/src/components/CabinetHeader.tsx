@@ -15,18 +15,19 @@ type Tab = { to: string; icon: string; key: string; end?: boolean; review?: bool
 
 const TABS: Record<'parent' | 'teacher', Tab[]> = {
   parent: [
-    { to: '/parent', icon: 'kids.webp', key: 'kids', end: true, review: true },
+    { to: '/parent', icon: 'feed', key: 'feed', end: true },
+    { to: '/parent/kids', icon: 'kids.webp', key: 'kids', review: true },
     { to: '/parent/plans', icon: 'crown.webp', key: 'plans' },
   ],
   teacher: [
-    { to: '/teacher', icon: 'shield.webp', key: 'review', end: true, review: true },
+    { to: '/teacher', icon: 'feed', key: 'feed', end: true },
+    { to: '/teacher/review', icon: 'shield.webp', key: 'review', review: true },
     { to: '/teacher/tasks', icon: 'tasks', key: 'tasks' },
     { to: '/teacher/classes', icon: 'classes.webp', key: 'classes' },
   ],
 }
 
 const loadKids = () => api<{ nick: string }[]>('/api/parent/children')
-const loadRooms = () => api<{ id: number }[]>('/api/teacher/classes')
 
 /** Шапка кабинета взрослого: те же Logo и TabPill, что у ребёнка; справа кружок с буквой и меню выхода. */
 export default function CabinetHeader({ role }: { role: Exclude<Role, 'child'> }) {
@@ -36,16 +37,11 @@ export default function CabinetHeader({ role }: { role: Exclude<Role, 'child'> }
   const { pathname } = useLocation()
   const count = useReviewCount()
   const [kids, reloadKids] = useLoad(role === 'parent' ? loadKids : loadNone)
-  const [rooms, reloadRooms] = useLoad(role === 'teacher' ? loadRooms : loadNone)
   const [menu, setMenu] = useState(false)
   useEffect(() => {
-    const again = () => {
-      reloadKids()
-      reloadRooms()
-    }
-    window.addEventListener(CABINET_EVENT, again)
-    return () => window.removeEventListener(CABINET_EVENT, again)
-  }, [reloadKids, reloadRooms])
+    window.addEventListener(CABINET_EVENT, reloadKids)
+    return () => window.removeEventListener(CABINET_EVENT, reloadKids)
+  }, [reloadKids])
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -69,11 +65,8 @@ export default function CabinetHeader({ role }: { role: Exclude<Role, 'child'> }
   const first = (kids as { nick: string }[] | null)?.[0]
   const name =
     role === 'teacher' ? t('cab.meTeacher') : first ? t('cab.meParent', { nick: first.nick }) : t('cab.meParentNoKid')
-  const classFeed = (rooms as { id: number }[] | null)?.[0]
-  const tabs: Tab[] =
-    role === 'teacher'
-      ? [...TABS.teacher, { to: pathname.startsWith('/teacher/feed/') ? pathname : classFeed ? `/teacher/feed/${classFeed.id}` : '/teacher/classes', icon: 'feed', key: 'classfeed' }]
-      : TABS.parent
+  // Лента другого класса: та же вкладка «Лента»
+  const tabs = TABS[role].map((x) => (x.key === 'feed' && pathname.startsWith('/teacher/feed/') ? { ...x, to: pathname } : x))
 
   return (
     <header

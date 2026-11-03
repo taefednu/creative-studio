@@ -44,14 +44,16 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/qr" element={<QrLanding />} />
       <Route path="/s/:token" element={<SharedWork />} />
-      <Route path="/parent" element={<Guard role="parent"><ParentCabinet /></Guard>} />
-      <Route path="/parent/review" element={<Navigate to="/parent" replace />} />
+      <Route path="/parent" element={<Guard role="parent"><AdultFeed who="parent" /></Guard>} />
+      <Route path="/parent/kids" element={<Guard role="parent"><ParentCabinet /></Guard>} />
+      <Route path="/parent/review" element={<Navigate to="/parent/kids" replace />} />
       <Route path="/parent/plans" element={<Guard role="parent"><ParentPlans /></Guard>} />
-      <Route path="/teacher" element={<Guard role="teacher"><TeacherCabinet /></Guard>} />
+      <Route path="/teacher" element={<Guard role="teacher"><AdultFeed who="teacher" /></Guard>} />
+      <Route path="/teacher/review" element={<Guard role="teacher"><TeacherCabinet /></Guard>} />
       <Route path="/teacher/tasks" element={<Guard role="teacher"><TeacherTasks /></Guard>} />
       <Route path="/teacher/classes" element={<Guard role="teacher"><TeacherClasses /></Guard>} />
       <Route path="/teacher/feed/:classId" element={<Guard role="teacher"><AdultFeed who="teacher" /></Guard>} />
-      <Route path="/parent/feed" element={<Guard role="parent"><AdultFeed who="parent" /></Guard>} />
+      <Route path="/parent/feed" element={<Navigate to="/parent" replace />} />
       <Route element={<ChildArea />}>
         <Route index element={<Feed />} />
         <Route path="create" element={<Create />} />

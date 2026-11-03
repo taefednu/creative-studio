@@ -23,34 +23,31 @@ const btnSide =
 export default function ReviewQueue({
   title,
   classFilter = null,
-  single = false,
-  onCount,
+  hideEmpty = false,
+  urgentOnly = false,
   limit,
 }: {
   title?: string
-  /** Узкая колонка: карточки одна под другой. */
-  single?: boolean
-  onCount?: (n: number) => void
+  /** Решений нет: секции нет вовсе. */
+  hideEmpty?: boolean
+  /** Над лентой: только срочное, обычные решения ждут на своей вкладке. */
+  urgentOnly?: boolean
   /** Сколько обычных решений показать сразу; остальные по кнопке. Срочное не прячется никогда. */
   limit?: number
   classFilter?: string | null
 }) {
   const { t } = useTranslation()
   const [all, setItems] = useState<ReviewItem[] | null>(null)
-  const items = all && filterByClass(all, classFilter)
+  const filtered = all && filterByClass(all, classFilter)
+  const items = urgentOnly ? filtered && filtered.filter((x) => x.urgent) : filtered
   const [open, setOpen] = useState<ReviewItem | null>(null)
   const [busy, setBusy] = useState<number | null>(null)
   const [failed, setFailed] = useState(false)
   const [zoom, setZoom] = useState<string | null>(null)
   const [expanded, setExpanded] = useState(false)
-  const count = items?.length
   const urgent = items?.filter((x) => x.urgent) ?? []
   const calm = items?.filter((x) => !x.urgent) ?? []
   const shown = limit && !expanded ? [...urgent, ...calm.slice(0, limit)] : items ?? []
-  useEffect(() => {
-    if (count !== undefined) onCount?.(count)
-  }, [count, onCount])
-
   useEffect(() => {
     if (!zoom) return
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && setZoom(null)
@@ -91,8 +88,10 @@ export default function ReviewQueue({
 
   const kind = (it: ReviewItem) => t(`review.types.${it.item_type}`)
 
+  if ((hideEmpty || urgentOnly) && !items?.length && !open) return null
+
   return (
-    <section id="review" data-testid="review" className="flex flex-col gap-3">
+    <section id="review" data-testid="review" className={`flex flex-col gap-3 ${urgentOnly ? 'mb-3' : ''}`}>
       {title && (
         <h2 className="flex items-center gap-2 text-2xl font-extrabold text-heading">
           {title}
@@ -117,7 +116,7 @@ export default function ReviewQueue({
         </div>
       )}
       {items && items.length > 0 && (
-        <div data-testid="review-grid" className={`grid grid-cols-1 gap-3 ${single ? '' : 'md:grid-cols-2 xl:grid-cols-4'}`}>
+        <div data-testid="review-grid" className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
           {shown.map((it) => (
             <ReviewCard key={it.id} it={it} kind={kind(it)} where={where(it)} busy={busy === it.id} onOpen={() => setOpen(it)} onZoom={setZoom} onAct={(w) => void act(it, w)} />
           ))}
@@ -179,20 +178,28 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
       <img src={url} alt="" data-testid={testid} className="h-full w-full object-contain" />
     </button>
   )
+  // Размытой версии нет, пока до неё не дошло, и незачем, если лицо нарисовано: одна картинка
+  const blurred = onlyDrawnFace(it.reason_codes) ? null : it.blurred_url
+  const version = (k: string, url: string, cap: string) => (
+    <figure className="relative flex h-full min-w-0 flex-1 bg-surface">
+      {picture(url, `review-${k}`)}
+      <figcaption className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-surface px-2 py-0.5 text-xs font-bold text-heading">{cap}</figcaption>
+    </figure>
+  )
   return (
     <article data-testid="review-item" className="feed-card flex flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-card">
       {reading !== null && <StoryReview id={reading} onClose={() => setReading(null)} />}
       <div className="relative flex h-44 bg-primary-soft">
         {it.original_url ? (
           <div data-testid="review-pair" className="flex h-full w-full gap-0.5">
-            {([['original', it.original_url, t('cab.upload.original')], ...(onlyDrawnFace(it.reason_codes) ? [] : [['blurred', it.blurred_url, t('cab.upload.blurred')]])] as const).map(([k, url, cap]) => (
-              <figure key={k} className="relative flex h-full min-w-0 flex-1 bg-surface">
-                {url ? picture(url, `review-${k}`) : (
-                  <div data-testid={`review-${k}-none`} className="flex h-full w-full items-center justify-center p-2 text-center text-xs font-bold text-muted">{t('cab.upload.noBlur')}</div>
-                )}
-                <figcaption className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-surface px-2 py-0.5 text-xs font-bold text-heading">{cap}</figcaption>
-              </figure>
-            ))}
+            {blurred ? (
+              <>
+                {version('original', it.original_url, t('cab.upload.original'))}
+                {version('blurred', blurred, t('cab.upload.blurred'))}
+              </>
+            ) : (
+              picture(it.original_url, 'review-original')
+            )}
           </div>
         ) : it.image_url ? (
           picture(it.image_url)

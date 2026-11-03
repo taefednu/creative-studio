@@ -196,6 +196,8 @@ def _run(db: Session, work: Work, skip_check: bool) -> None:
     work.file_path = str(path)
     codes = ["drawn_face" if drawn and c == "face" else f"blurred_{c}" for c, bs in found.items() if bs]
     if codes:
+        work.reason_codes = codes
+    if codes and not skip_check:  # взрослый уже решал по этой работе: второй раз не спрашиваем
         # Детям доступна только эта версия. Взрослый видит оригинал рядом с ней и может отклонить.
         hold(
             db,
@@ -206,7 +208,6 @@ def _run(db: Session, work: Work, skip_check: bool) -> None:
             reason_codes=codes,
             commit=False,
         )
-        work.reason_codes = codes
     work.status = "ready"
     db.commit()
 

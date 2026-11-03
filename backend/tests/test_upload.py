@@ -500,6 +500,18 @@ def test_class_post_of_blurred_upload_waits_for_teacher(w, sam, chk):
     assert r.content != orig
 
 
+def test_adult_decides_once_and_class_post_still_waits_for_teacher(w, sam, chk, monkeypatch):
+    chk.d = D("hold", reason_codes=["personal_info"])
+    sam.texts["human face"] = REAL
+    wid = up(w.a).json()["id"]
+    monkeypatch.setattr(pipeline, "spawn", lambda i, skip=False: pipeline.run(i, skip))
+    [it] = items()
+    w.parent.post(f"/api/review/items/{it.id}/approve")
+    assert work(wid).reason_codes == ["blurred_face"]
+    assert [i.status for i in items()] == ["approved"]
+    assert class_post(w, wid)["status"] == "held"
+
+
 def test_class_post_of_drawn_face_also_waits_for_teacher(w, sam, chk, monkeypatch):
     # Модель могла принять настоящее лицо за рисунок: резкая картинка не идёт в класс мимо учителя
     monkeypatch.setattr(pipeline, "only_drawn_faces", lambda data: True)
