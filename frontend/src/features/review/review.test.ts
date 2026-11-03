@@ -1,8 +1,29 @@
 import { describe, expect, it } from 'vitest'
 import i18n from '../../i18n'
-import { agoText, filterByClass, nothingBlurred, parseUtc, reasonKey, reasonKeys } from './review'
+import { agoText, filterByClass, firstKid, nothingBlurred, parseUtc, reasonKey, reasonKeys, ringAfter, stackOrder, waitingByNick } from './review'
 
 describe('review', () => {
+  it('waitingByNick считает всё, что ждёт, по детям', () => {
+    expect(waitingByNick([{ nick: 'A' }, { nick: 'B' }, { nick: 'A' }])).toEqual({ A: 2, B: 1 })
+  })
+  it('firstKid: первый, у кого есть что решить, иначе первый; пустой список не падает', () => {
+    const kids = [{ nick: 'A' }, { nick: 'B' }, { nick: 'C' }]
+    expect(firstKid(kids, { C: 1, B: 2 })?.nick).toBe('B')
+    expect(firstKid(kids, {})?.nick).toBe('A')
+    expect(firstKid([], { A: 1 })).toBeUndefined()
+  })
+  it('ringAfter: остальные дети по кругу от выбранного, без него самого', () => {
+    const kids = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]
+    expect(ringAfter(kids, 2).map((k) => k.id)).toEqual([3, 4, 1])
+    expect(ringAfter(kids, 4).map((k) => k.id)).toEqual([1, 2, 3])
+    expect(ringAfter([{ id: 1 }], 1)).toEqual([])
+  })
+  it('stackOrder: пропуск уводит верхнюю вниз по кругу, ни одна работа не теряется', () => {
+    expect(stackOrder([1, 2, 3], 0)).toEqual([1, 2, 3])
+    expect(stackOrder([1, 2, 3], 1)).toEqual([2, 3, 1])
+    expect(stackOrder([1, 2, 3], 4)).toEqual([2, 3, 1])
+    expect(stackOrder([], 3)).toEqual([])
+  })
   it('unknown reason code becomes the generic text, never a raw key', () => {
     expect(reasonKey('some_new_code')).toBe('review.reasons.unknown')
     expect(reasonKey('personal_info')).toBe('review.reasons.personal_info')

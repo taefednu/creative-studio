@@ -575,6 +575,99 @@ body {
 .nav-in {
   animation: nav-in 0.2s var(--ease-out);
 }
+/* Смена ребёнка: кружки мягко перелетают с лёгким доворотом, содержимое сменяется по очереди.
+   Корень без анимации: старый экран не должен просвечивать сквозь новый. */
+.kid-avatar {
+  view-transition-class: kid;
+}
+.kid-swap {
+  view-transition-class: kid-swap;
+}
+::view-transition-old(root) {
+  display: none;
+}
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-group(.kid) {
+  animation-duration: 0.56s;
+  animation-timing-function: var(--ease-drawer);
+}
+::view-transition-image-pair(.kid) {
+  animation: kid-turn 0.56s var(--ease-drawer);
+}
+@keyframes kid-turn {
+  from {
+    rotate: -10deg;
+  }
+}
+::view-transition-group(.kid-swap) {
+  animation: none;
+}
+::view-transition-old(.kid-swap) {
+  animation: kid-swap-out 0.14s var(--ease-out) both;
+}
+::view-transition-new(.kid-swap) {
+  animation: kid-swap-in 0.36s var(--ease-out) 0.1s both;
+}
+::view-transition-new(kid-badges) {
+  animation-delay: 0.15s;
+}
+::view-transition-new(kid-meta) {
+  animation-delay: 0.2s;
+}
+::view-transition-new(kid-right),
+::view-transition-new(kid-works) {
+  animation-delay: 0.16s;
+}
+@keyframes kid-swap-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes kid-swap-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+/* Стопка решений: новая карточка ложится, решённая уходит в сторону своей кнопки */
+.stack-in {
+  animation: stack-in 0.22s var(--ease-out);
+}
+@keyframes stack-in {
+  from {
+    opacity: 0.6;
+    rotate: 2deg;
+    scale: 0.97;
+  }
+}
+.stack-left,
+.stack-right {
+  opacity: 0;
+  transition:
+    opacity 0.18s var(--ease-out),
+    translate 0.18s var(--ease-out),
+    rotate 0.18s var(--ease-out);
+}
+.stack-left {
+  translate: -48px 0;
+  rotate: -4deg;
+}
+.stack-right {
+  translate: 48px 0;
+  rotate: 4deg;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stack-in {
+    animation: none;
+  }
+  .stack-left,
+  .stack-right {
+    translate: none;
+    rotate: none;
+  }
+}
 @keyframes nav-in {
   from {
     opacity: 0;

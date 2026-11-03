@@ -15,6 +15,8 @@ from app.db import get_session
 from app.feed.models import Post
 from app.moderation import HeldItem
 from app.works.image.models import Work
+from app.works.image.templates import TEMPLATES
+from app.works.story.models import Story
 
 router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
@@ -86,9 +88,19 @@ def analytics(child_id: int, p: Annotated[Parent, Depends(current_parent)], db: 
     # Нет данных — null, а не нули: пустое состояние с объяснением рисует экран.
     # За всё время, не за неделю: уровень как у ребёнка, загруженные рисунки не считаются
     pictures_total = _count(db, Work, Work.child_id == child.id, Work.status == "ready", Work.kind != "upload")
+    ready_kinds = db.execute(
+        select(Work.kind, Work.template_id).where(Work.child_id == child.id, Work.status == "ready")
+    ).all()
     return {
         "child_id": child.id,
         "pictures_total": pictures_total,
+        # Награды как у ребёнка в «Моих работах», за всё время
+        "achieved": {
+            "alive": any(kind == "alive" for kind, _ in ready_kinds),
+            "story": _count(db, Story, Story.child_id == child.id, Story.status == "ready") > 0,
+            "shared": _count(db, Post, Post.child_id == child.id, Post.status == "published") > 0,
+            "styles": {t.id for t in TEMPLATES} <= {tpl for _, tpl in ready_kinds},
+        },
         "days": DAYS,
         "has_data": has_data,
         "created": created if has_data else None,

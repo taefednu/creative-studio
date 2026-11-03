@@ -23,6 +23,8 @@ from app.moderation import hold
 from app.voice import router as voice
 from app.works.image import pipeline
 from app.works.image.models import Work
+from app.works.image.templates import TEMPLATES
+from app.works.story.models import Story
 
 PW = "correct-horse-1"
 
@@ -280,6 +282,30 @@ def test_analytics_numbers_and_privacy():
     assert b["coins_earned_lessons"] is None and "coins_earned" not in b
     assert "СРОЧНЫЙ" not in r.text and "self_harm" not in r.text
     assert len(b["ready_at"]) == 2  # график «картинок в день» считает эти метки в поясе родителя
+
+
+def test_analytics_achieved_only_from_ready_works():
+    p = login("parent")
+    cid, _ = child_of(p)
+    get = lambda: p.get(f"/api/parent/children/{cid}/analytics").json()["achieved"]
+    assert get() == {"alive": False, "story": False, "shared": False, "styles": False}
+    with db.new_session() as s:
+        # Не готовое не считается: ни оживление, ни сказка, ни пост, ни последний стиль
+        s.add(Work(child_id=cid, kind="alive", template_id="alive", status="held", request_id="r-a-aaaa"))
+        s.add(Story(child_id=cid, hero_work_id=1, lang="ru", request_id="r-s-aaaa", status="checking"))
+        s.add(Post(work_id=1, child_id=cid, audience="family", status="held"))
+        for i, t in enumerate(TEMPLATES[:-1]):
+            s.add(Work(child_id=cid, template_id=t.id, status="ready", request_id=f"r-t-{i}-aaaa"))
+        s.add(Work(child_id=cid, template_id=TEMPLATES[-1].id, status="held", request_id="r-l-aaaa"))
+        s.commit()
+    assert get() == {"alive": False, "story": False, "shared": False, "styles": False}
+    with db.new_session() as s:
+        s.add(Work(child_id=cid, kind="alive", template_id="alive", status="ready", request_id="r-b-aaaa"))
+        s.add(Story(child_id=cid, hero_work_id=1, lang="ru", request_id="r-u-aaaa", status="ready"))
+        s.add(Post(work_id=2, child_id=cid, audience="family", status="published"))
+        s.add(Work(child_id=cid, template_id=TEMPLATES[-1].id, status="ready", request_id="r-m-aaaa"))
+        s.commit()
+    assert get() == {"alive": True, "story": True, "shared": True, "styles": True}
 
 
 def test_children_list_names_class():

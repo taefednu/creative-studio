@@ -15,9 +15,8 @@ type Tab = { to: string; icon: string; key: string; end?: boolean; review?: bool
 
 const TABS: Record<'parent' | 'teacher', Tab[]> = {
   parent: [
-    { to: '/parent', icon: 'feed', key: 'feed', end: true },
     { to: '/parent/kids', icon: 'kids.webp', key: 'kids', review: true },
-    { to: '/parent/plans', icon: 'crown.webp', key: 'plans' },
+    { to: '/parent/plans', icon: 'coin.webp', key: 'plans' },
   ],
   teacher: [
     { to: '/teacher', icon: 'feed', key: 'feed', end: true },

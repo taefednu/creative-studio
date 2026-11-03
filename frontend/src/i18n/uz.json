@@ -276,7 +276,8 @@
     "effect": {"cleared_word": "Harflar topilmadi, shuning uchun rasm xiralashtirilmagan. Ism yoki boshqa shaxsiy ma'lumot ko'rsangiz, rad eting.", "drawn_face": "Bu yuz chizilganga o'xshaydi, shuning uchun xiralashtirilmagan. Unda haqiqiy odam bo'lsa, rad eting.", "share": "Tasdiqlang, rasmni hamma ko‘radi: umumiy lentada va havola orqali. Bolaning laqabi va ismi ko‘rsatilmaydi.", "story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
     "title": "Ushlab turilganlar",
     "badge": "Ushlab turilgan: {{count}}",
-    "okTitle": "Sizning ruxsatingizni kutmoqda",
+    "okTitle": "Qaroringizni kutmoqda",
+    "moreLeft": "Yana {{count}}",
     "empty": "Qaror kutayotgan narsa yoʻq.",
     "approve": "Tasdiqlash",
     "reject": "Rad etish",
@@ -343,11 +344,10 @@
     }
   },
   "cab": {
-    "allReview": "Hammasi: {{count}}",
     "tabs": {
       "kids": "Bolalarim",
       "review": "Tekshiruv",
-      "plans": "Tariflar",
+      "plans": "Tanga sotib olish",
       "tasks": "Topshiriqlar",
       "classes": "Sinflar",
       "feed": "Lenta"
@@ -358,7 +358,7 @@
     "nav": "Asosiy menyu",
     "account": "Akkaunt",
     "myKids": "Bolalarim",
-    "kid": { "more": "Batafsil", "less": "Yashirish",
+    "kid": { "works": "{{nick}} ishlari", "more": "Batafsil", "less": "Yashirish",
       "ageClass": "{{age}} · {{name}} sinfi",
       "age": "{{age}} · sinfsiz",
       "lessons": "bu haftada Mentorium darslaridan tangalar",
@@ -398,7 +398,7 @@
       }
     },
     "plans": {
-      "title": "Tariflar",
+      "title": "Tanga sotib olish",
       "coins": "{{count}} tanga",
       "soon": "Tez orada",
       "note": "Tanga sotib olish hozircha mavjud emas.",

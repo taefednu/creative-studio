@@ -276,7 +276,8 @@
     "effect": {"cleared_word": "No letters were found, so the drawing isn't blurred. Reject if you can see a name or other personal details.", "drawn_face": "This face looks drawn, so it isn't blurred. Reject if it shows a real person.", "share": "Approve and everyone can see the picture: in the public feed and by link. The child’s nickname and name are not shown.", "story": "Approve and the child will see the story; missing pages will be painted.", "prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
     "title": "Held for review",
     "badge": "Held: {{count}}",
-    "okTitle": "Waiting for your OK",
+    "okTitle": "Waiting for your decision",
+    "moreLeft": "{{count}} more",
     "empty": "Nothing is waiting for a decision.",
     "approve": "Approve",
     "reject": "Reject",
@@ -343,11 +344,10 @@
     }
   },
   "cab": {
-    "allReview": "See all: {{count}}",
     "tabs": {
       "kids": "My kids",
       "review": "Review",
-      "plans": "Plans",
+      "plans": "Buy coins",
       "tasks": "Tasks",
       "classes": "Classes",
       "feed": "Feed"
@@ -358,7 +358,7 @@
     "nav": "Main menu",
     "account": "Account",
     "myKids": "My kids",
-    "kid": { "more": "More", "less": "Hide",
+    "kid": { "works": "Works by {{nick}}", "more": "More", "less": "Hide",
       "ageClass": "{{age}} · class {{name}}",
       "age": "{{age}} · no class",
       "lessons": "coins from Mentorium lessons this week",
@@ -398,7 +398,7 @@
       }
     },
     "plans": {
-      "title": "Plans",
+      "title": "Buy coins",
       "coins": "{{count}} coins",
       "soon": "Soon",
       "note": "Buying coins is not available yet.",

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
-import { agoText, filterByClass, notifyReview, nothingBlurred, reasonKeys } from '../features/review/review'
+import { agoText, filterByClass, notifyReview, nothingBlurred, reasonKeys, stackOrder } from '../features/review/review'
 import { loadStory } from '../features/story/story'
 import type { Story } from '../features/story/story'
 import type { ReviewItem } from '../features/review/review'
@@ -15,6 +15,10 @@ const btnReject = 'rounded-full bg-danger-soft px-3 py-2 text-sm font-extrabold 
 const EFFECTS = ['prompt', 'image', 'post', 'comment', 'upload', 'submission', 'story', 'share']
 const btnSide =
   'rounded-full border border-border bg-surface px-5 py-2 text-sm font-extrabold text-heading disabled:opacity-50'
+const effectKey = (it: ReviewItem) =>
+  nothingBlurred(it.reason_codes)
+    ? `review.effect.${it.reason_codes.includes('drawn_face') ? 'drawn_face' : 'cleared_word'}`
+    : `review.effect.${EFFECTS.includes(it.item_type) ? it.item_type : 'other'}`
 
 /**
  * «Задержано» (учитель) и «Ждёт вашего OK» (родитель): один компонент, фильтр по роли на сервере.
@@ -25,15 +29,15 @@ export default function ReviewQueue({
   classFilter = null,
   hideEmpty = false,
   urgentOnly = false,
-  limit,
+  stackOf,
 }: {
   title?: string
   /** Решений нет: секции нет вовсе. */
   hideEmpty?: boolean
   /** Над лентой: только срочное, обычные решения ждут на своей вкладке. */
   urgentOnly?: boolean
-  /** Сколько обычных решений показать сразу; остальные по кнопке. Срочное не прячется никогда. */
-  limit?: number
+  /** Стопка одного ребёнка: по одной работе за раз. Срочное она не показывает, его держит urgentOnly над экраном. */
+  stackOf?: string
   classFilter?: string | null
 }) {
   const { t } = useTranslation()
@@ -44,10 +48,9 @@ export default function ReviewQueue({
   const [busy, setBusy] = useState<number | null>(null)
   const [failed, setFailed] = useState(false)
   const [zoom, setZoom] = useState<string | null>(null)
-  const [expanded, setExpanded] = useState(false)
-  const urgent = items?.filter((x) => x.urgent) ?? []
-  const calm = items?.filter((x) => !x.urgent) ?? []
-  const shown = limit && !expanded ? [...urgent, ...calm.slice(0, limit)] : items ?? []
+  const [skipped, setSkipped] = useState(0)
+  const [leaving, setLeaving] = useState<{ id: number; to: 'left' | 'right' } | null>(null)
+  const pile = stackOrder(stackOf ? items?.filter((x) => !x.urgent && x.nick === stackOf) ?? [] : [], skipped)
   useEffect(() => {
     if (!zoom) return
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && setZoom(null)
@@ -58,7 +61,7 @@ export default function ReviewQueue({
   const load = useCallback(() => {
     api<ReviewItem[]>('/api/review/queue')
       .then(setItems)
-      .catch(() => {})
+      .catch(() => setLeaving(null)) // список не обновился: решённая карточка не должна остаться невидимой
   }, [])
   useEffect(() => {
     load()
@@ -70,6 +73,10 @@ export default function ReviewQueue({
     try {
       await api(`/api/review/items/${it.id}/${what}`, 'POST')
       setOpen(null)
+      if (stackOf && what !== 'seen') {
+        setLeaving({ id: it.id, to: what === 'approve' ? 'right' : 'left' })
+        await new Promise((done) => setTimeout(done, 180))
+      }
     } catch {
       setFailed(true)
     } finally {
@@ -89,13 +96,14 @@ export default function ReviewQueue({
   const kind = (it: ReviewItem) => t(`review.types.${it.item_type}`)
 
   if ((hideEmpty || urgentOnly) && !items?.length && !open) return null
+  if (stackOf && !pile.length) return null
 
   return (
-    <section id="review" data-testid="review" className={`flex flex-col gap-3 ${urgentOnly ? 'mb-3' : ''}`}>
+    <section id="review" data-testid="review" className={`flex flex-col ${stackOf ? 'mx-auto w-full max-w-[520px] gap-5' : 'gap-3'} ${urgentOnly ? 'mb-3' : ''}`}>
       {title && (
-        <h2 className="flex items-center gap-2 text-2xl font-extrabold text-heading">
+        <h2 className={`flex items-center gap-2 text-heading ${stackOf ? 'text-[28px] font-black leading-9 tracking-tight lg:text-4xl lg:leading-[44px]' : 'text-2xl font-extrabold'}`}>
           {title}
-          {items !== null && items.length > 0 && (
+          {!stackOf && items !== null && items.length > 0 && (
             <span data-testid="review-count" className="rounded-full bg-primary px-3 py-0.5 text-sm text-primary-fg">
               {items.length}
             </span>
@@ -115,17 +123,35 @@ export default function ReviewQueue({
           </p>
         </div>
       )}
-      {items && items.length > 0 && (
+      {stackOf && pile[0] && (
+        <div data-testid="review-stack" className="flex w-full flex-col gap-4">
+          <div className="relative">
+            {/* Чистые листы под верхней: видно, что работ ещё несколько, и глаз не цепляется за обрезки чужих картинок */}
+            {pile.slice(1, 3).map((x, i) => (
+              <div key={x.id} aria-hidden="true" style={{ zIndex: 2 - i }} className={`absolute inset-0 rounded-[22px] border border-border bg-surface shadow-card ${i ? 'translate-x-2 rotate-[3deg] md:translate-x-3' : 'translate-x-1 rotate-[1.5deg] md:translate-x-1.5'}`} />
+            ))}
+            <div key={pile[0].id} className={`relative z-10 ${leaving?.id === pile[0].id ? `stack-${leaving.to}` : 'stack-in'}`}>
+              <ReviewCard big it={pile[0]} kind={kind(pile[0])} where={where(pile[0])} busy={busy === pile[0].id} onOpen={() => setOpen(pile[0])} onZoom={setZoom} onAct={(w) => void act(pile[0], w)} />
+            </div>
+          </div>
+          {/* Кнопки одного веса: одобрение не должно быть действием по умолчанию */}
+          <div className="grid grid-cols-2 gap-3">
+            <button type="button" data-testid="review-reject" disabled={busy === pile[0].id} className={`${btnReject} h-14 text-base md:text-lg`} onClick={() => void act(pile[0], 'reject')}>{t('review.reject')}</button>
+            <button type="button" data-testid="review-approve" disabled={busy === pile[0].id} title={t(effectKey(pile[0]))} className={`${btnApprove} h-14 text-base md:text-lg`} onClick={() => void act(pile[0], 'approve')}>{t('review.approve')}</button>
+          </div>
+          {pile.length > 1 && (
+            <button type="button" data-testid="review-skip" onClick={() => setSkipped(skipped + 1)} className="self-center text-base font-extrabold text-primary underline decoration-2 underline-offset-4">
+              {t('review.moreLeft', { count: pile.length - 1 })}
+            </button>
+          )}
+        </div>
+      )}
+      {!stackOf && items && items.length > 0 && (
         <div data-testid="review-grid" className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {shown.map((it) => (
+          {items.map((it) => (
             <ReviewCard key={it.id} it={it} kind={kind(it)} where={where(it)} busy={busy === it.id} onOpen={() => setOpen(it)} onZoom={setZoom} onAct={(w) => void act(it, w)} />
           ))}
         </div>
-      )}
-      {limit && !expanded && calm.length > limit && (
-        <button type="button" data-testid="review-all" onClick={() => setExpanded(true)} className="flex h-12 items-center justify-center self-center rounded-full border border-border bg-surface px-6 font-extrabold text-heading">
-          {t('cab.allReview', { count: items?.length })}
-        </button>
       )}
       {zoom && (
         <button
@@ -149,7 +175,7 @@ type RowProps = { it: ReviewItem; kind: string; busy: boolean; onOpen: () => voi
  * Карточка решения: сверху то, о чём решаем, крупно и целиком; причина поверх него; ниже кто и где; внизу равные кнопки.
  * Кнопки одного веса: одобрение не должно быть действием по умолчанию, особенно на «Обидных словах».
  */
-function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps & { where: string; onZoom: (url: string) => void }) {
+function ReviewCard({ it, kind, where, busy, big = false, onOpen, onZoom, onAct }: RowProps & { where: string; big?: boolean; onZoom: (url: string) => void }) {
   const { t } = useTranslation()
   const ago = agoText(it.created_at, t)
   const [reading, setReading] = useState<number | null>(null)
@@ -189,7 +215,7 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
   return (
     <article data-testid="review-item" className="feed-card flex flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-card">
       {reading !== null && <StoryReview id={reading} onClose={() => setReading(null)} />}
-      <div className="relative flex h-44 bg-primary-soft">
+      <div className={`relative flex bg-primary-soft ${big ? 'h-[clamp(190px,36dvh,300px)]' : 'h-44'}`}>
         {it.original_url ? (
           <div data-testid="review-pair" className="flex h-full w-full gap-0.5">
             {blurred ? (
@@ -214,6 +240,15 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
           </p>
         )}
       </div>
+      {big ? (
+        <div className="flex flex-col gap-0.5 p-3 md:px-4">
+          <p data-testid="review-reason" className="text-lg font-extrabold leading-6 text-heading">{reasonKeys(it.reason_codes).map((k) => t(k)).join(', ')}</p>
+          {it.image_url && it.preview_text && <p className="line-clamp-2 break-words text-sm text-text">«{it.preview_text}»</p>}
+          <p className="text-sm font-semibold text-muted">{kind}, {where}, {ago}</p>
+          {/* Предупреждение, которое меняет решение, видно сразу; общее «что будет» в подсказке на кнопке */}
+          {nothingBlurred(it.reason_codes) && <p data-testid="review-effect" className="mt-1 text-sm text-text">{t(effectKey(it))}</p>}
+        </div>
+      ) : (
       <div className="flex flex-1 flex-col gap-2.5 p-3">
         <p className="flex flex-wrap gap-1.5">
           {reasonKeys(it.reason_codes).map((k) => (
@@ -222,12 +257,13 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
         </p>
         {it.image_url && it.preview_text && <p className="line-clamp-2 break-words text-sm text-text">«{it.preview_text}»</p>}
         {who}
-        <p data-testid="review-effect" className="mt-auto text-xs text-muted">{t(nothingBlurred(it.reason_codes) ? `review.effect.${it.reason_codes.includes('drawn_face') ? 'drawn_face' : 'cleared_word'}` : `review.effect.${EFFECTS.includes(it.item_type) ? it.item_type : 'other'}`)}</p>
+        <p data-testid="review-effect" className="mt-auto text-xs text-muted">{t(effectKey(it))}</p>
         <div className="grid grid-cols-2 gap-2">
           <button type="button" data-testid="review-reject" disabled={busy} className={`${btnReject} h-11`} onClick={() => onAct('reject')}>{t('review.reject')}</button>
           <button type="button" data-testid="review-approve" disabled={busy} className={`${btnApprove} h-11`} onClick={() => onAct('approve')}>{t('review.approve')}</button>
         </div>
       </div>
+      )}
     </article>
   )
 }

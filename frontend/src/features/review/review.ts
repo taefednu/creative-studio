@@ -19,11 +19,11 @@ export type ReviewItem = {
   story_id?: number | null
 }
 
-const EVENT = 'review:changed'
+export const REVIEW_EVENT = 'review:changed'
 
 /** Очередь и бейдж держат один счётчик: после решения зовём notifyReview(). */
 export function notifyReview() {
-  window.dispatchEvent(new Event(EVENT))
+  window.dispatchEvent(new Event(REVIEW_EVENT))
 }
 
 export function useReviewCount(): number | null {
@@ -35,10 +35,34 @@ export function useReviewCount(): number | null {
   }, [])
   useEffect(() => {
     load()
-    window.addEventListener(EVENT, load)
-    return () => window.removeEventListener(EVENT, load)
+    window.addEventListener(REVIEW_EVENT, load)
+    return () => window.removeEventListener(REVIEW_EVENT, load)
   }, [load])
   return n
+}
+
+/** Сколько ждёт решения у каждого ребёнка: срочное тоже, сумма сходится со счётчиком на вкладке. */
+export function waitingByNick(items: Pick<ReviewItem, 'nick'>[]): Record<string, number> {
+  const counts: Record<string, number> = {}
+  for (const x of items) counts[x.nick] = (counts[x.nick] ?? 0) + 1
+  return counts
+}
+
+/** Кого открыть при входе: первого, у кого есть что решить, иначе первого в списке. */
+export function firstKid<T extends { nick: string }>(kids: T[], counts: Record<string, number>): T | undefined {
+  return kids.find((k) => counts[k.nick]) ?? kids[0]
+}
+
+/** Остальные дети по кругу от выбранного: смена ребёнка проворачивает всё кольцо. */
+export function ringAfter<T extends { id: number }>(kids: T[], id: number): T[] {
+  const i = kids.findIndex((k) => k.id === id)
+  return [...kids.slice(i + 1), ...kids.slice(0, Math.max(i, 0))]
+}
+
+/** Стопка решений: «Ещё» отправляет верхнюю работу под низ, ни одна не пропадает. */
+export function stackOrder<T>(items: T[], skipped: number): T[] {
+  const n = skipped % (items.length || 1)
+  return [...items.slice(n), ...items.slice(0, n)]
 }
 
 /** Сервер хранит наивное UTC: без «Z» браузер прочитал бы его как местное. */

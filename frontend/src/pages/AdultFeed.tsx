@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import CabinetHeader from '../components/CabinetHeader'
 import FeedView, { FeedSkeleton } from '../components/FeedView'
@@ -7,7 +7,6 @@ import ReviewQueue from '../components/ReviewQueue'
 import { useLoad } from '../useLoad'
 
 const loadRooms = () => api<{ id: number; name: string }[]>('/api/teacher/classes')
-const loadKids = () => api<unknown[]>('/api/parent/children')
 
 function TeacherFeed() {
   const { t } = useTranslation()
@@ -36,22 +35,14 @@ function TeacherFeed() {
   return <FeedView kinds={['class']} classId={id} classes={classes} />
 }
 
-function ParentFeed() {
-  const [kids] = useLoad(loadKids)
-  if (!kids) return <FeedSkeleton />
-  // Без детей лента пуста всегда: новому родителю сначала нужно добавить ребёнка
-  if (kids.length === 0) return <Navigate to="/parent/kids" replace />
-  return <FeedView kinds={['family']} />
-}
-
-/** Главный экран взрослого: та же лента, что у детей. Срочное видно над ней всегда, остальное ждёт по счётчику на вкладке. */
-export default function AdultFeed({ who }: { who: 'teacher' | 'parent' }) {
+/** Главный экран учителя: та же лента, что у детей. Срочное видно над ней всегда, остальное ждёт по счётчику на вкладке. */
+export default function AdultFeed() {
   return (
     <div className="min-h-screen bg-bg pb-24 lg:pb-6">
-      <CabinetHeader role={who} />
+      <CabinetHeader role="teacher" />
       <main className="px-4 pb-5 pt-1.5 md:px-8 lg:pt-4">
         <ReviewQueue urgentOnly />
-        {who === 'teacher' ? <TeacherFeed /> : <ParentFeed />}
+        <TeacherFeed />
       </main>
     </div>
   )
