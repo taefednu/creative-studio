@@ -21,14 +21,11 @@ const btnSide =
  */
 export default function ReviewQueue({
   title,
-  hideEmpty = false,
   urgentOnly = false,
   stackOf,
   withWho = false,
 }: {
   title?: string
-  /** Решений нет: секции нет вовсе. */
-  hideEmpty?: boolean
   /** Над лентой: только срочное, обычные решения ждут на своей вкладке. */
   urgentOnly?: boolean
   /** Стопка одного ребёнка: по одной работе за раз. Срочное она не показывает, его держит urgentOnly над экраном. */
@@ -90,7 +87,7 @@ export default function ReviewQueue({
 
   const kind = (it: ReviewItem) => t(`review.types.${it.item_type}`)
 
-  if ((hideEmpty || urgentOnly) && !items?.length && !open) return null
+  if (urgentOnly && !items?.length && !open) return null
   if (stackOf && !pile.length) return null
 
   return (
@@ -99,11 +96,6 @@ export default function ReviewQueue({
         <div className="flex items-center justify-between gap-3">
         <h2 className={`flex items-center gap-2 text-heading ${stackOf ? 'text-[28px] font-black leading-9 tracking-tight lg:text-4xl lg:leading-[44px]' : 'text-2xl font-extrabold'}`}>
           {title}
-          {!stackOf && items !== null && items.length > 0 && (
-            <span data-testid="review-count" className="rounded-full bg-primary px-3 py-0.5 text-sm text-primary-fg">
-              {items.length}
-            </span>
-          )}
         </h2>
         {stackOf && pile.length > 1 && (
           <button type="button" data-testid="review-skip" onClick={() => setSkipped(skipped + 1)} className="shrink-0 whitespace-nowrap text-base font-extrabold text-primary underline decoration-2 underline-offset-4">
@@ -117,18 +109,10 @@ export default function ReviewQueue({
           {t('review.failed')}
         </p>
       )}
-      {items && items.length === 0 && (
-        <div className="flex items-center gap-4">
-          <img src="/art/robot-happy.webp" alt="" className="h-20 w-20 shrink-0 object-contain" />
-          <p data-testid="review-empty" className="text-lg font-extrabold text-heading">
-            {t('review.empty')}
-          </p>
-        </div>
-      )}
       {stackOf && pile[0] && (
         <div data-testid="review-stack" className="flex w-full flex-col gap-4">
           <div key={pile[0].id} className={leaving?.id === pile[0].id ? `stack-${leaving.to}` : 'stack-in'}>
-            <ReviewCard big withWho={withWho} it={pile[0]} kind={kind(pile[0])} where={where(pile[0])} busy={busy === pile[0].id} onOpen={() => setOpen(pile[0])} onZoom={setZoom} onAct={(w) => void act(pile[0], w)} />
+            <ReviewCard withWho={withWho} it={pile[0]} kind={kind(pile[0])} where={where(pile[0])} busy={busy === pile[0].id} onOpen={() => setOpen(pile[0])} onZoom={setZoom} onAct={(w) => void act(pile[0], w)} />
           </div>
         </div>
       )}
@@ -163,7 +147,7 @@ type RowProps = { it: ReviewItem; kind: string; busy: boolean; onOpen: () => voi
  * Карточка решения: сверху то, о чём решаем, крупно и целиком; причина поверх него; ниже кто и где; внизу равные кнопки.
  * Кнопки одного веса: одобрение не должно быть действием по умолчанию, особенно на «Обидных словах».
  */
-function ReviewCard({ it, kind, where, busy, big = false, withWho = false, onOpen, onZoom, onAct }: RowProps & { where: string; big?: boolean; withWho?: boolean; onZoom: (url: string) => void }) {
+function ReviewCard({ it, kind, where, busy, withWho = false, onOpen, onZoom, onAct }: RowProps & { where: string; withWho?: boolean; onZoom: (url: string) => void }) {
   const { t } = useTranslation()
   const ago = agoText(it.created_at, t)
   const [reading, setReading] = useState<number | null>(null)
@@ -194,28 +178,15 @@ function ReviewCard({ it, kind, where, busy, big = false, withWho = false, onOpe
   )
   // Размытой версии нет, пока до неё не дошло, и незачем, если лицо нарисовано: одна картинка
   const blurred = nothingBlurred(it.reason_codes) ? null : it.blurred_url
-  const version = (k: string, url: string, cap: string) => (
-    <figure className="relative flex h-full min-w-0 flex-1 bg-surface">
-      {picture(url, `review-${k}`)}
-      <figcaption className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-surface px-2 py-0.5 text-xs font-bold text-heading">{cap}</figcaption>
-    </figure>
-  )
   return (
-    <article data-testid="review-item" className={big ? 'grid gap-2 md:gap-3 lg:grid-cols-4 xl:grid-cols-5' /* сетка галереи работ под блоком: края совпадают с плитками */ : 'feed-card flex flex-col overflow-hidden rounded-[22px] border border-border bg-surface shadow-card'}>
+    <article data-testid="review-item" className="grid gap-2 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
       {reading !== null && createPortal(<StoryReview id={reading} onClose={() => setReading(null)} />, document.body)}
-      <div className={`relative flex bg-primary-soft ${big ? 'h-[34dvh] min-h-[220px] overflow-hidden rounded-[22px] border border-border shadow-card lg:col-span-2 lg:aspect-square lg:h-auto xl:col-span-3 xl:aspect-[3/2]' : 'h-44'}`}>
-        {big && it.original_url && blurred ? (
+      <div className="relative flex bg-primary-soft h-[34dvh] min-h-[220px] overflow-hidden rounded-[22px] border border-border shadow-card lg:col-span-2 lg:aspect-square lg:h-auto xl:col-span-3 xl:aspect-[3/2]">
+        {it.original_url && blurred ? (
           <CompareSlider original={it.original_url} blurred={blurred} onZoom={onZoom} />
         ) : it.original_url ? (
           <div data-testid="review-pair" className="flex h-full w-full gap-0.5">
-            {blurred ? (
-              <>
-                {version('original', it.original_url, t('cab.upload.original'))}
-                {version('blurred', blurred, t('cab.upload.blurred'))}
-              </>
-            ) : (
-              picture(it.original_url, 'review-original')
-            )}
+            {picture(it.original_url, 'review-original')}
           </div>
         ) : it.image_url ? (
           picture(it.image_url)
@@ -230,7 +201,6 @@ function ReviewCard({ it, kind, where, busy, big = false, withWho = false, onOpe
           </p>
         )}
       </div>
-      {big ? (
         <div className="mt-2 flex min-w-0 flex-col gap-1 lg:col-span-2 lg:mt-0">
           <p data-testid="review-reason" className="text-2xl font-black leading-7 tracking-tight text-heading">{reasonKeys(it.reason_codes).map((k) => t(k)).join(', ')}</p>
           {it.image_url && it.preview_text && <p className="line-clamp-2 break-words text-sm text-text">«{it.preview_text}»</p>}
@@ -243,22 +213,6 @@ function ReviewCard({ it, kind, where, busy, big = false, withWho = false, onOpe
             <button type="button" data-testid="review-approve" disabled={busy} className={`${btnApprove} h-14 text-base md:text-lg`} onClick={() => onAct('approve')}>{t('review.approve')}</button>
           </div>
         </div>
-      ) : (
-      <div className="flex flex-1 flex-col gap-2.5 p-3">
-        <p className="flex flex-wrap gap-1.5">
-          {reasonKeys(it.reason_codes).map((k) => (
-            <span key={k} data-testid="review-reason" className="rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-extrabold text-danger">{t(k)}</span>
-          ))}
-        </p>
-        {it.image_url && it.preview_text && <p className="line-clamp-2 break-words text-sm text-text">«{it.preview_text}»</p>}
-        {who}
-        <p data-testid="review-effect" className="mt-auto text-xs text-muted">{t(effectKey(it))}</p>
-        <div className="grid grid-cols-2 gap-2">
-          <button type="button" data-testid="review-reject" disabled={busy} className={`${btnReject} h-11`} onClick={() => onAct('reject')}>{t('review.reject')}</button>
-          <button type="button" data-testid="review-approve" disabled={busy} className={`${btnApprove} h-11`} onClick={() => onAct('approve')}>{t('review.approve')}</button>
-        </div>
-      </div>
-      )}
     </article>
   )
 }
