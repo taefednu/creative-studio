@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app import clock
 from app.db import Base
 
-AUDIENCES = ("class", "family")
+AUDIENCES = ("class", "family", "public")  # public: только через разрешённую взрослым ссылку (works/share)
 POST_STATUSES = ("pending", "published", "held", "rejected", "hidden", "deleted")
 COMMENT_STATUSES = ("pending", "published", "held", "rejected")
 REACTIONS = ("star", "heart", "laugh", "wow")
@@ -20,12 +20,12 @@ class Post(Base):
     work_id: Mapped[int] = mapped_column(ForeignKey("works.id"), index=True)
     work_kind: Mapped[str] = mapped_column(String(10), default="image")
     child_id: Mapped[int] = mapped_column(ForeignKey("children.id"), index=True)
-    audience: Mapped[str] = mapped_column(String(7))  # class | family
+    audience: Mapped[str] = mapped_column(String(7))  # class | family | public
     class_id: Mapped[int | None] = mapped_column(ForeignKey("classrooms.id"), nullable=True, index=True)
     caption: Mapped[str | None] = mapped_column(String(300), nullable=True)  # только проверенная
     caption_i18n: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # только демо-наполнение, не ввод ребёнка
     status: Mapped[str] = mapped_column(String(10), default="pending", index=True)
-    best: Mapped[bool] = mapped_column(default=False, index=True)  # ставит только скрипт команды
+    best: Mapped[bool] = mapped_column(default=False, index=True)  # скрипт команды или разрешённая взрослым ссылка
     remix_allowed: Mapped[bool] = mapped_column(default=True, server_default=text("1"))  # автор может выключить
     created_at: Mapped[datetime] = mapped_column(DateTime, default=clock.now)
     # Живой пост один на работу и аудиторию: гонка публикации и «показать в ленте» не даст дубль.

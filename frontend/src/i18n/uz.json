@@ -204,7 +204,10 @@
     "remixGo": "Remiksni chizish",
     "remixAllow": "Remiksga ruxsat berish"
   },
+  "share": {"title": "Qara, nima yaratdim!", "alt": "AI tekshirgan rasm", "cta": "O‘z rasmingni yarat", "gone": "Bu havola endi ishlamaydi"},
   "publish": {
+    "toAll": "Hammaga", "toAllNote": "Kattalar ko‘rib, ruxsat beradi. Shunda rasm umumiy lentada chiqadi va senga havola beriladi. Havola sahifasida isming yo‘q.", "askAdult": "Kattalardan so‘rash",
+    "share": {"waiting": "Kattalar hammaga ko‘rsatishga ruxsat berishini kutamiz.", "refused": "Kattalar bu rasmni hammaga ko‘rsatmaslikka qaror qildi.", "live": "Rasmga havola", "copy": "Nusxalash", "copied": "Tayyor", "stop": "Havolani o‘chirish"},
     "button": "Ulashish",
     "toClass": "Sinfga",
     "toFamily": "Oilaga",
@@ -285,7 +288,7 @@
     "storyIdea": "Bolaning gʻoyasi: «{{text}}»",
     "storyNoImage": "Rasm hali yoʻq",
     "zoom": "Kattaroq ochish",
-    "effect": {"story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
+    "effect": {"share": "Tasdiqlang, rasmni hamma ko‘radi: umumiy lentada va havola orqali. Havola sahifasida bolaning ismi yo‘q.", "story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
     "title": "Ushlab turilganlar",
     "badge": "Ushlab turilgan: {{count}}",
     "okTitle": "Sizning ruxsatingizni kutmoqda",
@@ -305,7 +308,7 @@
     "now": "hozirgina",
     "childRejected": "Kattalar buni eʻlon qilmaslikka qaror qildi: «{{text}}»",
     "childRejectedNoText": "Kattalar buni eʻlon qilmaslikka qaror qildi.",
-    "types": { "story": "Ertak", "prompt": "Soʻrov", "image": "Rasm", "post": "Post", "comment": "Izoh", "nickname": "Taxallus", "assignment": "Topshiriq", "submission": "Topshirilgan ish", "upload": "Yuklash" },
+    "types": { "share": "Hammaga ko‘rsatish", "story": "Ertak", "prompt": "Soʻrov", "image": "Rasm", "post": "Post", "comment": "Izoh", "nickname": "Taxallus", "assignment": "Topshiriq", "submission": "Topshirilgan ish", "upload": "Yuklash" },
     "where": { "class": "{{name}} sinfida", "classNoName": "Sinfda", "family": "Oila", "personal": "Shaxsiy" },
     "reasons": {
       "personal_info": "Shaxsiy maʻlumot",
@@ -486,7 +489,7 @@
   },
   "mw": {
     "gallery": "{{nick}} galereyasi",
-    "rank": {"novice": "Yangi boshlovchi", "young": "Yosh rassom", "master": "Mo‘yqalam ustasi", "wizard": "Ranglar sehrgari", "great": "Buyuk rassom"}, "rankNext": "«{{rank}}» unvonigacha: {{n}} / {{need}}", "rankTop": "Eng yuqori unvon!", "badgeDone": "Olindi!", "badge": {"first": {"name": "Birinchi rasm", "how": "Birinchi rasmingni chiz."}, "alive": {"name": "Jonlangan rasm", "how": "Rasmingni jonlantir."}, "story": {"name": "Ertakchi", "how": "Qahramoning haqida ertak to‘qi."}, "shared": {"name": "Ko‘rgazmada", "how": "Ishingni oilang yoki sinfingga ko‘rsat."}, "styles": {"name": "Kollektsioner", "how": "Barcha uslublarda chiz."}, "ten": {"name": "O‘nta ish", "how": "10 ta rasm chiz."}},
+    "rank": {"novice": "Yangi boshlovchi", "young": "Yosh rassom", "master": "Mo‘yqalam ustasi", "wizard": "Ranglar sehrgari", "great": "Buyuk rassom"}, "level": "{{n}}-daraja", "levelNext": "{{level}}-darajagacha: {{n}} / {{need}} ta rasm", "rankTop": "Eng yuqori unvon!", "badgeDone": "Olindi!", "badge": {"first": {"name": "Birinchi rasm", "how": "Birinchi rasmingni chiz."}, "alive": {"name": "Jonlangan rasm", "how": "Rasmingni jonlantir."}, "story": {"name": "Ertakchi", "how": "Qahramoning haqida ertak to‘qi."}, "shared": {"name": "Ko‘rgazmada", "how": "Ishingni oilang yoki sinfingga ko‘rsat."}, "styles": {"name": "Kollektsioner", "how": "Barcha uslublarda chiz."}, "ten": {"name": "O‘nta ish", "how": "10 ta rasm chiz."}},
     "albumLabel": "Uslublar albomi",
     "albumEmpty": "«{{style}}» uslubida chizish",
     "all": "Hammasi",

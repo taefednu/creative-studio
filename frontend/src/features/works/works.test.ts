@@ -74,10 +74,10 @@ describe('withoutHeroSources', () => {
 describe('artistProgress', () => {
   const pics = (n: number): Work[] => Array.from({ length: n }, (_, i) => ({ ...w(i + 1), kind: 'image' }))
   it('звание растёт с картинками, загруженные рисунки не считаются', () => {
-    expect(artistProgress([], 0, 0, 8)).toMatchObject({ rank: 'novice', from: 0, next: { id: 'young', need: 3 } })
+    expect(artistProgress([], 0, 0, 8)).toMatchObject({ level: 1, rank: 'novice', from: 0, next: { id: 'young', need: 3 } })
     expect(artistProgress([...pics(2), { ...w(90), kind: 'upload' }], 0, 0, 8).rank).toBe('novice')
     expect(artistProgress(pics(3), 0, 0, 8).rank).toBe('young')
-    expect(artistProgress(pics(50), 0, 0, 8)).toMatchObject({ rank: 'great', next: null })
+    expect(artistProgress(pics(50), 0, 0, 8)).toMatchObject({ level: 5, rank: 'great', next: null })
   })
   it('значки только за сделанное', () => {
     const none = artistProgress([], 0, 7, 8).earned

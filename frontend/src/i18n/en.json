@@ -204,7 +204,10 @@
     "remixGo": "Draw my remix",
     "remixAllow": "Allow remixes"
   },
+  "share": {"title": "Look what I made!", "alt": "A picture checked by AI", "cta": "Make your own picture", "gone": "This link no longer works"},
   "publish": {
+    "toAll": "Everyone", "toAllNote": "An adult will look and allow it. Then the picture appears in the public feed and you get a link. Your name is not on the link page.", "askAdult": "Ask an adult",
+    "share": {"waiting": "Waiting for an adult to allow showing it to everyone.", "refused": "An adult decided not to show this picture to everyone.", "live": "Link to the picture", "copy": "Copy", "copied": "Copied", "stop": "Turn off the link"},
     "button": "Share",
     "toClass": "To the class",
     "toFamily": "To the family",
@@ -285,7 +288,7 @@
     "storyIdea": "The child's idea: “{{text}}”",
     "storyNoImage": "No picture yet",
     "zoom": "Open larger",
-    "effect": {"story": "Approve and the child will see the story; missing pages will be painted.", "prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
+    "effect": {"share": "Approve and everyone can see the picture: in the public feed and by link. The child’s name is not on the link page.", "story": "Approve and the child will see the story; missing pages will be painted.", "prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
     "title": "Held for review",
     "badge": "Held: {{count}}",
     "okTitle": "Waiting for your OK",
@@ -305,7 +308,7 @@
     "now": "just now",
     "childRejected": "A grown-up decided not to publish: “{{text}}”",
     "childRejectedNoText": "A grown-up decided not to publish this.",
-    "types": { "story": "Story", "prompt": "Prompt", "image": "Picture", "post": "Post", "comment": "Comment", "nickname": "Nickname", "assignment": "Assignment", "submission": "Submission", "upload": "Upload" },
+    "types": { "share": "Show to everyone", "story": "Story", "prompt": "Prompt", "image": "Picture", "post": "Post", "comment": "Comment", "nickname": "Nickname", "assignment": "Assignment", "submission": "Submission", "upload": "Upload" },
     "where": { "class": "In class {{name}}", "classNoName": "In class", "family": "Family", "personal": "Personal" },
     "reasons": {
       "personal_info": "Personal info",
@@ -486,7 +489,7 @@
   },
   "mw": {
     "gallery": "{{nick}}'s gallery",
-    "rank": {"novice": "Beginner", "young": "Young artist", "master": "Brush master", "wizard": "Color wizard", "great": "Great artist"}, "rankNext": "To “{{rank}}”: {{n}} of {{need}}", "rankTop": "The highest rank!", "badgeDone": "Earned!", "badge": {"first": {"name": "First picture", "how": "Draw your first picture."}, "alive": {"name": "Come to life", "how": "Bring your drawing to life."}, "story": {"name": "Storyteller", "how": "Write a story about your hero."}, "shared": {"name": "On show", "how": "Show a picture to your family or class."}, "styles": {"name": "Collector", "how": "Draw in every style."}, "ten": {"name": "Ten pictures", "how": "Draw 10 pictures."}},
+    "rank": {"novice": "Beginner", "young": "Young artist", "master": "Brush master", "wizard": "Color wizard", "great": "Great artist"}, "level": "Level {{n}}", "levelNext": "To level {{level}}: {{n}} of {{need}} pictures", "rankTop": "The highest rank!", "badgeDone": "Earned!", "badge": {"first": {"name": "First picture", "how": "Draw your first picture."}, "alive": {"name": "Come to life", "how": "Bring your drawing to life."}, "story": {"name": "Storyteller", "how": "Write a story about your hero."}, "shared": {"name": "On show", "how": "Show a picture to your family or class."}, "styles": {"name": "Collector", "how": "Draw in every style."}, "ten": {"name": "Ten pictures", "how": "Draw 10 pictures."}},
     "albumLabel": "Style album",
     "albumEmpty": "Draw in the “{{style}}” style",
     "all": "All",

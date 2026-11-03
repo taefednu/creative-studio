@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useOutletContext } from 'react-router-dom'
 import { api } from '../api'
 import type { ShellContext } from '../components/AppShell'
+import Avatar from '../components/Avatar'
 import ChipSelect from '../components/ChipSelect'
 import Icon from '../components/Icon'
 import NavIcon from '../components/NavIcon'
@@ -41,10 +42,56 @@ export default function MyWorks() {
   const path = artistProgress(works ?? [], stories?.filter((x) => x.status === 'ready').length ?? 0, stylesDone, album.length)
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:flex-nowrap">
-        <h1 data-testid="works-title" className="min-w-0 flex-1 truncate text-3xl font-black leading-10 tracking-tight text-heading md:flex-none md:text-5xl md:leading-[56px]">
-          {nick ? t('mw.gallery', { nick, interpolation: { escapeValue: false } }) : t('myWorks.title')}
-        </h1>
+      {!works?.length && (
+        <h1 data-testid="works-title" className="text-3xl font-black leading-10 tracking-tight text-heading md:text-5xl md:leading-[56px]">{t('myWorks.title')}</h1>
+      )}
+      {!!works?.length && (
+        <div data-testid="artist-path" className="relative">
+          <section className="relative flex min-h-[132px] items-center overflow-hidden rounded-[28px] bg-primary-soft p-4 pr-[132px] shadow-card md:h-[230px] md:items-start md:p-6">
+            <img src="/art/level-banner.webp" alt="" className="absolute inset-y-0 right-0 h-full w-auto max-w-none [mask-image:linear-gradient(to_right,transparent,black_30%)]" />
+            <div className="relative flex min-w-0 flex-1 items-center gap-3 md:items-start md:gap-6">
+              <div className="relative shrink-0 rounded-full bg-primary p-1">
+                {nick && <Avatar nick={nick} className="h-[60px] w-[60px] md:h-[150px] md:w-[150px]" />}
+                <span data-testid="artist-level" className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface bg-primary text-sm font-black text-primary-fg md:bottom-1 md:right-1 md:h-11 md:w-11 md:border-4 md:text-xl">{path.level}</span>
+              </div>
+              <div className="min-w-0 flex-1 md:max-w-[520px]">
+                <h1 data-testid="works-title" className="truncate text-xl font-black leading-7 tracking-tight text-heading md:text-[40px] md:leading-[48px]">{nick}</h1>
+                <p data-testid="artist-rank" className="truncate text-sm font-extrabold text-primary md:text-xl">
+                  {t('mw.level', { n: path.level })}<span className="hidden md:inline"> · {t(`mw.rank.${path.rank}`)}</span>
+                </p>
+                <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-surface md:mt-2 md:h-3.5">
+                  <div
+                    data-testid="artist-bar"
+                    className="h-full rounded-full bg-primary"
+                    style={{ width: `${path.next ? Math.round(((path.pictures - path.from) / (path.next.need - path.from)) * 100) : 100}%` }}
+                  />
+                </div>
+                <p className="mt-1 truncate text-xs font-bold text-heading md:text-sm">
+                  {path.next ? <><span className="md:hidden">{path.pictures} / {path.next.need}</span><span className="hidden md:inline">{t('mw.levelNext', { level: path.level + 1, n: path.pictures, need: path.next.need })}</span></> : t('mw.rankTop')}
+                </p>
+              </div>
+            </div>
+          </section>
+          <div className="mt-2 flex justify-between gap-1 md:absolute md:bottom-4 md:left-[206px] md:mt-0 md:justify-start md:gap-2">
+            {BADGES.map((id) => (
+              <button
+                key={id}
+                type="button"
+                data-testid={`badge-${id}`}
+                data-earned={path.earned[id]}
+                aria-pressed={badge === id}
+                aria-label={`${t(`mw.badge.${id}.name`)}${path.earned[id] ? `: ${t('mw.badgeDone')}` : ''}`}
+                title={t(`mw.badge.${id}.name`)}
+                onClick={() => setBadge(badge === id ? null : id)}
+                className={`h-12 w-12 shrink-0 rounded-full transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transition-none ${badge === id ? 'ring-[3px] ring-primary ring-offset-2 ring-offset-primary-soft' : ''}`}
+              >
+                <img src={`/art/badges/${id}.webp`} alt="" className={`h-full w-full object-contain ${path.earned[id] ? '' : 'opacity-60 grayscale'}`} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="mt-2 flex md:mt-3 md:justify-end">
         {works && works.length > 0 && (
           <div role="group" aria-label={t('mw.filters')} data-testid="works-filters" className="flex w-full gap-1.5 md:ml-auto md:w-auto md:gap-2">
             {FILTERS.map((f) => (
@@ -64,42 +111,6 @@ export default function MyWorks() {
           </div>
         )}
       </div>
-      {!!works?.length && (
-        <div data-testid="artist-path" className="mt-2 flex flex-col gap-2 md:flex-row md:items-center md:gap-6">
-          <div className="min-w-0 flex-1">
-            <p className="flex flex-wrap items-baseline gap-x-2 text-lg font-black leading-6 text-heading">
-              <span data-testid="artist-rank">{t(`mw.rank.${path.rank}`)}</span>
-              <span className="text-sm font-bold text-muted">
-                {path.next ? t('mw.rankNext', { rank: t(`mw.rank.${path.next.id}`), n: path.pictures, need: path.next.need, interpolation: { escapeValue: false } }) : t('mw.rankTop')}
-              </span>
-            </p>
-            <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-primary-soft md:max-w-[420px]">
-              <div
-                data-testid="artist-bar"
-                className="h-full rounded-full bg-primary"
-                style={{ width: `${path.next ? Math.round(((path.pictures - path.from) / (path.next.need - path.from)) * 100) : 100}%` }}
-              />
-            </div>
-          </div>
-          <div className="flex shrink-0 justify-between gap-1 md:justify-start md:gap-2">
-            {BADGES.map((id) => (
-              <button
-                key={id}
-                type="button"
-                data-testid={`badge-${id}`}
-                data-earned={path.earned[id]}
-                aria-pressed={badge === id}
-                aria-label={`${t(`mw.badge.${id}.name`)}${path.earned[id] ? `: ${t('mw.badgeDone')}` : ''}`}
-                title={t(`mw.badge.${id}.name`)}
-                onClick={() => setBadge(badge === id ? null : id)}
-                className={`h-12 w-12 shrink-0 rounded-full transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transition-none md:h-14 md:w-14 ${badge === id ? 'ring-[3px] ring-primary ring-offset-2 ring-offset-bg' : ''}`}
-              >
-                <img src={`/art/badges/${id}.webp`} alt="" className={`h-full w-full object-contain ${path.earned[id] ? '' : 'opacity-50 grayscale'}`} />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
       {badge && badge !== 'styles' && (
         <p data-testid="badge-note" className="nav-in mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-primary-soft px-4 py-2.5 text-sm font-bold text-heading">
           <span className="font-black">{t(`mw.badge.${badge}.name`)}</span>
@@ -293,7 +304,7 @@ function WorkCard({ w, big, open, onSubmitted, onClosed }: { w: Work; big: boole
               </button>
             </div>
             {w.image_url && <img src={w.image_url} alt={style} className="mb-3 aspect-square max-h-[50dvh] w-full rounded-2xl object-cover" />}
-            <PublishBox workId={w.id} onSupport={() => setSupport(true)} />
+            <PublishBox publicOk={w.kind === 'image' || w.kind === 'alive'} workId={w.id} onSupport={() => setSupport(true)} />
             {cur && (
               <div className="mt-2 flex flex-col gap-2">
                 <button

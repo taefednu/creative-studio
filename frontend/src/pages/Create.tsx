@@ -429,7 +429,7 @@ function WorkView({
           )}
           {err && <ErrorText code={err} />}
           {task && <SubmitBox main workId={work.id} assignment={task} onSupport={() => setSupportFor(work.id)} />}
-          <PublishBox main second={!!task} workId={work.id} onSupport={() => setSupportFor(work.id)} />
+          <PublishBox main second={!!task} publicOk={work.kind === 'image' || work.kind === 'alive'} workId={work.id} onSupport={() => setSupportFor(work.id)} />
           {(work.kind === 'alive' || work.kind === 'image' || !work.kind) && (
             <StoryForm heroId={work.id} price={storyPrice} onCreated={(id) => navigate(`/story/${id}`)} />
           )}

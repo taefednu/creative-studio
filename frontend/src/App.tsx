@@ -18,6 +18,7 @@ import Tasks from './pages/Tasks'
 import TeacherCabinet from './pages/TeacherCabinet'
 import TeacherClasses from './pages/TeacherClasses'
 import TeacherTasks from './pages/TeacherTasks'
+import SharedWork from './pages/SharedWork'
 
 /** Роутинг по роли: чужой кабинет не открывается, без входа — на экран входа. */
 function Guard({ role, children }: { role: Role; children: ReactNode }) {
@@ -43,6 +44,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/qr" element={<QrLanding />} />
+      <Route path="/s/:token" element={<SharedWork />} />
       <Route path="/parent" element={<Guard role="parent"><ParentCabinet /></Guard>} />
       <Route path="/parent/review" element={<Guard role="parent"><ParentReview /></Guard>} />
       <Route path="/parent/plans" element={<Guard role="parent"><ParentPlans /></Guard>} />

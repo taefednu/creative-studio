@@ -71,7 +71,7 @@ export function artistProgress(works: Work[], storiesReady: number, stylesDone: 
     styles: stylesTotal > 0 && stylesDone >= stylesTotal,
     ten: pictures >= 10,
   }
-  return { pictures, rank: RANKS[at].id, next: RANKS[at + 1] ?? null, from: RANKS[at].need, earned }
+  return { pictures, level: at + 1, rank: RANKS[at].id, next: RANKS[at + 1] ?? null, from: RANKS[at].need, earned }
 }
 
 /** Галерея вместе со сказками: готовое по дате, от новых к старым; плитки без картинки остаются в конце. */

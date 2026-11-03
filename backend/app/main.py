@@ -22,6 +22,7 @@ from app.voice.router import router as voice_router
 from app.works.image import pipeline
 from app.works.image.router import router as image_router
 from app.works.remix.router import router as remix_router
+from app.works.share.router import router as share_router
 from app.works.story import models as _story_models  # noqa: F401  (таблицы)
 from app.works.story import pipeline as story_pipeline
 from app.works.story.router import router as story_router
@@ -49,6 +50,7 @@ app.include_router(assignments_router)
 app.include_router(voice_router)
 app.include_router(remix_router)
 app.include_router(story_router)
+app.include_router(share_router)
 app.include_router(parent_router)
 app.include_router(platform_router)
 app.include_router(demo_router)

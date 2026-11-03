@@ -408,7 +408,7 @@ def delete_post(post_id: int, db: Db, v: V):
     if v.role == "child" and not is_author:
         raise HTTPException(403, "forbidden")
     if p.best and not is_author:
-        raise HTTPException(403, "forbidden")  # из «Лучшего» чужой пост взрослый не скрывает
+        raise HTTPException(403, "forbidden")  # из «Лучшего» чужой пост взрослый не скрывает; своего ребёнка снимает через share
     new = "deleted" if is_author else "hidden"
     db.execute(update(Post).where(Post.id == p.id).values(status=new))
     if new == "hidden":  # взрослый скрыл исходник: ремиксы с него тоже скрыты, одной транзакцией

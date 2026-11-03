@@ -1,28 +1,43 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useOutletContext } from 'react-router-dom'
 import { api } from '../api'
 import type { ShellContext } from './AppShell'
 import ErrorText, { errorKey } from './ErrorText'
 import Icon from './Icon'
+import ShareLink from './ShareLink'
 
 type Result = { id: number; status: string; support: boolean }
+export type ShareState = { status: 'none' | 'waiting' | 'live' | 'off' | 'refused'; path: string | null }
 
 /** «Показать классу»: в класс или семье + подпись; итог — опубликовано / отправили взрослому / тёплый ответ. */
-export default function PublishBox({ workId, grid, main, second, onSupport }: { workId: number; grid?: boolean; main?: boolean; second?: boolean; onSupport?: () => void }) {
+export default function PublishBox({ workId, grid, main, second, publicOk, onSupport }: { workId: number; grid?: boolean; main?: boolean; second?: boolean; publicOk?: boolean; onSupport?: () => void }) {
   const { t } = useTranslation()
   const { cls, hasParent } = useOutletContext<ShellContext>()
   const [open, setOpen] = useState(false)
-  const [audience, setAudience] = useState<'class' | 'family' | null>(null)
+  const [audience, setAudience] = useState<'class' | 'family' | 'public' | null>(null)
+  const [share, setShare] = useState<ShareState>({ status: 'none', path: null })
   const [caption, setCaption] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [res, setRes] = useState<Result | null>(null)
 
+  // publicOk: всем можно показать только нарисованное здесь, не загрузку и не ремикс; сервер проверяет то же самое
+  const canAsk = (cls || hasParent) && share.status !== 'refused'
   const options = [
     ...(cls ? [{ key: 'class' as const, label: t('publish.toClass') }] : []),
     ...(hasParent ? [{ key: 'family' as const, label: t('publish.toFamily') }] : []),
+    ...(canAsk && publicOk ? [{ key: 'public' as const, label: t('publish.toAll') }] : []),
   ]
+  useEffect(() => {
+    let alive = true
+    api<ShareState>(`/api/works/${workId}/share`)
+      .then((x) => alive && setShare(x))
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [workId])
   const chosen = audience ?? options[0]?.key ?? null
 
   async function submit() {
@@ -30,6 +45,11 @@ export default function PublishBox({ workId, grid, main, second, onSupport }: { 
     setBusy(true)
     setErr(null)
     try {
+      if (chosen === 'public') {
+        setShare(await api<ShareState>(`/api/works/${workId}/share`, 'POST'))
+        setOpen(false)
+        return
+      }
       const r = await api<Result>('/api/posts', 'POST', { work_id: workId, audience: chosen, caption: caption.trim() || null })
       setRes(r)
       if (r.support) onSupport?.() // родитель заменяет весь экран или карточку тёплым ответом
@@ -61,6 +81,7 @@ export default function PublishBox({ workId, grid, main, second, onSupport }: { 
   const Wrap = grid ? Fragment : 'div'
   return (
     <Wrap {...(grid ? {} : { className: 'flex flex-col gap-2' })}>
+      <ShareLink workId={workId} state={share} onChange={setShare} />
       {open && (
         <div data-testid="publish-form" className={`chip-pop relative flex flex-col gap-3 rounded-3xl border border-border bg-surface p-4 shadow-pop ${grid ? 'col-span-2 md:col-span-3' : ''}`}>
           {main && (
@@ -85,10 +106,11 @@ export default function PublishBox({ workId, grid, main, second, onSupport }: { 
               </button>
             ))}
           </div>
-          <label htmlFor="caption-input" className={`-mb-1 text-xs font-extrabold uppercase text-primary ${main ? 'hidden' : ''}`}>
+          {chosen !== 'public' && <label htmlFor="caption-input" className={`-mb-1 text-xs font-extrabold uppercase text-primary ${main ? 'hidden' : ''}`}>
             {t('publish.caption')}
-          </label>
-          <input
+          </label>}
+          {chosen === 'public' && <p data-testid="public-note" className="text-sm font-bold text-muted">{t('publish.toAllNote')}</p>}
+          {chosen !== 'public' && <input
             id="caption-input"
             data-testid="caption-input"
             value={caption}
@@ -97,7 +119,7 @@ export default function PublishBox({ workId, grid, main, second, onSupport }: { 
             placeholder={t('publish.caption')}
             aria-label={t('publish.caption')}
             className={`w-full rounded-2xl border border-border bg-bg px-4 py-3 text-heading outline-none focus:border-primary ${main && options.length === 1 ? 'mt-8' : ''}`}
-          />
+          />}
           {!main && <span aria-hidden="true" className="-mt-2 self-end text-xs font-bold text-muted">{caption.length}/200</span>}
           <ErrorText code={err} />
           <button
@@ -107,7 +129,7 @@ export default function PublishBox({ workId, grid, main, second, onSupport }: { 
             onClick={() => void submit()}
             className="rounded-full bg-primary px-4 py-3 font-extrabold uppercase text-primary-fg disabled:opacity-60"
           >
-            {t('publish.send')}
+            {t(chosen === 'public' ? 'publish.askAdult' : 'publish.send')}
           </button>
         </div>
       )}

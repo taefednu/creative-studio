@@ -22,12 +22,13 @@ from app.feed.models import Comment, Post
 from app.moderation.models import HeldItem
 from app.moderation.service import close_urgent, decide
 from app.works.image.models import Work
+from app.works.share.models import Share
 from app.works.story.models import Story
 
 router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
 
-IMAGE_TYPES = ("image", "post", "submission", "upload")  # у остальных видов своей картинки нет
+IMAGE_TYPES = ("image", "post", "submission", "upload", "share")  # у остальных видов своей картинки нет
 
 
 def adult(
@@ -102,6 +103,9 @@ def _work_of(db: Session, item: HeldItem) -> Work | None:
     if item.item_type == "submission":
         s = db.get(Submission, int(item.target_id))
         return db.get(Work, s.work_id) if s is not None else None
+    if item.item_type == "share":
+        sh = db.get(Share, int(item.target_id))
+        return db.get(Work, sh.work_id) if sh is not None else None
     return None
 
 
@@ -269,7 +273,7 @@ def held_mine(c: Annotated[Child, Depends(current_child)], db: Db):
             HeldItem.child_id == c.id,
             HeldItem.status == "rejected",
             HeldItem.urgent.is_(False),
-            HeldItem.item_type.in_(("post", "comment", "prompt", "image", "upload", "story")),
+            HeldItem.item_type.in_(("post", "comment", "prompt", "image", "upload", "story", "share")),
         )
         .order_by(HeldItem.id.desc())
         .limit(20)
@@ -279,8 +283,8 @@ def held_mine(c: Annotated[Child, Depends(current_child)], db: Db):
         if i.item_type == "post":
             p = db.get(Post, int(i.target_id))
             text = p.caption if p is not None else None
-        elif i.item_type == "upload":
-            text = None  # у загрузки нет текста ребёнка
+        elif i.item_type in ("upload", "share"):
+            text = None  # у загрузки и просьбы поделиться нет текста ребёнка
         elif i.item_type == "story":
             st = db.get(Story, int(i.target_id))
             text = st.idea if st is not None else None  # его же слова, не текст модели

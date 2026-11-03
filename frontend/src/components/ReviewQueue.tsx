@@ -13,7 +13,7 @@ const btnMain =
 const btnApprove = 'rounded-full bg-success-soft px-3 py-2 text-sm font-extrabold text-success transition-colors duration-150 hover:bg-success hover:text-primary-fg disabled:opacity-50'
 const btnReject = 'rounded-full bg-danger-soft px-3 py-2 text-sm font-extrabold text-danger transition-colors duration-150 hover:bg-danger hover:text-primary-fg disabled:opacity-50'
 // Типы, у которых есть своя подпись «что будет после одобрения»; остальным общая
-const EFFECTS = ['prompt', 'image', 'post', 'comment', 'upload', 'submission', 'story']
+const EFFECTS = ['prompt', 'image', 'post', 'comment', 'upload', 'submission', 'story', 'share']
 const btnSide =
   'rounded-full border border-border bg-surface px-5 py-2 text-sm font-extrabold text-heading disabled:opacity-50'
 
