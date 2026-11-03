@@ -33,7 +33,9 @@ class Child(Base):
     age_group: Mapped[str] = mapped_column(String(5))  # "5-8" | "9-12"
     lang: Mapped[str] = mapped_column(String(2))  # ru | en | uz
     avatar: Mapped[str | None] = mapped_column(String(10), nullable=True)  # зверёк; пусто — зверёк по нику
+    avatar_work_id: Mapped[int | None] = mapped_column(Integer, nullable=True)  # своя работа, только после «да» взрослого
     notes_seen_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # колокольчик: всё до этого прочитано
+    studio_coins: Mapped[int] = mapped_column(Integer, default=0, server_default="0")  # остаток студийных монет при привязке к Mentorium
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("parents.id"), nullable=True)
     picture_password_hash: Mapped[str | None] = mapped_column(String(300), nullable=True)
     platform_user_id: Mapped[str | None] = mapped_column(String(36), unique=True, nullable=True)

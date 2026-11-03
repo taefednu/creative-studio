@@ -715,3 +715,119 @@ def test_platform_429_does_not_pause_login(api, plat):
     assert pl_login(api).json()["detail"] == "platform_busy"
     plat.login_mode = "ok"
     assert pl_login(api).status_code == 200  # логин на паузу не ставили
+
+
+def studio_child(parent, nick="HomeKid"):
+    r = parent.post("/api/parent/children", json={"nick": nick, "age_group": "5-8", "lang": "ru", "pictures": [3, 7, 1]})
+    assert r.status_code == 201
+    c = TestClient(app)
+    assert c.post("/api/child/login", json={"nick": nick, "pictures": [3, 7, 1]}).status_code == 200
+    return r.json()["id"], c
+
+
+def link(c, login="kid@x.io", password=PASSWORD):
+    return c.post("/api/auth/platform-link", json={"login": login, "password": password})
+
+
+def test_link_keeps_works_and_studio_coins_and_does_not_double(api, plat, gen):
+    _, c = studio_child(parent_client())
+    before = c.get("/api/child/me").json()["coins"]
+    wid = draw(c).json()["id"]
+    assert wstatus(c, wid)["status"] == "ready"
+    after_draw = c.get("/api/child/me").json()["coins"]
+    assert after_draw == before - 1
+    assert link(c).status_code == 200
+    assert link(c).status_code == 200  # двойной клик ничего не меняет
+    assert c.get(f"/api/works/{wid}").status_code == 200  # работа на месте
+    me = c.get("/api/child/me").json()
+    assert me["coins_source"] == "platform" and me["coins"] == after_draw + plat.coins[UID]
+    assert plat.adjusts == []  # на платформу ничего не начислено
+    # сначала тратятся студийные, платформа не тронута
+    wid2 = draw(c).json()["id"]
+    assert wstatus(c, wid2)["status"] == "ready"
+    assert plat.adjusts == [] and c.get("/api/child/me").json()["coins"] == after_draw + plat.coins[UID] - 1
+
+
+def test_refund_of_studio_coin_after_link_stays_studio(api, plat, gen):
+    _, c = studio_child(parent_client())
+    assert link(c).status_code == 200
+    total = c.get("/api/child/me").json()["coins"]
+    gen.exc = RuntimeError("boom")
+    wid = draw(c).json()["id"]
+    assert wstatus(c, wid)["status"] == "failed"
+    assert c.get("/api/child/me").json()["coins"] == total  # вернулось
+    assert plat.adjusts == []  # а не монетой платформы
+
+
+def test_coins_after_studio_rest_go_to_platform(api, plat, gen):
+    cid, c = studio_child(parent_client())
+    assert link(c).status_code == 200
+    with db.new_session() as s:
+        s.get(Child, cid).studio_coins = 0
+        s.commit()
+    assert wstatus(c, draw(c).json()["id"])["status"] == "ready"
+    assert [a[1] for a in plat.adjusts] == [-1]
+
+
+def test_link_refuses_while_work_is_in_flight(api, plat, gen):
+    cid, c = studio_child(parent_client())
+    with db.new_session() as s:
+        s.add(Work(child_id=cid, template_id="x", status="generating", request_id="r-fly"))
+        s.commit()
+    r = link(c)
+    assert r.status_code == 409 and r.json()["detail"] == "platform_busy_work"
+    with db.new_session() as s:
+        assert s.get(Child, cid).platform_user_id is None
+
+
+def test_link_refuses_profile_already_in_studio_and_merges_nothing(api, plat):
+    pl_login(api)  # этот профиль уже есть как отдельный ребёнок студии
+    cid, c = studio_child(parent_client())
+    r = link(c)
+    assert r.status_code == 409 and r.json()["detail"] == "platform_taken"
+    with db.new_session() as s:
+        assert s.get(Child, cid).platform_user_id is None
+
+
+def test_link_wrong_role_and_bad_password_change_nothing(api, plat):
+    p = parent_client()
+    cid, c = studio_child(p)
+    assert link(c, password="wrong-password").status_code == 401
+    plat.accounts["dad@x.io"] = (PASSWORD, "99999999-0000-0000-0000-000000000000", "parent")
+    r = link(c, login="dad@x.io")
+    assert r.status_code == 403 and r.json()["detail"] == "platform_wrong_role"
+    with db.new_session() as s:
+        assert s.get(Child, cid).platform_user_id is None
+    assert link(p, login="dad@x.io").status_code == 200
+    assert link(p).status_code == 403  # логин ребёнка родителю не подходит
+
+
+def test_link_second_profile_refused(api, plat):
+    _, c = studio_child(parent_client())
+    plat.accounts["other@x.io"] = (PASSWORD, "88888888-0000-0000-0000-000000000000", "student")
+    assert link(c).status_code == 200
+    r = link(c, login="other@x.io")
+    assert r.status_code == 409 and r.json()["detail"] == "platform_already_linked"
+
+
+def test_after_link_weak_picture_login_is_off(api, plat):
+    _, c = studio_child(parent_client())
+    assert link(c).status_code == 200
+    r = TestClient(app).post("/api/child/login", json={"nick": "HomeKid", "pictures": [3, 7, 1]})
+    assert r.status_code in (401, 403)
+
+
+def test_link_needs_session_and_hides_when_not_configured(api, plat, monkeypatch):
+    assert link(TestClient(app)).status_code == 401
+    assert plat.logins == []
+    _, c = studio_child(parent_client())
+    assert c.get("/api/auth/platform-link").json() == {"enabled": True, "linked": False}
+    monkeypatch.delenv("PLATFORM_API_URL")
+    get_settings.cache_clear()
+    assert c.get("/api/auth/platform-link").json()["enabled"] is False
+
+
+def test_link_never_echoes_password(api, plat, caplog):
+    _, c = studio_child(parent_client())
+    r = link(c, password="wrong-secret-pass")
+    assert "wrong-secret-pass" not in r.text and "wrong-secret-pass" not in caplog.text

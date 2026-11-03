@@ -21,6 +21,7 @@ from app.platform import client as pc
 
 log = logging.getLogger("app.platform")
 
+STUDIO = "studio:"  # запись журнала, оплаченная остатком студийных монет
 _locks: dict[str, threading.Lock] = {}
 _locks_guard = threading.Lock()
 
@@ -46,7 +47,24 @@ class PlatformWallet:
     def balance(self, db: Session, child: Child) -> int:
         """pc.Unavailable / pc.NotConfigured — платформа недоступна."""
         assert child.platform_user_id
-        return pc.get_client().balance(child.platform_user_id)
+        return pc.get_client().balance(child.platform_user_id) + child.studio_coins
+
+    def _charge_studio(self, db: Session, child: Child, amount: int, reason: str, ref_id: str) -> str | None:
+        """Сначала остаток студийных монет с привязки: они не пропадают и на платформу не уходят.
+
+        ponytail: цена не делится между кошельками; 2 студийные и 1 платформы на цену 3 дадут no_coins.
+        """
+        spent = db.execute(
+            update(Child).where(Child.id == child.id, Child.studio_coins >= amount).values(studio_coins=Child.studio_coins - amount)
+        )
+        if spent.rowcount != 1:
+            return None
+        if not coins.add_entry(db, child.id, -amount, STUDIO + reason, ref_id):
+            db.rollback()
+            return "duplicate"
+        db.commit()
+        db.refresh(child)
+        return "ok"
 
     def charge(self, db: Session, child: Child, amount: int, reason: str, ref_id: str) -> str:
         """'ok' | 'no_coins' | 'duplicate' | 'unavailable' | 'uncertain'."""
@@ -55,6 +73,9 @@ class PlatformWallet:
         db.commit()  # к платформе идём без открытой транзакции
         if coins.has_entry(db, ref_id):
             return "duplicate"
+        done = self._charge_studio(db, child, amount, reason, ref_id)
+        if done:
+            return done
         with _lock(uid):  # два параллельных списания одного ребёнка не читают один и тот же баланс
             try:
                 client = pc.get_client()
@@ -86,9 +107,15 @@ class PlatformWallet:
         self, db: Session, child: Child, amount: int, charge_ref: str, refund_ref: str
     ) -> bool:
         """Запись о возврате, без сети и без commit. Только если списание подтверждено (done)."""
-        status = db.scalar(select(CoinLedger.status).where(CoinLedger.ref_id == charge_ref))
-        if status != "done":
+        row = db.execute(select(CoinLedger.status, CoinLedger.reason).where(CoinLedger.ref_id == charge_ref)).first()
+        if row is None or row.status != "done":
             return False
+        if row.reason.startswith(STUDIO):
+            # status done: refund_settle берёт только pending, на платформу такой возврат не уйдёт
+            if not coins.add_entry(db, child.id, amount, "refund", refund_ref):
+                return False
+            db.execute(update(Child).where(Child.id == child.id).values(studio_coins=Child.studio_coins + amount))
+            return True
         return coins.add_entry(db, child.id, amount, "refund", refund_ref, status="pending")
 
     def refund_settle(self, db: Session, child: Child, refund_ref: str) -> str:
