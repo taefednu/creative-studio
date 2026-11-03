@@ -12,8 +12,8 @@ import { isOpen, loadAssignments } from '../features/assignments/assignments'
 import { loadMyStories } from '../features/story/story'
 import type { Story } from '../features/story/story'
 import type { Assignment } from '../features/assignments/assignments'
-import { filterWorks, galleryOrder, loadTemplates, styleAlbum, withoutHeroSources, withStories } from '../features/works/works'
-import type { Work, WorkFilter } from '../features/works/works'
+import { filterWorks, galleryOrder, loadTemplates, artistProgress, BADGES, styleAlbum, withoutHeroSources, withStories } from '../features/works/works'
+import type { BadgeId, Work, WorkFilter } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
 const loadWorks = () => api<Work[]>('/api/works/mine')
@@ -32,28 +32,19 @@ export default function MyWorks() {
   const [stories] = useLoad(loadMyStories)
   const [style, setStyle] = useState<string | null>(null)
   const filtered = works ? filterWorks(withoutHeroSources(works), filter).filter((w) => !style || w.template_id === style) : []
-  const [albumOpen, setAlbumOpen] = useState(false)
+  const [badge, setBadge] = useState<BadgeId | null>(null)
   const shown = galleryOrder(filtered)
   // Сказки в той же сетке; у них нет статуса показа и стиля, поэтому только во «Всех»
   const items = withStories(shown, filter === 'all' && !style ? (stories ?? []).filter((x) => x.status === 'ready') : [])
   const album = styleAlbum(tplData?.templates ?? [], works ?? [])
+  const stylesDone = album.filter((a) => a.work).length
+  const path = artistProgress(works ?? [], stories?.filter((x) => x.status === 'ready').length ?? 0, stylesDone, album.length)
   return (
     <div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:flex-nowrap">
         <h1 data-testid="works-title" className="min-w-0 flex-1 truncate text-3xl font-black leading-10 tracking-tight text-heading md:flex-none md:text-5xl md:leading-[56px]">
           {nick ? t('mw.gallery', { nick, interpolation: { escapeValue: false } }) : t('myWorks.title')}
         </h1>
-        {!!works?.length && album.length > 0 && (
-          <button
-            type="button"
-            data-testid="album-toggle"
-            aria-expanded={albumOpen}
-            onClick={() => setAlbumOpen((o) => !o)}
-            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-sm font-extrabold md:order-last md:h-[42px] md:px-4 ${style ? 'bg-primary-soft text-primary' : 'bg-surface text-heading'}`}
-          >
-            {t('mw.stylesPill', { n: album.filter((a) => a.work).length, total: album.length })}
-          </button>
-        )}
         {works && works.length > 0 && (
           <div role="group" aria-label={t('mw.filters')} data-testid="works-filters" className="flex w-full gap-1.5 md:ml-auto md:w-auto md:gap-2">
             {FILTERS.map((f) => (
@@ -73,7 +64,50 @@ export default function MyWorks() {
           </div>
         )}
       </div>
-      {albumOpen && (
+      {!!works?.length && (
+        <div data-testid="artist-path" className="mt-2 flex flex-col gap-2 md:flex-row md:items-center md:gap-6">
+          <div className="min-w-0 flex-1">
+            <p className="flex flex-wrap items-baseline gap-x-2 text-lg font-black leading-6 text-heading">
+              <span data-testid="artist-rank">{t(`mw.rank.${path.rank}`)}</span>
+              <span className="text-sm font-bold text-muted">
+                {path.next ? t('mw.rankNext', { rank: t(`mw.rank.${path.next.id}`), n: path.pictures, need: path.next.need, interpolation: { escapeValue: false } }) : t('mw.rankTop')}
+              </span>
+            </p>
+            <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-primary-soft md:max-w-[420px]">
+              <div
+                data-testid="artist-bar"
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${path.next ? Math.round(((path.pictures - path.from) / (path.next.need - path.from)) * 100) : 100}%` }}
+              />
+            </div>
+          </div>
+          <div className="flex shrink-0 justify-between gap-1 md:justify-start md:gap-2">
+            {BADGES.map((id) => (
+              <button
+                key={id}
+                type="button"
+                data-testid={`badge-${id}`}
+                data-earned={path.earned[id]}
+                aria-pressed={badge === id}
+                aria-label={`${t(`mw.badge.${id}.name`)}${path.earned[id] ? `: ${t('mw.badgeDone')}` : ''}`}
+                title={t(`mw.badge.${id}.name`)}
+                onClick={() => setBadge(badge === id ? null : id)}
+                className={`h-12 w-12 shrink-0 rounded-full transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transition-none md:h-14 md:w-14 ${badge === id ? 'ring-[3px] ring-primary ring-offset-2 ring-offset-bg' : ''}`}
+              >
+                <img src={`/art/badges/${id}.webp`} alt="" className={`h-full w-full object-contain ${path.earned[id] ? '' : 'opacity-50 grayscale'}`} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {badge && badge !== 'styles' && (
+        <p data-testid="badge-note" className="nav-in mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-primary-soft px-4 py-2.5 text-sm font-bold text-heading">
+          <span className="font-black">{t(`mw.badge.${badge}.name`)}</span>
+          <span className="min-w-0 flex-1">{t(path.earned[badge] ? 'mw.badgeDone' : `mw.badge.${badge}.how`)}</span>
+          {!path.earned[badge] && <Link to="/create" data-testid="badge-go" className="font-extrabold text-primary underline">{t('mw.draw')}</Link>}
+        </p>
+      )}
+      {badge === 'styles' && (
         <section data-testid="style-album" aria-label={t('mw.albumLabel')} className="nav-in mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
           {album.map(({ tpl, work }) =>
             work ? (

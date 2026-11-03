@@ -486,7 +486,7 @@
   },
   "mw": {
     "gallery": "{{nick}} galereyasi",
-    "stylesPill": "Uslublar {{n}} / {{total}}",
+    "rank": {"novice": "Yangi boshlovchi", "young": "Yosh rassom", "master": "Mo‘yqalam ustasi", "wizard": "Ranglar sehrgari", "great": "Buyuk rassom"}, "rankNext": "«{{rank}}» unvonigacha: {{n}} / {{need}}", "rankTop": "Eng yuqori unvon!", "badgeDone": "Olindi!", "badge": {"first": {"name": "Birinchi rasm", "how": "Birinchi rasmingni chiz."}, "alive": {"name": "Jonlangan rasm", "how": "Rasmingni jonlantir."}, "story": {"name": "Ertakchi", "how": "Qahramoning haqida ertak to‘qi."}, "shared": {"name": "Ko‘rgazmada", "how": "Ishingni oilang yoki sinfingga ko‘rsat."}, "styles": {"name": "Kollektsioner", "how": "Barcha uslublarda chiz."}, "ten": {"name": "O‘nta ish", "how": "10 ta rasm chiz."}},
     "albumLabel": "Uslublar albomi",
     "albumEmpty": "«{{style}}» uslubida chizish",
     "all": "Hammasi",

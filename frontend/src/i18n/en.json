@@ -486,7 +486,7 @@
   },
   "mw": {
     "gallery": "{{nick}}'s gallery",
-    "stylesPill": "Styles {{n}} of {{total}}",
+    "rank": {"novice": "Beginner", "young": "Young artist", "master": "Brush master", "wizard": "Color wizard", "great": "Great artist"}, "rankNext": "To “{{rank}}”: {{n}} of {{need}}", "rankTop": "The highest rank!", "badgeDone": "Earned!", "badge": {"first": {"name": "First picture", "how": "Draw your first picture."}, "alive": {"name": "Come to life", "how": "Bring your drawing to life."}, "story": {"name": "Storyteller", "how": "Write a story about your hero."}, "shared": {"name": "On show", "how": "Show a picture to your family or class."}, "styles": {"name": "Collector", "how": "Draw in every style."}, "ten": {"name": "Ten pictures", "how": "Draw 10 pictures."}},
     "albumLabel": "Style album",
     "albumEmpty": "Draw in the “{{style}}” style",
     "all": "All",

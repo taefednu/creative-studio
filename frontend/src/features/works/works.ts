@@ -48,6 +48,32 @@ export function withoutHeroSources(list: Work[]): Work[] {
   return list.filter((w) => !sources.has(w.id) || (w.shared ?? []).length > 0)
 }
 
+// Звания: сколько готовых картинок нужно. Значения подобраны под детскую норму, легко двигать
+const RANKS = [
+  { id: 'novice', need: 0 },
+  { id: 'young', need: 3 },
+  { id: 'master', need: 10 },
+  { id: 'wizard', need: 25 },
+  { id: 'great', need: 50 },
+]
+export const BADGES = ['first', 'alive', 'story', 'shared', 'styles', 'ten'] as const
+export type BadgeId = (typeof BADGES)[number]
+
+/** Путь художника: только из настоящих работ ребёнка. Загруженные рисунки не считаем: нарисовал не он здесь. Монет и сравнения с другими нет. */
+export function artistProgress(works: Work[], storiesReady: number, stylesDone: number, stylesTotal: number) {
+  const pictures = works.filter((w) => w.image_url && w.kind !== 'upload').length
+  const at = RANKS.filter((r) => pictures >= r.need).length - 1
+  const earned: Record<BadgeId, boolean> = {
+    first: pictures >= 1,
+    alive: works.some((w) => w.kind === 'alive' && w.image_url),
+    story: storiesReady > 0,
+    shared: works.some((w) => (w.shared ?? []).some((s) => s.status === 'published')),
+    styles: stylesTotal > 0 && stylesDone >= stylesTotal,
+    ten: pictures >= 10,
+  }
+  return { pictures, rank: RANKS[at].id, next: RANKS[at + 1] ?? null, from: RANKS[at].need, earned }
+}
+
 /** Галерея вместе со сказками: готовое по дате, от новых к старым; плитки без картинки остаются в конце. */
 export function withStories<S extends { created_at: string }>(list: Work[], stories: S[]): ({ work: Work; story?: undefined } | { story: S; work?: undefined })[] {
   const dated = [

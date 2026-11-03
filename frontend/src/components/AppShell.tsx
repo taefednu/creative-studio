@@ -168,7 +168,8 @@ export default function AppShell() {
                         {t('child.myClass', { name: me.class.name })}
                       </p>
                     )}
-                    {!me.class && (
+                    {/* Семейному ребёнку код класса не нужен: только тому, у кого нет ни класса, ни родителя */}
+                    {!me.class && !me.has_parent && (
                       <form onSubmit={(e) => void join(e)} data-testid="join-class" className="mt-3">
                         <label htmlFor="class-code" className="text-sm font-extrabold text-heading">
                           {t('child.classCode')}

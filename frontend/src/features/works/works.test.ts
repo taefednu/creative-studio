@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import en from '../../i18n/en.json'
 import ru from '../../i18n/ru.json'
 import uz from '../../i18n/uz.json'
-import { BLURRED, filterWorks, galleryOrder, styleAlbum, withoutHeroSources, withStories } from './works'
+import { BLURRED, filterWorks, galleryOrder, artistProgress, styleAlbum, withoutHeroSources, withStories } from './works'
 import type { Work } from './works'
 
 const w = (id: number, shared?: Work['shared']): Work => ({ id, template_id: 'clay', status: 'ready', reason_codes: [], rewrite_text: null, image_url: '/x', shared })
@@ -68,5 +68,23 @@ describe('withoutHeroSources', () => {
     const hero = (id: number, from: number) => ({ ...w(id), kind: 'alive', hero_of_work_id: from })
     const out = withoutHeroSources([hero(5, 1), upload(1), hero(6, 2), upload(2, [{ audience: 'family', status: 'published' }]), upload(3)])
     expect(out.map((x) => x.id)).toEqual([5, 6, 2, 3])
+  })
+})
+
+describe('artistProgress', () => {
+  const pics = (n: number): Work[] => Array.from({ length: n }, (_, i) => ({ ...w(i + 1), kind: 'image' }))
+  it('звание растёт с картинками, загруженные рисунки не считаются', () => {
+    expect(artistProgress([], 0, 0, 8)).toMatchObject({ rank: 'novice', from: 0, next: { id: 'young', need: 3 } })
+    expect(artistProgress([...pics(2), { ...w(90), kind: 'upload' }], 0, 0, 8).rank).toBe('novice')
+    expect(artistProgress(pics(3), 0, 0, 8).rank).toBe('young')
+    expect(artistProgress(pics(50), 0, 0, 8)).toMatchObject({ rank: 'great', next: null })
+  })
+  it('значки только за сделанное', () => {
+    const none = artistProgress([], 0, 7, 8).earned
+    expect(Object.values(none).some(Boolean)).toBe(false)
+    const waiting = artistProgress([w(1, [{ audience: 'class', status: 'waiting' }])], 0, 7, 8).earned
+    expect(waiting.shared).toBe(false) // ждёт взрослого: ещё не показано
+    const all = artistProgress([...pics(10), { ...w(20), kind: 'alive' }, w(21, [{ audience: 'family', status: 'published' }])], 1, 8, 8).earned
+    expect(Object.values(all).every(Boolean)).toBe(true)
   })
 })
