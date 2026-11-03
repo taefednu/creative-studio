@@ -11,6 +11,7 @@ export type WorkStatus =
   | 'failed'
 
 export type Work = {
+  created_at?: string
   id: number
   /** 'upload' — загруженный рисунок: image_url у него размытая версия, оригинал ребёнку не отдаётся */
   kind?: string
@@ -39,6 +40,22 @@ export const BLURRED = ['face', 'school_uniform', 'house_number', 'handwritten_n
 /** Галерея: готовые картинки впереди, плитки без картинки в конце; порядок внутри групп не меняется. */
 export function galleryOrder(list: Work[]): Work[] {
   return [...list.filter((w) => w.image_url), ...list.filter((w) => !w.image_url)]
+}
+
+/** Рисунок, из которого уже вышел герой, в галерее не дублируем: он виден на углу героя. Показанный кому-то остаётся. */
+export function withoutHeroSources(list: Work[]): Work[] {
+  const sources = new Set(list.map((w) => w.hero_of_work_id))
+  return list.filter((w) => !sources.has(w.id) || (w.shared ?? []).length > 0)
+}
+
+/** Галерея вместе со сказками: готовое по дате, от новых к старым; плитки без картинки остаются в конце. */
+export function withStories<S extends { created_at: string }>(list: Work[], stories: S[]): ({ work: Work; story?: undefined } | { story: S; work?: undefined })[] {
+  const dated = [
+    ...list.filter((w) => w.image_url).map((work) => ({ at: work.created_at ?? '', item: { work } })),
+    ...stories.map((story) => ({ at: story.created_at, item: { story } })),
+  ]
+  dated.sort((a, b) => b.at.localeCompare(a.at))
+  return [...dated.map((x) => x.item), ...list.filter((w) => !w.image_url).map((work) => ({ work }))]
 }
 
 /** Альбом стилей: последняя готовая работа ребёнка в каждом стиле; список приходит от новых к старым. */

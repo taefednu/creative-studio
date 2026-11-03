@@ -3,15 +3,16 @@ import { useTranslation } from 'react-i18next'
 import { Link, useOutletContext } from 'react-router-dom'
 import { api } from '../api'
 import type { ShellContext } from '../components/AppShell'
-import Avatar from '../components/Avatar'
 import ChipSelect from '../components/ChipSelect'
 import Icon from '../components/Icon'
+import NavIcon from '../components/NavIcon'
 import PublishBox from '../components/PublishBox'
 import SubmitBox from '../components/SubmitBox'
 import { isOpen, loadAssignments } from '../features/assignments/assignments'
 import { loadMyStories } from '../features/story/story'
+import type { Story } from '../features/story/story'
 import type { Assignment } from '../features/assignments/assignments'
-import { filterWorks, galleryOrder, loadTemplates, styleAlbum } from '../features/works/works'
+import { filterWorks, galleryOrder, loadTemplates, styleAlbum, withoutHeroSources, withStories } from '../features/works/works'
 import type { Work, WorkFilter } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
@@ -30,25 +31,31 @@ export default function MyWorks() {
   const [tplData] = useLoad(loadTemplates)
   const [stories] = useLoad(loadMyStories)
   const [style, setStyle] = useState<string | null>(null)
-  const filtered = works ? filterWorks(works, filter).filter((w) => !style || w.template_id === style) : []
+  const filtered = works ? filterWorks(withoutHeroSources(works), filter).filter((w) => !style || w.template_id === style) : []
+  const [albumOpen, setAlbumOpen] = useState(false)
   const shown = galleryOrder(filtered)
+  // Сказки в той же сетке; у них нет статуса показа и стиля, поэтому только во «Всех»
+  const items = withStories(shown, filter === 'all' && !style ? (stories ?? []).filter((x) => x.status === 'ready') : [])
   const album = styleAlbum(tplData?.templates ?? [], works ?? [])
-  const ready = works?.filter((w) => w.image_url).length ?? 0
-  const published = works?.filter((w) => (w.shared ?? []).some((x) => x.status === 'published')).length ?? 0
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          {nick && <Avatar nick={nick} className="h-14 w-14 shrink-0 lg:h-[72px] lg:w-[72px]" />}
-          <div className="min-w-0">
-            <h1 data-testid="works-title" className="w-fit text-3xl font-extrabold leading-9 text-heading md:text-4xl md:leading-10">
-              {nick ? t('mw.gallery', { nick, interpolation: { escapeValue: false } }) : t('myWorks.title')}
-            </h1>
-            {!!works?.length && <p data-testid="works-counts" className="text-sm font-bold text-muted">{t('mw.counts', { n: ready, s: published })}</p>}
-          </div>
-        </div>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:flex-nowrap">
+        <h1 data-testid="works-title" className="min-w-0 flex-1 truncate text-3xl font-black leading-10 tracking-tight text-heading md:flex-none md:text-5xl md:leading-[56px]">
+          {nick ? t('mw.gallery', { nick, interpolation: { escapeValue: false } }) : t('myWorks.title')}
+        </h1>
+        {!!works?.length && album.length > 0 && (
+          <button
+            type="button"
+            data-testid="album-toggle"
+            aria-expanded={albumOpen}
+            onClick={() => setAlbumOpen((o) => !o)}
+            className={`flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-border px-3 text-sm font-extrabold md:order-last md:h-[42px] md:px-4 ${style ? 'bg-primary-soft text-primary' : 'bg-surface text-heading'}`}
+          >
+            {t('mw.stylesPill', { n: album.filter((a) => a.work).length, total: album.length })}
+          </button>
+        )}
         {works && works.length > 0 && (
-          <div role="group" aria-label={t('mw.filters')} data-testid="works-filters" className="flex w-full gap-1.5 md:w-auto md:gap-2">
+          <div role="group" aria-label={t('mw.filters')} data-testid="works-filters" className="flex w-full gap-1.5 md:ml-auto md:w-auto md:gap-2">
             {FILTERS.map((f) => (
               <button
                 key={f}
@@ -66,53 +73,35 @@ export default function MyWorks() {
           </div>
         )}
       </div>
-      {!!works?.length && album.length > 0 && (
-        <section data-testid="style-album" aria-label={t('mw.albumLabel')} className="mt-3">
-          <p className="text-sm font-extrabold text-heading">
-            {t('mw.album', { n: album.filter((a) => a.work).length, total: album.length })}
-          </p>
-          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-            {album.map(({ tpl, work }) =>
-              work ? (
-                <button
-                  key={tpl.id}
-                  type="button"
-                  data-testid={`album-${tpl.id}`}
-                  aria-pressed={style === tpl.id}
-                  aria-label={t(`templates.${tpl.id}`)}
-                  title={t(`templates.${tpl.id}`)}
-                  onClick={() => setStyle(style === tpl.id ? null : tpl.id)}
-                  className={`h-16 w-16 shrink-0 overflow-hidden rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transition-none ${style === tpl.id ? 'ring-4 ring-primary ring-inset' : ''}`}
-                >
-                  <img src={`${work.image_url}?thumb=1`} alt="" className="h-full w-full object-cover" />
-                </button>
-              ) : (
-                <Link
-                  key={tpl.id}
-                  to={`/create?template=${tpl.id}`}
-                  data-testid={`album-${tpl.id}`}
-                  aria-label={t(`templates.${tpl.id}`)}
-                  title={t('mw.albumEmpty', { style: t(`templates.${tpl.id}`), interpolation: { escapeValue: false } })}
-                  className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border-2 border-dashed border-border transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transition-none"
-                >
-                  <img src={tpl.image_url} alt="" className="h-full w-full object-cover opacity-50 grayscale" />
-                </Link>
-              ),
-            )}
-          </div>
-        </section>
-      )}
-      {!!stories?.filter((x) => x.status === 'ready').length && (
-        <section data-testid="my-stories" aria-label={t('story.mine')} className="mt-3">
-          <p className="text-sm font-extrabold text-heading">{t('story.mine')}</p>
-          <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-            {stories.filter((x) => x.status === 'ready').map((x) => (
-              <Link key={x.id} to={`/story/${x.id}`} data-testid="my-story" className="w-40 shrink-0 overflow-hidden rounded-2xl bg-surface shadow-card transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transition-none">
-                <img src={`${x.pages[0]?.image_url}?thumb=1`} alt="" className="aspect-[4/3] w-full object-cover" />
-                <p className="truncate px-2 py-1.5 text-sm font-extrabold text-heading">{x.title}</p>
+      {albumOpen && (
+        <section data-testid="style-album" aria-label={t('mw.albumLabel')} className="nav-in mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+          {album.map(({ tpl, work }) =>
+            work ? (
+              <button
+                key={tpl.id}
+                type="button"
+                data-testid={`album-${tpl.id}`}
+                aria-pressed={style === tpl.id}
+                aria-label={t(`templates.${tpl.id}`)}
+                title={t(`templates.${tpl.id}`)}
+                onClick={() => setStyle(style === tpl.id ? null : tpl.id)}
+                className={`h-16 w-16 shrink-0 overflow-hidden rounded-2xl transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transition-none ${style === tpl.id ? 'ring-4 ring-primary ring-inset' : ''}`}
+              >
+                <img src={`${work.image_url}?thumb=1`} alt="" className="h-full w-full object-cover" />
+              </button>
+            ) : (
+              <Link
+                key={tpl.id}
+                to={`/create?template=${tpl.id}`}
+                data-testid={`album-${tpl.id}`}
+                aria-label={t(`templates.${tpl.id}`)}
+                title={t('mw.albumEmpty', { style: t(`templates.${tpl.id}`), interpolation: { escapeValue: false } })}
+                className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border-2 border-dashed border-border transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transition-none"
+              >
+                <img src={tpl.image_url} alt="" className="h-full w-full object-cover opacity-50 grayscale" />
               </Link>
-            ))}
-          </div>
+            ),
+          )}
         </section>
       )}
       {rejected?.map((r) => (
@@ -137,16 +126,20 @@ export default function MyWorks() {
         </p>
       )}
       <div data-testid="works-grid" className="mt-3 grid grid-flow-dense grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-6">
-        {shown.map((w, i) => (
-          <WorkCard
-            key={w.id}
-            w={w}
-            big={!!w.image_url && i % 7 === 0}
-            open={open}
-            onSubmitted={reloadTasks}
-            onClosed={reloadWorks}
-          />
-        ))}
+        {items.map((x, i) =>
+          x.story ? (
+            <StoryCard key={`s${x.story.id}`} story={x.story} big={i % 7 === 0} />
+          ) : (
+            <WorkCard
+              key={x.work.id}
+              w={x.work}
+              big={!!x.work.image_url && i % 7 === 0}
+              open={open}
+              onSubmitted={reloadTasks}
+              onClosed={reloadWorks}
+            />
+          ),
+        )}
         {!!works?.length && filter === 'all' && !style && (
           <Link
             to="/create"
@@ -160,6 +153,20 @@ export default function MyWorks() {
         )}
       </div>
     </div>
+  )
+}
+
+/** Сказка в общей сетке: обложка, значок книжки и название; открывается как книжка. */
+function StoryCard({ story, big }: { story: Story; big: boolean }) {
+  const cover = story.pages.find((p) => p.ok)?.image_url
+  return (
+    <Link to={`/story/${story.id}`} data-testid="my-story" className={`feed-card group relative block overflow-hidden rounded-[22px] bg-primary-soft shadow-card ${big ? 'col-span-2 row-span-2' : ''}`}>
+      {cover && <img src={`${cover}?thumb=1`} alt="" className="feed-img aspect-square h-full w-full object-cover group-hover:scale-105" loading="lazy" decoding="async" onLoad={(e) => e.currentTarget.classList.add('feed-img-on')} />}
+      <span className="absolute left-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-fg">
+        <NavIcon name="tasks" className="h-5 w-5" />
+      </span>
+      <span className="absolute inset-x-2 bottom-2 truncate rounded-xl bg-surface px-2 py-1 text-center text-xs font-extrabold leading-4 text-heading shadow-card md:text-sm">{story.title}</span>
+    </Link>
   )
 }
 

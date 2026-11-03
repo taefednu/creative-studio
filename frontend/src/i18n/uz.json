@@ -486,8 +486,7 @@
   },
   "mw": {
     "gallery": "{{nick}} galereyasi",
-    "counts": "Rasmlar: {{n}}, ko'rsatilgan: {{s}}",
-    "album": "To'plangan uslublar: {{n}} / {{total}}",
+    "stylesPill": "Uslublar {{n}} / {{total}}",
     "albumLabel": "Uslublar albomi",
     "albumEmpty": "«{{style}}» uslubida chizish",
     "all": "Hammasi",
