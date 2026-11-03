@@ -71,7 +71,7 @@ export default function HomeFilm({ feedId }: { feedId: string }) {
           />
         )}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-film-top" />
-        <div className={`pointer-events-none absolute inset-0 hidden bg-film-side transition-opacity duration-500 lg:block ${shown ? 'opacity-100' : 'opacity-0'}`} />
+        <div className={`pointer-events-none absolute inset-0 hidden bg-film-side transition-opacity duration-200 lg:block ${shown ? 'opacity-100' : 'opacity-0'}`} />
         {!still && phase === 'arrow' && (
           <button
             type="button"
