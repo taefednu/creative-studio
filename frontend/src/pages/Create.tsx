@@ -217,7 +217,7 @@ export default function Create() {
             <span className={TILE_IMG}>
               <img src={CUSTOM.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
               {tpl === CUSTOM.id && (
-                <span className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-fg">
+                <span className="tick-in absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-fg">
                   <Icon name="check" />
                 </span>
               )}
@@ -235,7 +235,7 @@ export default function Create() {
             data-testid={`tpl-${x.id}`}
             aria-pressed={tpl === x.id}
             onClick={() => setSelected(x.id)}
-            className={`${TILE} bg-surface ${tpl === x.id ? 'border-primary' : 'border-transparent'}`}
+            className={`${TILE} tile-lift bg-surface ${tpl === x.id ? 'border-primary' : 'border-transparent'}`}
           >
             <span className={TILE_IMG}>
               <img src={x.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -455,7 +455,7 @@ function WorkView({
             </figure>
           )}
         </div>
-        <section data-testid="result-side" className="mt-3 flex min-w-0 flex-col gap-2 lg:mt-0 lg:w-[400px] lg:gap-3">
+        <section data-testid="result-side" className="stagger mt-3 flex min-w-0 flex-col gap-2 lg:mt-0 lg:w-[400px] lg:gap-3">
           <h1 data-testid="result-title" className="text-balance text-[28px] font-black leading-8 tracking-tight text-heading lg:mb-3 lg:text-5xl lg:leading-[52px]">{t(upload ? 'create.uploadReadyTitle' : work.kind === 'alive' ? 'create.aliveTitle' : 'create.readyTitle')}</h1>
           {work.rewrite_text && <p className="text-base text-muted lg:text-lg">{t('create.rewrite', { text: work.rewrite_text })}</p>}
           {blurred.map((c) => <p key={c} data-testid={`blurred-${c}`} className="text-base text-muted lg:text-lg">{t(`create.blurred.${c}`)}</p>)}

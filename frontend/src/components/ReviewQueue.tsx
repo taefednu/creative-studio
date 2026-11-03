@@ -362,8 +362,8 @@ function UrgentModal({
     }
   }, [item.id, tick])
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-scrim backdrop-blur-sm p-4" role="dialog" aria-modal="true" data-testid="review-modal">
-      <div className="flex max-h-full w-full max-w-md flex-col gap-3 overflow-y-auto rounded-card border border-urgent-border bg-surface p-5 shadow-card">
+    <div className="modal-bg fixed inset-0 z-50 flex items-center justify-center bg-scrim backdrop-blur-sm p-4" role="dialog" aria-modal="true" data-testid="review-modal">
+      <div className="modal-in flex max-h-full w-full max-w-md flex-col gap-3 overflow-y-auto rounded-card border border-urgent-border bg-surface p-5 shadow-card">
         <p className="font-extrabold text-urgent">{t('review.urgentNote')}</p>
         <p className="text-sm font-extrabold text-heading">
           {item.nick} · {t(`review.types.${item.item_type}`)}

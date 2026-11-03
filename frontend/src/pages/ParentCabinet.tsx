@@ -204,7 +204,7 @@ function KidFace({ kid, className }: { kid: Kid; className: string }) {
 function KidList({ kids, sel, counts, onPick, onAdd }: { kids: Kid[]; sel: Kid | null; counts: Record<string, number>; onPick: (k: Kid) => void; onAdd: () => void }) {
   const { t } = useTranslation()
   return (
-    <div data-testid="kid-list" role="group" aria-label={t('cab.myKids')} className="-mx-1 flex gap-1 overflow-x-auto p-1 [scrollbar-width:none] lg:grid lg:max-h-[168px] lg:grid-cols-4 lg:gap-x-1 lg:gap-y-2 lg:overflow-y-auto lg:overflow-x-hidden lg:[scrollbar-width:thin] xl:grid-cols-5">
+    <div data-testid="kid-list" role="group" aria-label={t('cab.myKids')} className="stagger -mx-1 flex gap-1 overflow-x-auto p-1 [scrollbar-width:none] lg:grid lg:max-h-[168px] lg:grid-cols-4 lg:gap-x-1 lg:gap-y-2 lg:overflow-y-auto lg:overflow-x-hidden lg:[scrollbar-width:thin] xl:grid-cols-5">
       {kids.filter((k) => k.id !== sel?.id).map((k) => (
         <button key={k.id} type="button" data-testid={`kid-${k.id}`} title={k.nick} onClick={() => onPick(k)} className="flex w-[72px] shrink-0 flex-col items-center gap-1 transition-transform duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.97] motion-reduce:transition-none lg:w-full">
           <span className="relative">
@@ -279,7 +279,7 @@ function KidWorks({ kid }: { kid: Kid }) {
   }
   return (
     <>
-      <div data-testid="kid-works" className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3 lg:grid-cols-6 xl:grid-cols-7">
+      <div data-testid="kid-works" className="stagger grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3 lg:grid-cols-6 xl:grid-cols-7">
         {works.map((w) => (
           <button key={w.id} type="button" data-testid="kid-work" aria-label={t('review.zoom')} onClick={() => (w.post_id ? setPost(w.post_id) : setZoom(w.image_url))} className="feed-card group relative block aspect-square overflow-hidden rounded-[22px] bg-primary-soft shadow-card">
             <img src={`${w.image_url}?thumb=1`} alt="" loading="lazy" decoding="async" onLoad={(e) => e.currentTarget.classList.add('feed-img-on')} className="feed-img h-full w-full object-cover group-hover:scale-105" />

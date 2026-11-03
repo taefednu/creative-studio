@@ -81,7 +81,7 @@ body {
   }
   button,
   a {
-    transition: filter 0.15s, scale 0.12s, translate 0.1s, border-color 0.15s, box-shadow 0.1s;
+    transition: filter 0.15s, scale 0.12s, translate 0.1s, border-color 0.15s, box-shadow 0.1s, background-color 0.15s, color 0.15s;
   }
   button.bg-primary:not(:disabled):hover,
   a.bg-primary:hover {
@@ -486,22 +486,6 @@ body {
   }
 }
 
-.voice-bar {
-  height: 6px;
-  animation: voice-wave 0.9s ease-in-out infinite;
-}
-@keyframes voice-wave {
-  50% {
-    height: 22px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .voice-bar {
-    animation: none;
-    height: 14px;
-  }
-}
-
 /* Первый экран: заголовок проявляется по словам на появлении героя, стрелка зовёт вниз */
 .film-in {
   animation: film-in 0.5s var(--ease-out) both;
@@ -676,6 +660,103 @@ body {
 }
 .film-dim {
   opacity: 0;
+}
+
+/* Словарь движения: списки появляются каскадом, отметки выскакивают, окна гаснут, вкладка едет (TabPill) */
+.stagger > * {
+  animation: rise 0.3s var(--ease-out) backwards;
+}
+.stagger > :nth-child(2) { animation-delay: 35ms; }
+.stagger > :nth-child(3) { animation-delay: 70ms; }
+.stagger > :nth-child(4) { animation-delay: 105ms; }
+.stagger > :nth-child(5) { animation-delay: 140ms; }
+.stagger > :nth-child(6) { animation-delay: 175ms; }
+.stagger > :nth-child(n + 7) { animation-delay: 210ms; }
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+.tick-in {
+  animation: tick-in 0.24s var(--ease-pop);
+}
+@keyframes tick-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+.err-in {
+  animation: gen-title-in 0.2s var(--ease-out);
+}
+.bell-ring {
+  transform-origin: 50% 10%;
+  animation: bell-ring 0.7s var(--ease-out);
+}
+@keyframes bell-ring {
+  15% {
+    transform: rotate(14deg);
+  }
+  35% {
+    transform: rotate(-10deg);
+  }
+  55% {
+    transform: rotate(6deg);
+  }
+  75% {
+    transform: rotate(-3deg);
+  }
+}
+.row-out {
+  opacity: 0;
+  transform: translateX(16px);
+  transition:
+    opacity 0.14s var(--ease-out),
+    transform 0.14s var(--ease-out);
+}
+/* Снимок закрытого окна (features/windowExit.ts): поверх всего, нажать нельзя */
+.win-closing {
+  pointer-events: none;
+  animation: win-bg-out 0.14s var(--ease-out) both;
+}
+.win-closing .modal-in {
+  animation: win-out 0.14s var(--ease-out) both;
+}
+@keyframes win-bg-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes win-out {
+  to {
+    transform: translateY(8px) scale(0.98);
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .tile-lift {
+    transition: translate 0.2s var(--ease-out), border-color 0.15s;
+  }
+  .tile-lift:hover {
+    translate: 0 -3px;
+  }
+  .tile-lift img {
+    transition: transform 0.3s var(--ease-out);
+  }
+  .tile-lift:hover img {
+    transform: scale(1.03);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stagger > *,
+  .tick-in,
+  .err-in,
+  .bell-ring {
+    animation: none;
+  }
+  .row-out {
+    transform: none;
+  }
 }
 
 /* Движение от прокрутки: без поддержки в браузере всё просто стоит на месте и видно */

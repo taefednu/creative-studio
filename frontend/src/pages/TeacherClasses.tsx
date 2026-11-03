@@ -185,7 +185,7 @@ export default function TeacherClasses() {
           </button>
         </div>
         {rooms && rooms.length === 0 && <p data-testid="rooms-empty" className="mt-4 text-lg font-bold text-text">{t('teacher.noClasses')}</p>}
-        <section data-testid="rooms" className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <section data-testid="rooms" className="stagger mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {rooms?.map((r) => (
             <RoomCard key={r.id} r={r} kids={kids[r.id]} banner={sampleFor(r.id, tpl?.templates ?? [])} waiting={queue ? forClass(queue, r.id).length : 0} />
           ))}
@@ -279,14 +279,14 @@ export function TeacherClass() {
               </Link>
               <h1 data-testid="page-title" className="min-w-0 truncate text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">{room.name}</h1>
             </div>
-            <section data-testid="room-inside" className="mt-4 grid gap-6 lg:grid-cols-6 lg:gap-x-3 xl:grid-cols-7">
+            <section data-testid="room-inside" className="stagger mt-4 grid gap-6 lg:grid-cols-6 lg:gap-x-3 xl:grid-cols-7">
               <aside data-testid="room-panel" className="flex min-w-0 flex-col gap-4 lg:order-2 lg:col-span-2">
                 <ClassCode key={room.id} code={room.code} />
                 <div className="border-t border-border pt-3">
                   {kids && <p data-testid="kids-count" className="mb-2 text-sm font-extrabold text-heading">{t('cl.kids', { count: kids.length })}</p>}
                   <ErrorText code={qrErr} />
                   {kids?.length === 0 && <p className="text-sm font-bold text-text">{t('cl.noKids')}</p>}
-                  <div data-testid="room-kids" className="-mx-1 flex gap-1 overflow-x-auto p-1 [scrollbar-width:none] lg:grid lg:max-h-[252px] lg:grid-cols-4 lg:gap-x-1 lg:gap-y-2 lg:overflow-y-auto lg:overflow-x-hidden lg:[scrollbar-width:thin] xl:grid-cols-5">
+                  <div data-testid="room-kids" className="stagger -mx-1 flex gap-1 overflow-x-auto p-1 [scrollbar-width:none] lg:grid lg:max-h-[252px] lg:grid-cols-4 lg:gap-x-1 lg:gap-y-2 lg:overflow-y-auto lg:overflow-x-hidden lg:[scrollbar-width:thin] xl:grid-cols-5">
                     {kids?.map((k) => (
                       <button key={k.id} type="button" data-testid={`kid-qr-${k.nick}`} title={`${k.nick}: ${t('parent.qrButton')}`} onClick={() => void showQr(k)} className="flex w-[72px] shrink-0 flex-col items-center gap-1 transition-transform duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.97] motion-reduce:transition-none lg:w-full">
                         <Avatar nick={k.nick} className="h-14 w-14" />

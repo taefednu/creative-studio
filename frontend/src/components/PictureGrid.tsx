@@ -24,7 +24,7 @@ export default function PictureGrid({ value, onChange, compact = false }: Props)
             data-filled={i < value.length}
             className={`flex h-10 items-center justify-center rounded-2xl border-2 border-dashed border-border ${compact ? '' : 'flex-1'}`}
           >
-            <span className={`h-4 w-4 rounded-full ${i < value.length ? 'bg-primary' : 'bg-primary-soft'}`} />
+            <span className={`h-4 w-4 rounded-full ${i < value.length ? 'tick-in bg-primary' : 'bg-primary-soft'}`} />
           </span>
         ))}
         <button

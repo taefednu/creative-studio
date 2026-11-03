@@ -7,8 +7,11 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import ErrorBoundary from './components/ErrorBoundary'
 import { SessionProvider } from './features/auth/session'
+import { watchWindowExit } from './features/windowExit'
 import './i18n'
 import './index.css'
+
+watchWindowExit()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -123,7 +123,7 @@ export default function MyWorks() {
         </p>
       )}
       {badge === 'styles' && (
-        <section data-testid="style-album" aria-label={t('mw.albumLabel')} className="nav-in mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+        <section data-testid="style-album" aria-label={t('mw.albumLabel')} className="stagger mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
           {album.map(({ tpl, work }) =>
             work ? (
               <button
@@ -168,7 +168,7 @@ export default function MyWorks() {
           {t('mw.none')}
         </p>
       )}
-      <div data-testid="works-grid" className="mt-3 grid grid-flow-dense grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-6">
+      <div data-testid="works-grid" className="stagger mt-3 grid grid-flow-dense grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-6">
         {items.map((x, i) =>
           x.story ? (
             <StoryCard key={`s${x.story.id}`} story={x.story} big={i % 7 === 0} />
@@ -299,8 +299,8 @@ function WorkCard({ w, big, cover, open, onSubmitted, onClosed }: { w: Work; big
         ))}
       </div>
       {modal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-scrim p-4">
-          <div role="dialog" aria-label={t('publish.who')} data-testid="work-modal" className="my-auto w-full max-w-md rounded-card bg-surface p-5 shadow-card">
+        <div className="modal-bg fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-scrim p-4">
+          <div role="dialog" aria-label={t('publish.who')} data-testid="work-modal" className="modal-in my-auto w-full max-w-md rounded-card bg-surface p-5 shadow-card">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-xl font-extrabold text-heading">{t('publish.who')}</h2>
               <button type="button" data-testid="work-modal-close" aria-label={t('mw.close')} onClick={close} className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-heading">

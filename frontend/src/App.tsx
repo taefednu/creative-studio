@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import AppShell from './components/AppShell'
@@ -36,7 +37,20 @@ function ChildArea() {
   return <AppShell />
 }
 
+/** Смена вкладки: содержимое проявляется. Только прозрачность: transform на main сдвинул бы закреплённую панель создания. */
+function usePageFade() {
+  const { pathname } = useLocation()
+  const was = useRef(pathname)
+  useEffect(() => {
+    if (was.current === pathname) return
+    was.current = pathname
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    document.querySelector('main')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' })
+  }, [pathname])
+}
+
 export default function App() {
+  usePageFade()
   return (
     <Routes>
       <Route path="/login" element={<Login />} />

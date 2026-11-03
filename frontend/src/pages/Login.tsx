@@ -353,7 +353,7 @@ export default function Login() {
                 }`}
               >
                 {role === r.role && (
-                  <span data-testid={`role-check-${r.role}`} className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-fg">
+                  <span data-testid={`role-check-${r.role}`} className="tick-in absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-fg">
                     <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M5 12l5 5 9-10" />
                     </svg>

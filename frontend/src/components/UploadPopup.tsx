@@ -126,7 +126,7 @@ export default function UploadPopup({ guest, className, assignmentId, label, tes
       </button>
       {open && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-3"
+          className="modal-bg fixed inset-0 z-50 flex items-center justify-center bg-scrim p-3"
           onPointerDown={(e) => e.target === e.currentTarget && !busy && setOpen(false)}
         >
           <div

@@ -29,7 +29,7 @@ export default function ParentPlans() {
           </p>
         </div>
         {data && data.packs.length === 0 && <p className="text-muted">{t('cab.plans.empty')}</p>}
-        <div data-testid="plans" className="mx-auto w-full max-w-[720px] divide-y divide-border rounded-card border border-border bg-surface px-4 shadow-card">
+        <div data-testid="plans" className="stagger mx-auto w-full max-w-[720px] divide-y divide-border rounded-card border border-border bg-surface px-4 shadow-card">
           {data?.packs.map((p, i) => (
             <div key={p.id} data-testid="plan-card" className="flex items-center gap-4 py-3">
               <img src={`/art/coins-${COINS[Math.min(i, 2)]}.webp`} alt="" className="h-16 w-16 shrink-0 object-contain" />

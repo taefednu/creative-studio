@@ -118,7 +118,7 @@ export default function ClassTasks({ classId, nicks }: { classId: number; nicks:
       )}
       <div className="mt-3">
             {formOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-scrim p-3" onPointerDown={(e) => e.target === e.currentTarget && !busy && setFormOpen(false)}>
+              <div className="modal-bg fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-scrim p-3" onPointerDown={(e) => e.target === e.currentTarget && !busy && setFormOpen(false)}>
             <form
               onSubmit={(e) => void create(e)}
               data-testid="task-form"
@@ -202,7 +202,7 @@ export default function ClassTasks({ classId, nicks }: { classId: number; nicks:
                   {t('tt.empty')}
                 </p>
               )}
-              <div className="flex flex-col gap-3">
+              <div className="stagger flex flex-col gap-3">
                 {items?.map((a) => (
                   <div key={a.id}>
                     <AssignmentRow a={a} subs={tasks?.subs[a.id] ?? []} total={total} active={open === a.id} onClick={() => setOpen(open === a.id ? null : a.id)} />
@@ -343,7 +343,7 @@ function Gallery({ subs, onShown, cols }: { subs: Sub[]; onShown: () => void; co
   }
 
   return (
-    <div className={`grid gap-3 ${cols}`}>
+    <div className={`stagger grid gap-3 ${cols}`}>
       {subs.map((s) => (
         <figure key={s.id} data-testid="submission" className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
           <img src={s.image_url} alt={s.nick} className="aspect-[1.66] w-full object-cover" loading="lazy" />

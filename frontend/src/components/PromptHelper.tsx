@@ -49,7 +49,7 @@ export default function PromptHelper({ onClose, onDone }: Props) {
   return createPortal(
     <div
       data-testid="helper-bg"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-scrim p-3"
+      className="modal-bg fixed inset-0 z-50 flex items-center justify-center bg-scrim p-3"
       onPointerDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
@@ -57,7 +57,7 @@ export default function PromptHelper({ onClose, onDone }: Props) {
         aria-modal="true"
         aria-label={t('ideas.open')}
         data-testid="helper"
-        className="chip-pop max-h-full w-full max-w-[600px] overflow-y-auto rounded-[28px] bg-surface p-4 shadow-pop md:p-6"
+        className="modal-in max-h-full w-full max-w-[600px] overflow-y-auto rounded-[28px] bg-surface p-4 shadow-pop md:p-6"
       >
         <div className="flex items-center gap-3">
           <img src="/art/robot-wave.webp" alt="" className="h-12 w-12 shrink-0 object-contain" />

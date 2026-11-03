@@ -39,7 +39,7 @@ export default function Tasks() {
           {t('task.empty')}
         </p>
       )}
-      <div data-testid="tasks-grid" className="mt-4 grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div data-testid="tasks-grid" className="stagger mt-4 grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {cls && sorted.map((a) => <TaskCard key={a.id} a={a} />)}
       </div>
     </div>

@@ -111,7 +111,7 @@ export default function PublishBox({ workId, main, second, publicOk, noTitle, on
             data-state={r.state}
             className={`flex min-h-14 items-center gap-2 rounded-2xl px-4 py-1.5 text-base font-extrabold leading-5 ${r.state === 'done' ? 'bg-success-soft text-success' : r.state === 'waiting' ? 'bg-primary-soft text-primary' : 'bg-primary-soft text-muted'}`}
           >
-            <Icon name={r.state === 'done' ? 'check' : r.state === 'waiting' ? 'clock' : 'close'} className="h-5 w-5 shrink-0" />
+            <Icon name={r.state === 'done' ? 'check' : r.state === 'waiting' ? 'clock' : 'close'} className="tick-in h-5 w-5 shrink-0" />
             {r.state === 'done' ? r.done : r.state === 'waiting' ? t(r.key === 'public' ? 'publish.waitingAll' : 'publish.waiting') : t('publish.refusedAll')}
           </p>
         ),

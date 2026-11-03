@@ -40,6 +40,7 @@ export default function NotifBell() {
   const [readOf, setReadOf] = useState<typeof data>(null) // какой ответ сервера уже отмечен прочитанным
   const [gone, setGone] = useState<string[]>([]) // убрано тут же, не дожидаясь сервера
   const [all, setAll] = useState(false)
+  const [leaving, setLeaving] = useState<string | null>(null)
   const box = useRef<HTMLDivElement>(null)
 
   useEffect(reload, [pathname, reload])
@@ -63,7 +64,10 @@ export default function NotifBell() {
   function clear(keys: string[]) {
     const everything = keys[0] === '*'
     if (everything) setAll(true)
-    else setGone((g) => [...g, ...keys])
+    else {
+      setLeaving(keys[0]) // строка уезжает, потом исчезает
+      window.setTimeout(() => setGone((g) => [...g, ...keys]), 140)
+    }
     void api('/api/child/notifications/clear', 'POST', { keys })
       .catch(() => {})
       .then(() => {
@@ -93,11 +97,11 @@ export default function NotifBell() {
         onClick={toggle}
         className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-primary lg:h-11 lg:w-11"
       >
-        <svg viewBox="0 0 24 24" className="h-5 w-5 lg:h-6 lg:w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <svg key={unread} viewBox="0 0 24 24" className={`h-5 w-5 lg:h-6 lg:w-6 ${unread > 0 ? 'bell-ring' : ''}`} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M6 9a6 6 0 0 1 12 0c0 6 2.500 7 2.500 7h-17S6 15 6 9zM10 20a2.200 2.200 0 0 0 4 0" />
         </svg>
         {unread > 0 && (
-          <span data-testid="bell-badge" className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-xs font-extrabold text-primary-fg">
+          <span data-testid="bell-badge" className="tick-in absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-xs font-extrabold text-primary-fg">
             {unread}
           </span>
         )}
@@ -122,7 +126,7 @@ export default function NotifBell() {
             const picture = n.image_url ?? ICON[n.kind]
             const many = (n.count ?? 1) > 1 && (n.kind === 'refused' || n.kind === 'approved') ? MANY[n.kind] : `notes.${n.kind}`
             return (
-              <div key={n.keys[0]} className={`mt-1 flex items-center rounded-2xl pr-1 hover:bg-primary-soft ${n.unread ? 'bg-primary-soft' : ''}`}>
+              <div key={n.keys[0]} className={`mt-1 flex items-center rounded-2xl pr-1 hover:bg-primary-soft ${n.unread ? 'bg-primary-soft' : ''} ${leaving === n.keys[0] ? 'row-out' : ''}`}>
                 <Link to={n.link} data-testid={`note-${n.kind}`} onClick={() => setOpen(false)} className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl p-2">
                   {picture && <img src={picture} alt="" className={`h-12 w-12 shrink-0 rounded-xl ${n.image_url ? 'object-cover' : 'object-contain'}`} />}
                   <span className="min-w-0 flex-1">
