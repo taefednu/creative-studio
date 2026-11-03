@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useSession } from '../features/auth/session'
 import type { Role } from '../features/auth/session'
@@ -33,6 +33,7 @@ export default function CabinetHeader({ role }: { role: Exclude<Role, 'child'> }
   const { t } = useTranslation()
   const { refresh } = useSession()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
   const count = useReviewCount()
   const [kids, reloadKids] = useLoad(role === 'parent' ? loadKids : loadNone)
   const [rooms, reloadRooms] = useLoad(role === 'teacher' ? loadRooms : loadNone)
@@ -71,7 +72,7 @@ export default function CabinetHeader({ role }: { role: Exclude<Role, 'child'> }
   const classFeed = (rooms as { id: number }[] | null)?.[0]
   const tabs: Tab[] =
     role === 'teacher'
-      ? [...TABS.teacher, { to: classFeed ? `/teacher/feed/${classFeed.id}` : '/teacher/classes', icon: 'feed', key: 'classfeed' }]
+      ? [...TABS.teacher, { to: pathname.startsWith('/teacher/feed/') ? pathname : classFeed ? `/teacher/feed/${classFeed.id}` : '/teacher/classes', icon: 'feed', key: 'classfeed' }]
       : TABS.parent
 
   return (

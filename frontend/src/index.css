@@ -141,16 +141,6 @@ body {
 .feed-img-on {
   opacity: 1;
 }
-/* Строка задания приходит позже ленты: раскрывается, а не выскакивает */
-.task-slot {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s var(--ease-out), margin-top 0.3s var(--ease-out);
-}
-.task-slot:has(> div > *) {
-  grid-template-rows: 1fr;
-  margin-top: 12px;
-}
 .modal-bg {
   animation: modal-bg 0.2s ease-out;
 }

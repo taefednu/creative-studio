@@ -151,11 +151,6 @@
   },
   "feed": {
     "anon": "Young artist",
-    "title": {
-      "class": "Class feed",
-      "family": "Family feed",
-      "best": "Featured"
-    },
     "tab": {
       "class": "My class",
       "family": "Family",
@@ -194,7 +189,6 @@
     "kinderCancel": "Cancel",
     "classFeed": "Class feed",
     "familyFeed": "Family feed",
-    "back": "Back to the cabinet",
     "model": "Model",
     "made": "Made",
     "today": "today",
@@ -221,7 +215,7 @@
     "showClass": "Share with class"
   },
   "shell": { "coinsUnknown": "Coins are not available right now", "nav": "Main menu", "account": "Profile" },
-  "task": { "start": "Start", "overdue": "deadline passed", "today": "due today", "left_one": "{{count}} day left", "left_few": "{{count}} days left", "left_many": "{{count}} days left", "left_other": "{{count}} days left", "draw": "Draw", "noClass": "Tasks show up once you join a class: enter the class code from your teacher.", "empty": "No tasks yet. Check back later: your teacher will think of something soon!", "sentMark": "Handed in, your teacher will see it", "heldMark": "Sent to your teacher to look at", "submit": "Hand in", "submitFor": "Handing in to:", "submitComment": "Caption (optional)", "submitDone": "Handed in! Your teacher will see your picture.", "submitRejected": "Your teacher did not accept this picture. Pick another one.", "submitHeld": "Sent to your teacher to look at. They will answer once they have.", "pick": "Which task to hand in to" },
+  "task": { "overdue": "deadline passed", "today": "due today", "left_one": "{{count}} day left", "left_few": "{{count}} days left", "left_many": "{{count}} days left", "left_other": "{{count}} days left", "draw": "Draw", "noClass": "Tasks show up once you join a class: enter the class code from your teacher.", "empty": "No tasks yet. Check back later: your teacher will think of something soon!", "sentMark": "Handed in, your teacher will see it", "heldMark": "Sent to your teacher to look at", "submit": "Hand in", "submitFor": "Handing in to:", "submitComment": "Caption (optional)", "submitDone": "Handed in! Your teacher will see your picture.", "submitRejected": "Your teacher did not accept this picture. Pick another one.", "submitHeld": "Sent to your teacher to look at. They will answer once they have.", "pick": "Which task to hand in to" },
   "panel": { "voiceStart": "Speak your idea", "voiceStop": "Stop recording", "voiceListening": "Listening…", "uploadTitle": "Your drawing", "uploadHint": "PNG or JPG", "uploadSending": "Sending…", "uploadPick": "Choose a photo", "modePhoto": "Photo of a drawing", "modeDraw": "Draw here", "drawColor": "Color", "drawWidth": "Brush size", "drawUndo": "Undo", "drawClear": "Clear all", "uploadOther": "Choose another", "uploadClose": "Close", "model": "Muse Image", "format": "1:1", "style": "Style", "allStyles": "All styles", "styleFilter": "Filter by style", "noStyleMatch": "No pictures in this style yet" },
   "templates": { "custom": "My style", "alive": "Living drawing", "story": "Story",
     "superhero": "I'm a superhero",

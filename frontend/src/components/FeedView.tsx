@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiError, api } from '../api'
-import { REACTIONS, byStyle, captionOf, cardRatio, feedUrl, toColumns } from '../features/feed/feed'
+import { byStyle, captionOf, cardRatio, feedUrl, toColumns } from '../features/feed/feed'
 import type { FeedKind, FeedPage, Post } from '../features/feed/feed'
 import type { TemplateInfo } from '../features/works/works'
 import Avatar from './Avatar'
 import FeedImage, { Skeleton } from './FeedImage'
 import ChipSelect from './ChipSelect'
 import PostModal from './PostModal'
-import TeacherTask from './TeacherTask'
+
+export type FeedHead = { id: string; label: string; active: boolean; onPick: () => void }
 
 type Props = {
   kinds: FeedKind[]
   classId?: number
   title?: string
-  /** Лента ребёнка: строка задания, фильтр по стилям и место под панель создания. */
+  /** Учитель: шапка переключает классы вместо вкладок ленты. Пустой список: классы ещё грузятся. */
+  classes?: FeedHead[]
+  /** Лента ребёнка: фильтр по стилям и место под панель создания. */
   child?: { templates: TemplateInfo[]; onStyle: (id: string) => void }
-  /** Витрина для гостя: та же сетка, но без строки задания, комментариев и реакций. */
+  /** Витрина для гостя: та же сетка, но без комментариев и реакций. */
   guest?: boolean
 }
 
@@ -39,12 +42,14 @@ function useColumnCount() {
 
 const GHOST_ROWS = 4
 
+const HEAD_CLS = 'whitespace-nowrap text-2xl font-black leading-10 tracking-tight md:text-5xl md:leading-[56px]'
+
 /** Экран до ответа о ребёнке: те же места, что займёт лента, и заголовок той же высоты. */
 export function FeedSkeleton() {
   const count = useColumnCount()
   return (
     <div data-testid="feed-skeleton" aria-hidden="true">
-      <div className="flex h-[84px] items-start md:h-[45px] md:items-center">
+      <div className="flex h-10 items-center md:h-14">
         <Skeleton className="block h-9 w-[220px] rounded-full" />
       </div>
       <div className="mt-2 flex items-start gap-2 lg:gap-3">
@@ -61,7 +66,7 @@ export function FeedSkeleton() {
 }
 
 /** Лента (docs/design/feed.jpg): «кирпичная» сетка, клик по карточке — работа поверх. Новые страницы подгружаются при прокрутке. */
-export default function FeedView({ kinds, classId, title, child, guest }: Props) {
+export default function FeedView({ kinds, classId, title, classes, child, guest }: Props) {
   const { t, i18n } = useTranslation()
   const [kind, setKind] = useState<FeedKind>(kinds[0])
   const [page, setPage] = useState<{ key: string; items: Post[]; cursor: number | null } | null>(null)
@@ -118,6 +123,8 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
   const ghosts = !loaded ? count * GHOST_ROWS : autoLoads || fetching ? count : 0
   const slots: (Post | number)[] = [...shown, ...Array.from({ length: ghosts }, (_, i) => shown.length + i)]
   const Title = guest ? 'h2' : 'h1' // у гостя заголовок страницы на первом экране
+  const heads: FeedHead[] =
+    classes ?? kinds.map((k) => ({ id: k, label: title ?? t(`feed.tab.${k}`), active: kind === k, onPick: () => setKind(k) }))
 
   // Обновляем только изменённый пост: перезагрузка ленты вернула бы её к первой странице и сбила прокрутку
   async function refreshPost(id: number) {
@@ -132,30 +139,28 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:flex-nowrap">
-        <div className="order-1 mt-1 md:mt-0">
-          <Title data-testid="feed-title" className={`w-fit font-extrabold text-heading ${child ? 'text-2xl md:text-[28px] md:leading-[34px]' : 'text-3xl leading-9 md:text-[44px] md:leading-[42px]'}`}>
-            {title ?? t(`feed.title.${kind}`)}
-          </Title>
-        </div>
-        {kinds.length > 1 && (
-          <div className="order-3 -mb-1.5 flex max-w-full basis-full gap-2 overflow-x-auto pb-1.5 md:order-2 md:basis-auto md:gap-1.5" role="tablist">
-            {kinds.map((k) => (
-              <button
-                key={k}
-                type="button"
-                role="tab"
-                aria-selected={kind === k}
-                data-testid={`feed-${k}`}
-                onClick={() => setKind(k)}
-                className={`h-10 whitespace-nowrap shrink-0 rounded-full px-4 text-sm s380:px-[26px] font-extrabold md:h-[45px] md:px-9 md:text-base ${
-                  kind === k ? 'bg-primary text-primary-fg' : 'border border-border bg-surface text-heading'
-                }`}
-              >
-                {t(`feed.tab.${k}`)}
-              </button>
-            ))}
-          </div>
+      <div className="flex min-h-10 items-center gap-x-2 md:min-h-14 md:gap-x-3">
+        {heads.length === 1 ? (
+          <Title data-testid="feed-title" className={`${HEAD_CLS} text-heading`}>{heads[0].label}</Title>
+        ) : (
+          <>
+            <Title data-testid="feed-title" className="sr-only">{heads.find((x) => x.active)?.label}</Title>
+            <div className="flex min-w-0 gap-3 overflow-x-auto [scrollbar-width:none] md:gap-8" role="tablist">
+              {heads.map((x) => (
+                <button
+                  key={x.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={x.active}
+                  data-testid={`feed-${x.id}`}
+                  onClick={x.onPick}
+                  className={`${HEAD_CLS} shrink-0 transition-colors ${x.active ? 'text-heading' : 'text-muted hover:text-heading'}`}
+                >
+                  {x.label}
+                </button>
+              ))}
+            </div>
+          </>
         )}
         {child && (
           <ChipSelect
@@ -170,17 +175,10 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
               { value: '', label: t('panel.allStyles') },
               ...child.templates.map((x) => ({ value: x.id, label: t(`templates.${x.id}`), thumb: x.image_url })),
             ]}
-            className="order-2 ml-auto h-10 w-[124px] md:order-3 md:h-[45px] md:w-[156px]"
+            className="ml-auto h-10 w-[116px] shrink-0 md:h-[45px] md:w-[156px]"
           />
         )}
       </div>
-      {child && !guest && (
-        <div className="task-slot">
-          <div className="min-h-0 overflow-hidden">
-            <TeacherTask start />
-          </div>
-        </div>
-      )}
       {loaded && items.length === 0 && (
         <p data-testid="feed-empty" className="mt-6 text-text">
           {t('feed.empty')}
@@ -196,31 +194,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
         <div key={c} className="flex min-w-0 flex-1 flex-col gap-2 lg:gap-3">
         {col.map((p, row) =>
           typeof p === 'number' ? (
-            <Skeleton key={`g${p}`} data-testid="feed-ghost" className="block rounded-card" style={{ aspectRatio: child ? cardRatio(p + 1) : '1 / 1' }} />
-          ) : !child ? (
-            <button
-              key={p.id}
-              type="button"
-              data-testid="post-card"
-              data-post-id={p.id}
-              onClick={() => setOpen(p.id)}
-              className="feed-card block w-full overflow-hidden rounded-card border border-border bg-primary-soft text-left shadow-card"
-            >
-              <span className="relative block aspect-square">
-                <FeedImage src={`${p.image_url}?thumb=1`} alt={captionOf(p, i18n.language) ?? ''} eager={row < 3} className="h-full w-full object-cover" />
-              </span>
-              <div className="px-3 py-2">
-                <p className="truncate text-sm font-extrabold text-heading">{p.nick || t('feed.anon')}</p>
-                {p.caption && <p className="text-sm text-text">{captionOf(p, i18n.language)}</p>}
-                <div className="mt-1 flex flex-wrap gap-x-3 text-sm font-bold text-heading">
-                  {REACTIONS.map((r) => (
-                    <span key={r.key} data-testid={`card-${r.key}`}>
-                      <span aria-hidden="true">{r.emoji}</span> {p.reactions[r.key]}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </button>
+            <Skeleton key={`g${p}`} data-testid="feed-ghost" className="block rounded-card" style={{ aspectRatio: cardRatio(p + 1) }} />
           ) : (
           <button
             key={p.id}

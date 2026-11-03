@@ -151,11 +151,6 @@
   },
   "feed": {
     "anon": "Yosh rassom",
-    "title": {
-      "class": "Sinf lentasi",
-      "family": "Oila lentasi",
-      "best": "Eng yaxshilari"
-    },
     "tab": {
       "class": "Mening sinfim",
       "family": "Oila",
@@ -194,7 +189,6 @@
     "kinderCancel": "Bekor qilish",
     "classFeed": "Sinf lentasi",
     "familyFeed": "Oila lentasi",
-    "back": "Kabinetga qaytish",
     "model": "Model",
     "made": "Yaratilgan",
     "today": "bugun",
@@ -221,7 +215,7 @@
     "showClass": "Sinfga ko‘rsatish"
   },
   "shell": { "coinsUnknown": "Tangalar hozircha mavjud emas", "nav": "Asosiy menyu", "account": "Profil" },
-  "task": { "start": "Boshlash", "overdue": "muddat tugagan", "today": "muddat bugun", "left_one": "{{count}} kun qoldi", "left_few": "{{count}} kun qoldi", "left_many": "{{count}} kun qoldi", "left_other": "{{count}} kun qoldi", "draw": "Chizish", "noClass": "Sinfga qo‘shilganingdan keyin topshiriqlar shu yerda chiqadi: o‘qituvchidan sinf kodini kiritgin.", "empty": "Hozircha topshiriq yo‘q. Keyinroq qara: o‘qituvchi tez orada nimadir o‘ylab topadi!", "sentMark": "Topshirildi, o‘qituvchi ko‘radi", "heldMark": "O‘qituvchiga ko‘rish uchun yuborildi", "submit": "Topshiriqqa topshirish", "submitFor": "Topshiryapman:", "submitComment": "Rasm izohi (shart emas)", "submitDone": "Topshirildi! O‘qituvchi rasmingni ko‘radi.", "submitRejected": "O‘qituvchi bu rasmni qabul qilmadi. Boshqasini tanla.", "submitHeld": "O‘qituvchiga ko‘rish uchun yuborildi. Tekshirgach, u javob beradi.", "pick": "Qaysi topshiriqqa topshirish" },
+  "task": { "overdue": "muddat tugagan", "today": "muddat bugun", "left_one": "{{count}} kun qoldi", "left_few": "{{count}} kun qoldi", "left_many": "{{count}} kun qoldi", "left_other": "{{count}} kun qoldi", "draw": "Chizish", "noClass": "Sinfga qo‘shilganingdan keyin topshiriqlar shu yerda chiqadi: o‘qituvchidan sinf kodini kiritgin.", "empty": "Hozircha topshiriq yo‘q. Keyinroq qara: o‘qituvchi tez orada nimadir o‘ylab topadi!", "sentMark": "Topshirildi, o‘qituvchi ko‘radi", "heldMark": "O‘qituvchiga ko‘rish uchun yuborildi", "submit": "Topshiriqqa topshirish", "submitFor": "Topshiryapman:", "submitComment": "Rasm izohi (shart emas)", "submitDone": "Topshirildi! O‘qituvchi rasmingni ko‘radi.", "submitRejected": "O‘qituvchi bu rasmni qabul qilmadi. Boshqasini tanla.", "submitHeld": "O‘qituvchiga ko‘rish uchun yuborildi. Tekshirgach, u javob beradi.", "pick": "Qaysi topshiriqqa topshirish" },
   "panel": { "voiceStart": "Ovozda ayt", "voiceStop": "Yozishni to‘xtat", "voiceListening": "Tinglayapman…", "uploadTitle": "Sening rasming", "uploadHint": "PNG yoki JPG", "uploadSending": "Yuborilmoqda…", "uploadPick": "Suratni tanlash", "modePhoto": "Rasm surati", "modeDraw": "Shu yerda chiz", "drawColor": "Rang", "drawWidth": "Mo‘yqalam qalinligi", "drawUndo": "Bekor qilish", "drawClear": "Hammasini o‘chirish", "uploadOther": "Boshqasini tanlash", "uploadClose": "Yopish", "model": "Muse Image", "format": "1:1", "style": "Uslub", "allStyles": "Barcha uslublar", "styleFilter": "Uslub bo'yicha filtr", "noStyleMatch": "Bu uslubda hali rasm yo'q" },
   "templates": { "custom": "O‘z uslubim", "alive": "Jonlangan rasm", "story": "Ertak",
     "superhero": "Men superqahramonman",

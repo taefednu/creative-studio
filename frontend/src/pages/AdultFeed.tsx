@@ -1,24 +1,32 @@
-import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { api } from '../api'
 import CabinetHeader from '../components/CabinetHeader'
 import FeedView from '../components/FeedView'
+import { useLoad } from '../useLoad'
 
-/** Лента для взрослых: учитель — «Лента класса» (:classId), родитель — «Семейная лента». */
-export default function AdultFeed({ who }: { who: 'teacher' | 'parent' }) {
-  const { t } = useTranslation()
+const loadRooms = () => api<{ id: number; name: string }[]>('/api/teacher/classes')
+
+function TeacherFeed() {
   const { classId } = useParams()
+  const navigate = useNavigate()
+  const [rooms] = useLoad(loadRooms)
+  const id = Number(classId)
+  const classes = (rooms ?? []).map((r) => ({
+    id: String(r.id),
+    label: r.name,
+    active: r.id === id,
+    onPick: () => navigate(`/teacher/feed/${r.id}`),
+  }))
+  return <FeedView kinds={['class']} classId={id} classes={classes} />
+}
+
+/** Та же лента, что у детей: учитель переключает классы, родитель видит семью. */
+export default function AdultFeed({ who }: { who: 'teacher' | 'parent' }) {
   return (
     <div className="min-h-screen bg-bg pb-24 lg:pb-6">
       <CabinetHeader role={who} />
-      <main className="mx-auto max-w-[1672px] px-4 py-4 md:px-8">
-        <Link to={`/${who}`} data-testid="back" className="mb-3 inline-block text-sm font-bold text-primary underline">
-          {t('feed.back')}
-        </Link>
-        {who === 'teacher' ? (
-          <FeedView kinds={['class']} classId={Number(classId)} />
-        ) : (
-          <FeedView kinds={['family']} title={t('feed.title.family')} />
-        )}
+      <main className="px-4 pb-5 pt-1.5 md:px-8 lg:pt-4">
+        {who === 'teacher' ? <TeacherFeed /> : <FeedView kinds={['family']} />}
       </main>
     </div>
   )

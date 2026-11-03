@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api'
+import { isOpen, loadAssignments } from '../features/assignments/assignments'
 import { useSession } from '../features/auth/session'
 import { useLoad } from '../useLoad'
 import ErrorText, { errorKey } from './ErrorText'
@@ -44,6 +45,10 @@ export default function AppShell() {
   const { refresh } = useSession()
   const navigate = useNavigate()
   const [me, load] = useLoad(loadMe)
+  const [tasks, reloadTasks] = useLoad(loadAssignments)
+  const { pathname } = useLocation()
+  // Строки задания на ленте нет: о новом задании и о сданном говорит счётчик на вкладке
+  useEffect(reloadTasks, [pathname, reloadTasks])
   const [code, setCode] = useState('')
   const [err, setErr] = useState<string | null>(null)
   const [menu, setMenu] = useState(false)
@@ -125,6 +130,7 @@ export default function AppShell() {
               icon={tab.key}
               testid={`tab-${tab.key}`}
               label={t(`nav.${tab.key}`)}
+              badge={tab.key === 'tasks' ? tasks?.filter(isOpen).length : null}
             />
           ))}
         </nav>

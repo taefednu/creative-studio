@@ -1,13 +1,12 @@
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import { loadAssignments, shownTask } from '../features/assignments/assignments'
 import { dueLabel } from '../features/assignments/due'
 import { useLoad } from '../useLoad'
 
-type Props = { start?: boolean; assignmentId?: number | null }
+type Props = { assignmentId?: number | null }
 
-/** Строка задания учителя: на ленте с кнопкой «Начать», на «Создать» без неё. Нет задания — ничего. */
-export default function TeacherTask({ start, assignmentId }: Props) {
+/** Строка задания учителя на «Создать». */
+export default function TeacherTask({ assignmentId }: Props) {
   const { t } = useTranslation()
   const [list] = useLoad(loadAssignments)
   // заданный, но не найденный id не подменяем другим заданием; сданное задание из строки уходит
@@ -29,15 +28,6 @@ export default function TeacherTask({ start, assignmentId }: Props) {
         <span data-testid="task-title">{a.title}</span>
         {leftText && <span className="font-semibold text-muted"> · {leftText}</span>}
       </p>
-      {start && (
-        <Link
-          to={`/create?assignment=${a.id}`}
-          data-testid="task-start"
-          className="flex h-10 w-[76px] shrink-0 items-center justify-center rounded-full bg-primary text-sm font-extrabold uppercase text-primary-fg shadow-card md:h-[38px] md:w-[131px] md:text-base"
-        >
-          {t('task.start')}
-        </Link>
-      )}
     </div>
   )
 }
