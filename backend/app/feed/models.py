@@ -70,3 +70,17 @@ class CommentSuggestion(Base):
     kinder_text: Mapped[str] = mapped_column(String(600))
     status: Mapped[str] = mapped_column(String(10), default="open")  # open | accepted | cancelled
     created_at: Mapped[datetime] = mapped_column(DateTime, default=clock.now)
+
+
+class NoteCleared(Base):
+    """Что ребёнок убрал из колокольчика: новости собираются на лету, поэтому помним отдельно.
+
+    key — ключ события или "*" («очистить все»). Скрыто всё этого ключа не новее cleared_at.
+    Записи взрослых (срочное, решения) это не трогает: это только вид списка у самого ребёнка.
+    """
+
+    __tablename__ = "notes_cleared"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    child_id: Mapped[int] = mapped_column(ForeignKey("children.id"), index=True)
+    key: Mapped[str] = mapped_column(String(40))
+    cleared_at: Mapped[datetime] = mapped_column(DateTime, default=clock.now)

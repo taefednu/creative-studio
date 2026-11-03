@@ -87,3 +87,69 @@ def test_read_clears_unread_new_event_comes_back(w, fake):
 
 def test_only_child_sees(w, fake):
     assert w.teacher.get("/api/child/notifications").status_code in (401, 403)
+
+
+def clear(c, *keys):
+    return c.post("/api/child/notifications/clear", json={"keys": list(keys)})
+
+
+def test_same_in_a_row_collapse_into_one_row_with_all_keys(w, fake):
+    _decide(w, "rejected")
+    _decide(w, "rejected")
+    _decide(w, "rejected")
+    items = notes(w.a)["items"]
+    assert [i["kind"] for i in items] == ["refused"] and items[0]["count"] == 3 and len(items[0]["keys"]) == 3
+    assert notes(w.a)["unread"] == 1
+
+
+def test_refusal_shows_no_picture_approval_names_the_work(w, fake):
+    _decide(w, "rejected")
+    assert notes(w.a)["items"][0]["image_url"] is None
+    _decide(w, "approved")
+    assert notes(w.a)["items"][0]["image_url"] == f"/api/works/{w.work}/image?thumb=1"
+
+
+def test_cleared_stays_cleared_and_only_for_this_child(w, fake):
+    aid = w.teacher.post(f"/api/teacher/classes/{w.room['id']}/assignments", json={"title": "Кот"}).json()["id"]
+    assert clear(w.a, f"task:{aid}").status_code == 200
+    assert kinds(w.a) == []
+    assert kinds(w.b) == ["task"]  # у одноклассника осталось
+    assert w.teacher.post(f"/api/teacher/classes/{w.room['id']}/assignments", json={"title": "Пёс"}).status_code in (200, 201)
+    assert [i["title"] for i in notes(w.a)["items"]] == ["Пёс"]  # новое приходит
+
+
+def test_new_reaction_after_clear_counts_only_new(w, fake):
+    pid = post(w)
+    w.b.put(f"/api/posts/{pid}/reactions/heart")
+    w.b.put(f"/api/posts/{pid}/reactions/star")
+    assert notes(w.a)["items"][0]["count"] == 2
+    clear(w.a, f"reaction:{pid}")
+    assert kinds(w.a) == []
+    w.b.put(f"/api/posts/{pid}/reactions/wow")
+    got = notes(w.a)["items"]
+    assert [i["kind"] for i in got] == ["reaction"] and got[0]["count"] == 1
+
+
+def test_clear_all_hides_old_lets_new_through(w, fake):
+    _decide(w, "rejected")
+    w.teacher.post(f"/api/teacher/classes/{w.room['id']}/assignments", json={"title": "Кот"})
+    assert clear(w.a, "*").status_code == 200
+    n = notes(w.a)
+    assert n["items"] == [] and n["unread"] == 0
+    _decide(w, "approved")
+    assert kinds(w.a) == ["approved"]
+
+
+def test_clear_does_not_touch_adults_record(w, fake):
+    _decide(w, "rejected")
+    with db.new_session() as s:
+        before = s.scalar(select(HeldItem).where(HeldItem.child_id == w.a_id)).status
+    clear(w.a, "*")
+    with db.new_session() as s:
+        assert s.scalar(select(HeldItem).where(HeldItem.child_id == w.a_id)).status == before
+
+
+def test_clear_rejects_junk_and_outsiders(w, fake):
+    assert clear(w.a, "<script>").status_code == 422
+    assert clear(w.a).status_code == 422
+    assert clear(w.teacher, "*").status_code in (401, 403)

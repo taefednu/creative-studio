@@ -5,6 +5,7 @@ import { api } from '../api'
 import { taskTitle } from '../features/assignments/assignments'
 import type { TaskI18n } from '../features/assignments/assignments'
 import { agoText } from '../features/review/review'
+import Icon from './Icon'
 import { useLoad } from '../useLoad'
 
 type Note = {
@@ -12,6 +13,7 @@ type Note = {
   at: string
   unread: boolean
   link: string
+  keys: string[]
   count?: number
   image_url?: string | null
   title?: string
@@ -19,6 +21,7 @@ type Note = {
 }
 
 const loadNotes = () => api<{ items: Note[]; unread: number }>('/api/child/notifications')
+const MANY = { refused: 'notes.refusedMany', approved: 'notes.approvedMany' } as const
 const ICON: Partial<Record<Note['kind'], string>> = { refused: '/art/shield.webp', approved: '/art/robot-happy.webp' }
 
 /** Колокольчик ребёнка: что нового о его работах и заданиях. Открыл — прочитано; новое событие зажжёт снова. */
@@ -27,7 +30,9 @@ export default function NotifBell() {
   const [data, reload] = useLoad(loadNotes)
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
-  const [read, setRead] = useState(false)
+  const [readOf, setReadOf] = useState<typeof data>(null) // какой ответ сервера уже отмечен прочитанным
+  const [gone, setGone] = useState<string[]>([]) // убрано тут же, не дожидаясь сервера
+  const [all, setAll] = useState(false)
   const box = useRef<HTMLDivElement>(null)
 
   useEffect(reload, [pathname, reload])
@@ -43,16 +48,34 @@ export default function NotifBell() {
     }
   }, [open])
 
+  useEffect(() => {
+    // Закрыли: отметки прочитанного сервер уже знает, новый ответ сам зажжёт счётчик, если есть новое
+    if (!open && data && readOf === data) reload()
+  }, [open, data, readOf, reload])
+
+  function clear(keys: string[]) {
+    const everything = keys[0] === '*'
+    if (everything) setAll(true)
+    else setGone((g) => [...g, ...keys])
+    void api('/api/child/notifications/clear', 'POST', { keys })
+      .catch(() => {})
+      .then(() => {
+        reload()
+        if (everything) setAll(false)
+      })
+  }
+
   function toggle() {
     if (!open && data?.unread) {
-      setRead(true)
+      setReadOf(data)
       void api('/api/child/notifications/read', 'POST').catch(() => {})
     }
     setOpen(!open)
   }
 
+  const items = all ? [] : (data?.items ?? []).filter((n) => !n.keys.every((k) => gone.includes(k)))
   // Отметки в открытом списке видны, пока он открыт; счётчик гаснет сразу
-  const unread = read ? 0 : (data?.unread ?? 0)
+  const unread = (data && readOf === data) || all ? 0 : items.filter((n) => n.unread).length
   return (
     <div ref={box} className="relative shrink-0">
       <button
@@ -74,25 +97,38 @@ export default function NotifBell() {
       </button>
       {open && (
         <div data-testid="bell-list" className="modal-in fixed inset-x-2 top-[64px] z-40 max-h-[70dvh] overflow-y-auto rounded-3xl border border-border bg-surface p-2 shadow-pop md:absolute md:inset-x-auto md:right-0 md:top-full md:mt-2 md:w-[400px]">
-          <h2 className="px-3 pb-1 pt-2 text-lg font-black tracking-tight text-heading">{t('notes.title')}</h2>
-          {data?.items.length === 0 && (
+          <div className="flex items-center justify-between gap-2 px-3 pb-1 pt-2">
+            <h2 className="min-w-0 text-lg font-black tracking-tight text-heading">{t('notes.title')}</h2>
+            {items.length > 1 && (
+              <button type="button" data-testid="bell-clear-all" onClick={() => clear(['*'])} className="shrink-0 rounded-full px-3 py-1 text-sm font-extrabold text-muted hover:bg-primary-soft hover:text-heading">
+                {t('notes.clearAll')}
+              </button>
+            )}
+          </div>
+          {data && items.length === 0 && (
             <div data-testid="bell-empty" className="flex items-center gap-3 p-3">
               <img src="/art/robot-happy.webp" alt="" className="h-14 w-14 shrink-0 object-contain" />
               <p className="font-bold text-text">{t('notes.empty')}</p>
             </div>
           )}
-          {data?.items.map((n, i) => {
+          {items.map((n) => {
             const picture = n.image_url ?? ICON[n.kind]
+            const many = (n.count ?? 1) > 1 && (n.kind === 'refused' || n.kind === 'approved') ? MANY[n.kind] : `notes.${n.kind}`
             return (
-              <Link key={`${n.kind}-${n.at}-${i}`} to={n.link} data-testid={`note-${n.kind}`} onClick={() => setOpen(false)} className={`flex items-center gap-3 rounded-2xl p-2 hover:bg-primary-soft ${n.unread ? 'bg-primary-soft' : ''}`}>
-                {picture && <img src={picture} alt="" className={`h-12 w-12 shrink-0 rounded-xl ${n.image_url ? 'object-cover' : 'object-contain'}`} />}
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-extrabold leading-5 text-heading">
-                    {t(`notes.${n.kind}`, { count: n.count, title: n.title ? taskTitle({ title: n.title, text_i18n: n.text_i18n }, i18n.language) : '' })}
+              <div key={n.keys[0]} className={`mt-1 flex items-center rounded-2xl pr-1 hover:bg-primary-soft ${n.unread ? 'bg-primary-soft' : ''}`}>
+                <Link to={n.link} data-testid={`note-${n.kind}`} onClick={() => setOpen(false)} className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl p-2">
+                  {picture && <img src={picture} alt="" className={`h-12 w-12 shrink-0 rounded-xl ${n.image_url ? 'object-cover' : 'object-contain'}`} />}
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-extrabold leading-5 text-heading">
+                      {t(many, { count: n.count, title: n.title ? taskTitle({ title: n.title, text_i18n: n.text_i18n }, i18n.language) : '' })}
+                    </span>
+                    <span className="block text-xs font-bold text-muted">{agoText(n.at, t)}</span>
                   </span>
-                  <span className="block text-xs font-bold text-muted">{agoText(n.at, t)}</span>
-                </span>
-              </Link>
+                </Link>
+                <button type="button" data-testid="note-clear" aria-label={t('notes.clear')} onClick={() => clear(n.keys)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface hover:text-heading">
+                  <Icon name="close" className="h-4 w-4" />
+                </button>
+              </div>
             )
           })}
         </div>
