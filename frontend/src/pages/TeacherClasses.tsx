@@ -34,7 +34,7 @@ function Modal({ title, onClose, children, testid }: { title: string; onClose: (
     return () => document.removeEventListener('keydown', esc)
   }, [onClose])
   return (
-    <div className="modal-bg fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm">
+    <div className="modal-bg fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
       <div role="dialog" aria-modal="true" aria-label={title} data-testid={testid} className="modal-in max-h-full w-full max-w-sm overflow-y-auto rounded-[28px] bg-surface p-5 shadow-pop">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h2 className="text-2xl font-black tracking-tight text-heading">{title}</h2>

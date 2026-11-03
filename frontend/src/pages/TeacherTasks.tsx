@@ -38,6 +38,12 @@ export default function ClassTasks({ classId, nicks }: { classId: number; nicks:
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  useEffect(() => {
+    if (!formOpen) return
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setFormOpen(false)
+    document.addEventListener('keydown', esc)
+    return () => document.removeEventListener('keydown', esc)
+  }, [formOpen])
   const lock = useRef(false)
 
   useEffect(() => {

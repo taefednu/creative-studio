@@ -301,7 +301,7 @@ function WorkCard({ w, big, cover, open, onSubmitted, onClosed }: { w: Work; big
         ))}
       </div>
       {modal && (
-        <div className="modal-bg fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-scrim p-4">
+        <div className="modal-bg fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-scrim p-4" onPointerDown={(e) => e.target === e.currentTarget && close()}>
           <div role="dialog" aria-label={t('publish.who')} data-testid="work-modal" className="modal-in my-auto w-full max-w-md rounded-card bg-surface p-5 shadow-card">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 className="text-xl font-extrabold text-heading">{t('publish.who')}</h2>

@@ -184,7 +184,7 @@ export default function FeedView({ kinds, classId, title, classes, nick, child, 
               { value: '', label: t('panel.allStyles') },
               ...child.templates.map((x) => ({ value: x.id, label: t(`templates.${x.id}`), thumb: x.image_url })),
             ]}
-            className="ml-auto h-10 w-[116px] shrink-0 md:h-[45px] md:w-[156px]"
+            className="ml-auto h-10 w-[136px] shrink-0 md:h-[45px] md:w-[184px]"
           />
         )}
       </div>
