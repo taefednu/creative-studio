@@ -163,7 +163,7 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
     )
   }
   const picture = (url: string, testid?: string) => (
-    <button type="button" aria-label={t('review.zoom')} onClick={() => onZoom(url)} className="h-full min-w-0 flex-1 cursor-zoom-in">
+    <button type="button" aria-label={t('review.zoom')} onClick={() => onZoom(url)} className="h-full min-w-0 flex-1 cursor-zoom-in bg-surface">
       <img src={url} alt="" data-testid={testid} className="h-full w-full object-contain" />
     </button>
   )
@@ -174,7 +174,7 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
         {it.original_url ? (
           <div data-testid="review-pair" className="flex h-full w-full gap-0.5">
             {([['original', it.original_url, t('cab.upload.original')], ['blurred', it.blurred_url, t('cab.upload.blurred')]] as const).map(([k, url, cap]) => (
-              <figure key={k} className="relative flex h-full min-w-0 flex-1">
+              <figure key={k} className="relative flex h-full min-w-0 flex-1 bg-surface">
                 {url ? picture(url, `review-${k}`) : (
                   <div data-testid={`review-${k}-none`} className="flex h-full w-full items-center justify-center p-2 text-center text-xs font-bold text-muted">{t('cab.upload.noBlur')}</div>
                 )}

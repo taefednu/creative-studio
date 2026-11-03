@@ -181,7 +181,7 @@ export default function ParentCabinet() {
 
   const sel = kids?.find((k) => k.id === pick) ?? kids?.[0] ?? null
   const st = sel ? stats[sel.id] : undefined
-  const latest = sel ? (family?.items ?? []).filter((p) => p.nick === sel.nick).slice(0, 5) : []
+  const latest = sel ? (family?.items ?? []).filter((p) => p.nick === sel.nick).slice(0, 6) : []
 
   async function showQr(k: Kid) {
     const r = await api<{ token: string }>(`/api/parent/children/${k.id}/qr`, 'POST')
@@ -192,11 +192,11 @@ export default function ParentCabinet() {
   return (
     <div className="min-h-screen bg-bg pb-24 lg:pb-6">
       <CabinetHeader role="parent" />
-      <main className="mx-auto max-w-[1400px] px-4 py-4 md:px-8">
+      <main className="px-4 py-4 md:px-8">
         <h1 data-testid="page-title" className="mb-3 text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">
           {t('review.okTitle')}
         </h1>
-        <div className={few ? 'lg:grid lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:items-start lg:gap-10' : ''}>
+        <div className={few ? 'lg:grid lg:grid-cols-[400px_minmax(0,1fr)] lg:items-start lg:gap-8' : ''}>
         <ReviewQueue single={few} onCount={setWaiting} />
         <div className="min-w-0">
         <section data-testid="kids" className={`mt-8 ${few ? 'lg:mt-0' : ''}`}>
@@ -239,39 +239,20 @@ export default function ParentCabinet() {
           </div>
           {sel?.locked && <p className="mt-2 text-sm font-bold text-danger">{t('parent.locked')}</p>}
           {sel && (
-            <div data-testid="week" className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10">
-              <div className="min-w-0">
+            <div data-testid="week" className="mt-4 flex flex-col gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
                 {st && !st.has_data ? (
                   <p data-testid="week-empty" className="font-bold text-muted">{t('cab.week.noData', { nick: sel.nick })}</p>
                 ) : (
-                  <>
-                    <p data-testid="week-summary" className="text-lg font-extrabold leading-7 text-heading">
-                      <span data-testid="week-created">{t('cab.week.pictures')}: {dash(st && weekBars(st.ready_at, new Date()).reduce((n, b) => n + b.count, 0))}</span>
-                      {' · '}
-                      <span data-testid="week-published">{t('cab.week.shown')}: {dash(st?.published)}</span>
-                      {' · '}
-                      <span data-testid="week-held">{t('cab.week.held')}: {dash(st?.held)}</span>
-                    </p>
-                    <p className="mt-1 text-sm font-bold text-muted">{t('cab.week.chart')}</p>
-                    <div className="mt-2 max-h-[180px] overflow-hidden">{st ? <WeekChart readyAt={st.ready_at} /> : <div className="h-[180px]" />}</div>
-                    <p className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
-                      <span>{t('cab.week.received')}: <b data-testid="week-received" className="text-heading">{dash(st?.coins_received)}</b></span>
-                      <span>{t('cab.week.spent')}: <b data-testid="week-spent" className="text-heading">{dash(st?.coins_spent)}</b></span>
-                      {st?.coins_earned_lessons != null && <span data-testid="kid-lessons">{t('cab.kid.lessons')}: <b className="text-primary">+{st.coins_earned_lessons}</b></span>}
-                    </p>
-                    {!!st?.coins_uncertain && <p data-testid="week-uncertain" className="mt-1 text-sm font-bold text-muted">{t('cab.week.uncertain', { count: st.coins_uncertain })}</p>}
-                  </>
+                  <p data-testid="week-summary" className="text-lg font-extrabold leading-7 text-heading">
+                    <span data-testid="week-created">{t('cab.week.pictures')}: {dash(st && weekBars(st.ready_at, new Date()).reduce((n, b) => n + b.count, 0))}</span>
+                    {' · '}
+                    <span data-testid="week-published">{t('cab.week.shown')}: {dash(st?.published)}</span>
+                    {' · '}
+                    <span data-testid="week-held">{t('cab.week.held')}: {dash(st?.held)}</span>
+                  </p>
                 )}
-              </div>
-              <div className="min-w-0">
-                {latest.length > 0 && (
-                  <Link to="/parent/feed" data-testid="latest-link" className="grid grid-cols-3 gap-2">
-                    {latest.slice(0, 3).map((p) => (
-                      <img key={p.id} src={p.image_url} alt="" className="aspect-square w-full rounded-2xl object-cover" />
-                    ))}
-                  </Link>
-                )}
-                <div className="mt-3 flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Link to="/parent/feed" data-testid="family-feed-link" className="flex h-11 items-center rounded-full border border-border bg-surface px-5 text-sm font-extrabold text-heading">
                     {t('feed.familyFeed')}
                   </Link>
@@ -279,8 +260,27 @@ export default function ParentCabinet() {
                     {t('parent.qrButton')}
                   </button>
                 </div>
-                {qr?.id === sel.id && <div className="mt-3"><QrBox token={qr.token} nick={qr.nick} /></div>}
               </div>
+              {qr?.id === sel.id && <QrBox token={qr.token} nick={qr.nick} />}
+              {latest.length > 0 && (
+                <Link to="/parent/feed" data-testid="latest-link" className="grid grid-cols-3 gap-2 md:grid-cols-6 md:gap-3">
+                  {latest.map((p) => (
+                    <img key={p.id} src={p.image_url} alt="" className="aspect-square w-full rounded-2xl object-cover" />
+                  ))}
+                </Link>
+              )}
+              {st?.has_data && (
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-muted">{t('cab.week.chart')}</p>
+                  <div className="mt-1 max-h-[180px] overflow-hidden"><WeekChart readyAt={st.ready_at} /></div>
+                  <p className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
+                    <span>{t('cab.week.received')}: <b data-testid="week-received" className="text-heading">{dash(st.coins_received)}</b></span>
+                    <span>{t('cab.week.spent')}: <b data-testid="week-spent" className="text-heading">{dash(st.coins_spent)}</b></span>
+                    {st.coins_earned_lessons != null && <span data-testid="kid-lessons">{t('cab.kid.lessons')}: <b className="text-primary">+{st.coins_earned_lessons}</b></span>}
+                  </p>
+                  {!!st.coins_uncertain && <p data-testid="week-uncertain" className="mt-1 text-sm font-bold text-muted">{t('cab.week.uncertain', { count: st.coins_uncertain })}</p>}
+                </div>
+              )}
             </div>
           )}
         </section>
