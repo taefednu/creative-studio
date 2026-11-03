@@ -211,8 +211,12 @@ def _run(db: Session, work: Work, skip_check: bool) -> None:
         return
 
     # После одобрения взрослым не спрашиваем: ему обещано, что личное будет размыто
+    # Модель могла ошибиться и на настоящем имени: как и с лицом, взрослый видит работу, в класс она идёт через учителя
+    words_cleared = False
     if not skip_check:
-        found["written_word"] = real_words(im, found["written_word"])
+        kept = real_words(im, found["written_word"])
+        words_cleared = bool(found["written_word"]) and not kept
+        found["written_word"] = kept
     # Рожица на рисунке не личные данные, а размытие лишает героя сходства. Модель может ошибиться, поэтому
     # взрослый видит и такую работу, а в ленту класса она идёт через учителя. После одобрения взрослого
     # не спрашиваем: ему обещано, что лица будут размыты
@@ -224,6 +228,8 @@ def _run(db: Session, work: Work, skip_check: bool) -> None:
     path.write_bytes(to_webp(out))
     work.file_path = str(path)
     codes = ["drawn_face" if drawn and c == "face" else f"blurred_{c}" for c, bs in found.items() if bs]
+    if words_cleared:
+        codes.append("cleared_word")
     if codes:
         work.reason_codes = codes
     if codes and not skip_check:  # взрослый уже решал по этой работе: второй раз не спрашиваем

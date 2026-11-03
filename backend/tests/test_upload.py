@@ -281,12 +281,21 @@ def test_face_stays_blurred_after_adult_approved_the_original(w, sam, chk, monke
     assert Path(wk.file_path).read_bytes() != pipeline.to_webp(Image.open(pipeline.original_path(wid)))
 
 
-def test_scribble_taken_for_a_word_stays_sharp_and_goes_to_nobody(w, sam, chk, monkeypatch):
+def test_scribble_taken_for_a_word_stays_sharp_but_the_adult_still_sees_it(w, sam, chk, monkeypatch):
     monkeypatch.setattr(pipeline, "no_readable_text", lambda data: True)
     wid = good(w, sam, chk, found=("written_word",))
     wk = work(wid)
-    assert wk.status == "ready" and wk.reason_codes in (None, []) and items() == []
+    assert wk.status == "ready" and wk.reason_codes == ["cleared_word"]
+    assert [(i.status, i.reason_codes) for i in items()] == [("pending", ["cleared_word"])]
     assert Path(wk.file_path).read_bytes() == pipeline.to_webp(Image.open(pipeline.original_path(wid)))
+
+
+def test_class_post_of_cleared_word_waits_for_teacher(w, sam, chk, monkeypatch):
+    # Модель могла принять настоящее имя за закорючку: резкая картинка не идёт в класс мимо учителя
+    monkeypatch.setattr(pipeline, "no_readable_text", lambda data: True)
+    p = class_post(w, good(w, sam, chk, found=("written_word",)))
+    assert p["status"] == "held"
+    assert w.b.get("/api/feed/class").json()["items"] == []
 
 
 def test_real_word_blurred_and_adult_sees_it(w, sam, chk):

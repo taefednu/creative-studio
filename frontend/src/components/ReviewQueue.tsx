@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
-import { agoText, filterByClass, notifyReview, onlyDrawnFace, reasonKeys } from '../features/review/review'
+import { agoText, filterByClass, notifyReview, nothingBlurred, reasonKeys } from '../features/review/review'
 import { loadStory } from '../features/story/story'
 import type { Story } from '../features/story/story'
 import type { ReviewItem } from '../features/review/review'
@@ -179,7 +179,7 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
     </button>
   )
   // Размытой версии нет, пока до неё не дошло, и незачем, если лицо нарисовано: одна картинка
-  const blurred = onlyDrawnFace(it.reason_codes) ? null : it.blurred_url
+  const blurred = nothingBlurred(it.reason_codes) ? null : it.blurred_url
   const version = (k: string, url: string, cap: string) => (
     <figure className="relative flex h-full min-w-0 flex-1 bg-surface">
       {picture(url, `review-${k}`)}
@@ -222,7 +222,7 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
         </p>
         {it.image_url && it.preview_text && <p className="line-clamp-2 break-words text-sm text-text">«{it.preview_text}»</p>}
         {who}
-        <p data-testid="review-effect" className="mt-auto text-xs text-muted">{t(onlyDrawnFace(it.reason_codes) ? 'review.effect.drawn_face' : `review.effect.${EFFECTS.includes(it.item_type) ? it.item_type : 'other'}`)}</p>
+        <p data-testid="review-effect" className="mt-auto text-xs text-muted">{t(nothingBlurred(it.reason_codes) ? `review.effect.${it.reason_codes.includes('drawn_face') ? 'drawn_face' : 'cleared_word'}` : `review.effect.${EFFECTS.includes(it.item_type) ? it.item_type : 'other'}`)}</p>
         <div className="grid grid-cols-2 gap-2">
           <button type="button" data-testid="review-reject" disabled={busy} className={`${btnReject} h-11`} onClick={() => onAct('reject')}>{t('review.reject')}</button>
           <button type="button" data-testid="review-approve" disabled={busy} className={`${btnApprove} h-11`} onClick={() => onAct('approve')}>{t('review.approve')}</button>
