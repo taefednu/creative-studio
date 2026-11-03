@@ -36,10 +36,18 @@ export default function HomeFilm({ feedId }: { feedId: string }) {
     }
   }, [calm])
 
-  function onTime() {
-    const now = video.current?.currentTime ?? 0
-    setPhase(now >= ARROW_AT ? 'arrow' : now >= TITLE_AT ? 'title' : 'film')
-  }
+  // Каждый кадр, а не timeupdate (4 раза в секунду): заголовок встаёт ровно на появлении героя
+  useEffect(() => {
+    if (still) return
+    let raf = 0
+    const tick = () => {
+      const now = video.current?.currentTime ?? 0
+      setPhase(now >= ARROW_AT ? 'arrow' : now >= TITLE_AT ? 'title' : 'film')
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [still])
 
   function replay() {
     const v = video.current
@@ -65,8 +73,6 @@ export default function HomeFilm({ feedId }: { feedId: string }) {
             playsInline
             preload="auto"
             aria-hidden="true"
-            onTimeUpdate={onTime}
-            onEnded={() => setPhase('arrow')}
             className="h-full w-full object-cover"
           />
         )}

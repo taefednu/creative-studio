@@ -47,7 +47,7 @@ export default function SiteFooter({ guest }: { guest?: boolean }) {
       <Promo testid="home-coins" tint="bg-banner-sun" art="/art/coins-big.webp" title={t('home.coins.title')} text={t('home.coins.text')} cta={t('home.coins.cta')} href="https://mentorium.uz/" />
       <Promo testid={`home-${third}`} tint="bg-banner-sky" art={guest ? '/art/shield.webp' : '/art/clipboard.webp'} title={t(`home.${third}.title`)} text={t(`home.${third}.text`)} cta={t(`home.${third}.cta`)} to={guest ? '/login' : '/tasks'} />
     </section>
-    <footer data-testid="site-footer" className="relative overflow-hidden bg-footer pt-12 text-footer-text lg:pt-[70px]">
+    <footer data-testid="site-footer" className="relative overflow-hidden bg-footer pb-[92px] pt-10 text-footer-text lg:pb-8 lg:pt-12">
       <div className="relative grid grid-cols-2 gap-x-2 gap-y-8 px-4 md:px-8 lg:grid-cols-5 lg:gap-x-3 xl:grid-cols-6">
         <div className="col-span-2 xl:col-span-3">
           <img src="/art/logo-on-dark.webp" alt="Mentorium" className="h-[30px] w-auto" />
@@ -75,7 +75,7 @@ export default function SiteFooter({ guest }: { guest?: boolean }) {
           ))}
         </Col>
       </div>
-      <div className="relative mx-4 mt-10 flex flex-col items-start justify-between gap-4 border-t border-footer-line pt-6 sm:flex-row sm:items-center md:mx-8">
+      <div className="relative mx-4 mt-8 flex flex-col items-start justify-between gap-4 border-t border-footer-line pt-5 sm:flex-row sm:items-center md:mx-8">
         <p className="text-[13px] text-footer-muted">{t('footer.copyright', { year: new Date().getFullYear() })}</p>
         <div className="flex w-full items-center justify-between gap-4 sm:w-auto">
           <p className="text-[13px] text-footer-muted">{t('footer.models')}</p>
@@ -91,10 +91,6 @@ export default function SiteFooter({ guest }: { guest?: boolean }) {
             </svg>
           </button>
         </div>
-      </div>
-      <div aria-hidden="true" className="relative mx-4 mt-8 pb-[84px] md:mx-8 lg:pb-6">
-        <img src="/art/logo-on-dark.webp" alt="" className="footer-mark w-full opacity-[0.07]" />
-        <img src="/art/robot-wave.webp" alt="" className="footer-robot absolute bottom-6 right-0 hidden h-[156px] w-auto lg:block" />
       </div>
     </footer>
     </>

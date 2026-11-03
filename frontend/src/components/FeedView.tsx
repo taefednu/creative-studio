@@ -5,7 +5,7 @@ import { REACTIONS, byStyle, captionOf, cardRatio, feedUrl, toColumns } from '..
 import type { FeedKind, FeedPage, Post } from '../features/feed/feed'
 import type { TemplateInfo } from '../features/works/works'
 import Avatar from './Avatar'
-import FeedImage from './FeedImage'
+import FeedImage, { Skeleton } from './FeedImage'
 import ChipSelect from './ChipSelect'
 import PostModal from './PostModal'
 import TeacherTask from './TeacherTask'
@@ -37,21 +37,25 @@ function useColumnCount() {
   return count
 }
 
-const SKELETON_ROWS = 4
+const GHOST_ROWS = 4
 
-/** Места под ещё не пришедшие карточки: той же формы, что настоящие, чтобы лента не прыгала. */
-export function FeedSkeleton({ square }: { square?: boolean }) {
+/** Экран до ответа о ребёнке: те же места, что займёт лента, и заголовок той же высоты. */
+export function FeedSkeleton() {
   const count = useColumnCount()
-  const fake = Array.from({ length: count * SKELETON_ROWS }, (_, i) => ({ id: i + 1 }) as Post)
   return (
-    <div data-testid="feed-skeleton" aria-hidden="true" className="mt-2 flex items-start gap-2 lg:gap-3">
-      {toColumns(fake, count).map((col, c) => (
-        <div key={c} className="flex min-w-0 flex-1 flex-col gap-2 lg:gap-3">
-          {col.map((p) => (
-            <div key={p.id} className="skeleton rounded-card" style={{ aspectRatio: square ? '1 / 1' : cardRatio(p.id) }} />
-          ))}
-        </div>
-      ))}
+    <div data-testid="feed-skeleton" aria-hidden="true">
+      <div className="flex h-[84px] items-start md:h-[45px] md:items-center">
+        <Skeleton className="block h-9 w-[220px] rounded-full" />
+      </div>
+      <div className="mt-2 flex items-start gap-2 lg:gap-3">
+        {toColumns(Array.from({ length: count * GHOST_ROWS }, (_, i) => i), count).map((col, c) => (
+          <div key={c} className="flex min-w-0 flex-1 flex-col gap-2 lg:gap-3">
+            {col.map((i) => (
+              <Skeleton key={i} className="block rounded-card" style={{ aspectRatio: cardRatio(i + 1) }} />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -109,6 +113,10 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
   }, [more, items.length])
 
   const close = useCallback(() => setOpen(null), [])
+  // Места под то, что ещё придёт, в той же сетке: настоящая карточка встаёт на место заглушки той же формы
+  const autoLoads = cursor !== null && items.length < AUTO_LOAD_MAX
+  const ghosts = !loaded ? count * GHOST_ROWS : autoLoads || fetching ? count : 0
+  const slots: (Post | number)[] = [...shown, ...Array.from({ length: ghosts }, (_, i) => shown.length + i)]
   const Title = guest ? 'h2' : 'h1' // у гостя заголовок страницы на первом экране
 
   // Обновляем только изменённый пост: перезагрузка ленты вернула бы её к первой странице и сбила прокрутку
@@ -167,8 +175,10 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
         )}
       </div>
       {child && !guest && (
-        <div className="mt-3 empty:hidden">
-          <TeacherTask start />
+        <div className="task-slot">
+          <div className="min-h-0 overflow-hidden">
+            <TeacherTask start />
+          </div>
         </div>
       )}
       {loaded && items.length === 0 && (
@@ -181,12 +191,13 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
           {t('panel.noStyleMatch')}
         </p>
       )}
-      {!loaded && <FeedSkeleton square={!child} />}
       <div data-testid="feed-grid" className="mt-2 flex items-start gap-2 lg:gap-3">
-        {toColumns(shown, count).map((col, c) => (
+        {toColumns(slots, count).map((col, c) => (
         <div key={c} className="flex min-w-0 flex-1 flex-col gap-2 lg:gap-3">
         {col.map((p, row) =>
-          !child ? (
+          typeof p === 'number' ? (
+            <Skeleton key={`g${p}`} data-testid="feed-ghost" className="block rounded-card" style={{ aspectRatio: child ? cardRatio(p + 1) : '1 / 1' }} />
+          ) : !child ? (
             <button
               key={p.id}
               type="button"
@@ -219,7 +230,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
             aria-label={p.caption ? `${p.nick}: ${captionOf(p, i18n.language)}` : p.nick}
             title={p.nick}
             onClick={() => setOpen(p.id)}
-            style={{ aspectRatio: cardRatio(p.id) }}
+            style={{ aspectRatio: cardRatio(shown.indexOf(p) + 1) }}
             className="feed-card group relative block w-full overflow-hidden rounded-card bg-primary-soft text-left shadow-card"
           >
             <FeedImage src={`${p.image_url}?thumb=1`} alt={captionOf(p, i18n.language) ?? ''} eager={row < 3} className="h-full w-full object-cover group-hover:scale-105" />
@@ -250,14 +261,13 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
         </div>
         ))}
       </div>
-      {fetching && <FeedSkeleton square={!child} />}
       {cursor !== null && (
         <button
           ref={moreRef}
           type="button"
           data-testid="feed-more"
           onClick={() => void more()}
-          className="mx-auto mt-4 block rounded-full border border-border bg-surface px-6 py-2 font-extrabold text-heading"
+          className={`mx-auto mt-4 block rounded-full border border-border bg-surface px-6 py-2 font-extrabold text-heading ${autoLoads ? 'invisible' : ''}`}
         >
           {t('feed.more')}
         </button>

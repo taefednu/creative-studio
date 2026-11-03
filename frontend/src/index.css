@@ -72,7 +72,7 @@ body {
     inset: 0;
     transform: translateX(-100%);
     background: linear-gradient(100deg, transparent 20%, var(--color-skeleton-shine) 50%, transparent 80%);
-    animation: skeleton 1.5s linear infinite;
+    animation: skeleton 1.5s linear var(--shimmer, 0ms) infinite;
   }
 }
 @keyframes skeleton {
@@ -84,17 +84,26 @@ body {
 .feed-card > * {
   transition: opacity 0.3s var(--ease-out);
 }
-[data-testid='image-wait'] ~ * {
+[data-wait='true'] ~ * {
   opacity: 0;
 }
 .feed-img {
+  position: relative; /* поверх заглушки: она уходит, только когда картинка проявилась */
   opacity: 0;
-  filter: blur(10px);
-  transition: opacity 0.4s var(--ease-out), filter 0.4s var(--ease-out), transform 0.3s ease-out;
+  transition: opacity 0.5s var(--ease-out), transform 0.3s ease-out;
 }
 .feed-img-on {
   opacity: 1;
-  filter: none;
+}
+/* Строка задания приходит позже ленты: раскрывается, а не выскакивает */
+.task-slot {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s var(--ease-out), margin-top 0.3s var(--ease-out);
+}
+.task-slot:has(> div > *) {
+  grid-template-rows: 1fr;
+  margin-top: 12px;
 }
 .modal-bg {
   animation: modal-bg 0.2s ease-out;
@@ -456,14 +465,6 @@ body {
 .promo-art {
   transition: scale 0.25s var(--ease-out), rotate 0.25s var(--ease-out);
 }
-.footer-robot {
-  animation: robot-float 3.2s var(--ease-in-out) infinite alternate;
-}
-@keyframes robot-float {
-  to {
-    translate: 0 -10px;
-  }
-}
 @media (hover: hover) and (pointer: fine) {
   .home-sheet .feed-card {
     transition: translate 0.2s var(--ease-out);
@@ -516,11 +517,6 @@ body {
       animation-timeline: view();
       animation-range: entry 0% cover 45%;
     }
-    .footer-mark {
-      animation: footer-mark linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 50%;
-    }
   }
 }
 @keyframes film-sink {
@@ -552,18 +548,12 @@ body {
     rotate: -8deg;
   }
 }
-@keyframes footer-mark {
-  from {
-    translate: 0 30%;
-  }
-}
 @media (prefers-reduced-motion: reduce) {
   .film-in,
   .film-word,
   .film-arrow,
   .film-arrow::after,
-  .nav-in,
-  .footer-robot {
+  .nav-in {
     animation: none;
   }
 }

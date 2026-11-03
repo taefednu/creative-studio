@@ -8,7 +8,7 @@ import type { CommentResult, Post, PostComment, ReactionKey } from '../features/
 import { loadTemplates } from '../features/works/works'
 import { useLoad } from '../useLoad'
 import Avatar from './Avatar'
-import FeedImage from './FeedImage'
+import FeedImage, { Skeleton } from './FeedImage'
 import StoryBook from './StoryBook'
 import ChipSelect from './ChipSelect'
 import ErrorText, { errorKey } from './ErrorText'
@@ -288,7 +288,7 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
               <StoryBook compact title={post.story.title} pages={post.story.pages.map((p, i) => ({ text: p.text, url: `/api/posts/${post.id}/story/${i + 1}` }))} />
             </div>
           )}
-          {!post && <span className="skeleton block aspect-square w-full lg:absolute lg:inset-0 lg:aspect-auto" />}
+          {!post && <Skeleton className="block aspect-square w-full lg:absolute lg:inset-0 lg:aspect-auto" />}
           {post && !post.story && (
             <div className="relative aspect-square w-full lg:absolute lg:inset-0 lg:aspect-auto">
               <FeedImage src={post.image_url} preview={`${post.image_url}?thumb=1`} alt="" eager testid="modal-image" className="relative h-full w-full object-cover" />

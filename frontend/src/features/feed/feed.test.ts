@@ -26,6 +26,11 @@ describe('feed', () => {
     const lens = after.map((col) => col.length)
     expect(Math.max(...lens) - Math.min(...lens)).toBeLessThanOrEqual(3)
   })
+  it('toColumns: раскладка зависит от места, а не от id: заглушка совпадает с настоящей лентой', () => {
+    const shape = (ids: number[]) => toColumns(ids.map((id) => post(id, null)), 6).map((c) => c.length)
+    const real = Array.from({ length: 40 }, (_, i) => 900 - i * 7)
+    expect(shape(real)).toEqual(shape(Array.from({ length: 40 }, (_, i) => i + 1)))
+  })
   it('cardRatio: стабилен и даёт разные формы', () => {
     const set = new Set(Array.from({ length: 50 }, (_, i) => cardRatio(i + 1)))
     expect(set.size).toBe(7)

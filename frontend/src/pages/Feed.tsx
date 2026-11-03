@@ -18,10 +18,11 @@ export default function Feed() {
   const kinds: FeedKind[] = [...(cls ? (['class'] as const) : []), ...(hasParent ? (['family'] as const) : []), 'best']
   return (
     <>
+      {/* child есть и до ответа стилей: иначе лента сначала рисуется другими карточками */}
       <FeedView
         key={kinds.join()}
         kinds={kinds}
-        child={{ templates: templates ?? [], onStyle: setPicked }} // до ответа стилей та же сетка: иначе лента перерисовывается другими карточками
+        child={{ templates: templates ?? [], onStyle: setPicked }}
       />
       {templates && <CreatePanel floating templates={templates} price={tplData?.price} tpl={tpl} onTpl={setPicked} />}
     </>
