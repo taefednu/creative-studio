@@ -147,7 +147,7 @@ export default function UploadPopup({ guest, className, assignmentId, label, tes
                     data-testid={`upload-mode-${m}`}
                     disabled={busy}
                     onClick={() => setMode(m)}
-                    className={`h-11 min-w-0 flex-1 truncate rounded-full px-3 text-sm font-extrabold sm:text-base ${mode === m ? 'bg-primary text-primary-fg' : 'border border-border bg-surface text-heading'}`}
+                    className={`min-h-11 min-w-0 flex-1 rounded-full px-3 py-1 text-sm font-extrabold leading-tight sm:text-base ${mode === m ? 'bg-primary text-primary-fg' : 'border border-border bg-surface text-heading'}`}
                   >
                     {t(m === 'photo' ? 'panel.modePhoto' : 'panel.modeDraw')}
                   </button>

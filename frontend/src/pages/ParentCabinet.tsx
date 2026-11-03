@@ -90,7 +90,7 @@ function AddKidModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =>
     }
   }
 
-  const tabCls = (on: boolean) => `h-11 min-w-0 flex-1 truncate rounded-full px-4 text-base font-extrabold transition-colors duration-150 sm:flex-none sm:px-5 ${on ? 'bg-primary-soft text-primary' : 'text-heading hover:bg-primary-soft'}`
+  const tabCls = (on: boolean) => `min-h-11 min-w-0 flex-1 rounded-full px-3 py-1 text-sm font-extrabold leading-tight sm:px-5 sm:text-base transition-colors duration-150 sm:flex-none ${on ? 'bg-primary-soft text-primary' : 'text-heading hover:bg-primary-soft'}`
   return (
     <div
       data-testid="add-kid-modal"
