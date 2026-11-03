@@ -359,15 +359,8 @@ export default function Login() {
             {t('auth.mentorium')}
           </button>
           {platform && <PlatformForm onDone={(r) => void done(r)} onClose={() => setPlatform(false)} />}
-          <p className="mt-2 flex items-center justify-center gap-2 text-center text-base text-muted short:hidden">
-            <img src="/art/coin.webp" alt="" className="h-6 w-6 shrink-0" />
-            {t('auth.coinsLine')}
-          </p>
           <p className="text-center text-base font-bold text-primary underline short:hidden">{t('auth.classHint')}</p>
           </div>
-          <Link to="/" data-testid="to-showcase" className="mt-2 block text-center text-base font-bold text-primary underline short:hidden">
-            {t('showcase.fromLogin')}
-          </Link>
         </main>
       </section>
       <aside aria-hidden="true" className="relative hidden overflow-hidden lg:block lg:w-1/2">
