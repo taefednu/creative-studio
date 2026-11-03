@@ -154,7 +154,7 @@
     "tab": {
       "class": "My class",
       "family": "Family",
-      "best": "Featured"
+      "best": "Everyone"
     },
     "empty": "Nothing here yet. Share your picture!",
     "emptyAdult": "The children haven't shared anything yet.",
@@ -165,7 +165,7 @@
     "noComments": "No comments yet. Write the first one!",
     "idea": "Idea",
     "style": "Style",
-    "audience": {
+    "audience": { "public": "For everyone",
       "class": "For the class",
       "family": "For the family"
     },

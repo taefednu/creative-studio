@@ -1,10 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { byStyle, captionOf, cardRatio, createdLabel, drawSameKind, toColumns } from './feed'
+import { byStyle, captionOf, cardRatio, childKinds, createdLabel, drawSameKind, toColumns } from './feed'
 import type { Post } from './feed'
 
 const post = (id: number, template_id: string | null) => ({ id, template_id }) as Post
 
 describe('feed', () => {
+  it('childKinds: общая лента первая у школы и семьи, своя рядом', () => {
+    expect(childKinds(true, false)).toEqual(['best', 'class'])
+    expect(childKinds(false, true)).toEqual(['best', 'family'])
+    expect(childKinds(false, false)).toEqual(['best'])
+  })
   it('captionOf: перевод на язык интерфейса, иначе как написано', () => {
     const p = { caption: 'Лиса', caption_i18n: { en: 'Fox' } }
     expect(captionOf(p, 'en')).toBe('Fox')

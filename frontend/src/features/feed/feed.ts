@@ -58,6 +58,13 @@ export type CommentResult =
 
 export type FeedKind = 'class' | 'family' | 'best'
 
+/** Вкладки ленты ребёнка: первая открывается по умолчанию. */
+export const childKinds = (hasClass: boolean, hasParent: boolean): FeedKind[] => [
+  'best',
+  ...(hasClass ? (['class'] as const) : []),
+  ...(hasParent ? (['family'] as const) : []),
+]
+
 export function feedUrl(kind: FeedKind, classId?: number, before?: number | null): string {
   const q = new URLSearchParams()
   if (classId !== undefined && kind === 'class') q.set('class_id', String(classId))

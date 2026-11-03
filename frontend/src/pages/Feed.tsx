@@ -3,12 +3,12 @@ import { useOutletContext } from 'react-router-dom'
 import CreatePanel from '../components/CreatePanel'
 import FeedView, { FeedSkeleton } from '../components/FeedView'
 import type { ShellContext } from '../components/AppShell'
-import type { FeedKind } from '../features/feed/feed'
+import { childKinds } from '../features/feed/feed'
 import { useSmoothScroll } from '../features/smoothScroll'
 import { loadTemplates } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
-/** Вкладка «Лента» ребёнка: «Мой класс» (если есть класс), «Семья» (если есть родитель), «Лучшее». */
+/** Вкладка «Лента» ребёнка: сначала общая, рядом «Мой класс» (если есть класс) и «Семья» (если есть родитель). */
 export default function Feed() {
   const { cls, hasParent, ready } = useOutletContext<ShellContext>()
   useSmoothScroll()
@@ -17,7 +17,7 @@ export default function Feed() {
   if (!ready) return <FeedSkeleton />
   const templates = tplData?.templates
   const tpl = (templates?.some((x) => x.id === picked) ? picked : null) ?? templates?.[0]?.id ?? null
-  const kinds: FeedKind[] = [...(cls ? (['class'] as const) : []), ...(hasParent ? (['family'] as const) : []), 'best']
+  const kinds = childKinds(!!cls, hasParent)
   return (
     <>
       {/* child есть и до ответа стилей: иначе лента сначала рисуется другими карточками */}

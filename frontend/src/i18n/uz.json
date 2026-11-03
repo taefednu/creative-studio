@@ -154,7 +154,7 @@
     "tab": {
       "class": "Mening sinfim",
       "family": "Oila",
-      "best": "Eng yaxshilari"
+      "best": "Umumiy"
     },
     "empty": "Hozircha bu yerda hech narsa yo'q. Rasmingni ulash!",
     "emptyAdult": "Bolalar hali hech narsa ko'rsatmagan.",
@@ -165,7 +165,7 @@
     "noComments": "Hozircha izoh yo'q. Birinchisini yoz!",
     "idea": "G'oya",
     "style": "Uslub",
-    "audience": {
+    "audience": { "public": "Hamma uchun",
       "class": "Sinf uchun",
       "family": "Oila uchun"
     },
