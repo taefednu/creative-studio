@@ -355,7 +355,7 @@ export default function Login() {
             onClick={() => setPlatform((v) => !v)}
             className="flex min-h-12 short:min-h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-border bg-surface px-3 py-1 text-base font-extrabold text-heading"
           >
-            <img src="/mentorium-logo.png" alt="" className="h-6 w-auto" />
+            <img src="/icon-192.png" alt="" className="h-7 w-7 shrink-0 -translate-y-px" />
             {t('auth.mentorium')}
           </button>
           {platform && <PlatformForm onDone={(r) => void done(r)} onClose={() => setPlatform(false)} />}
