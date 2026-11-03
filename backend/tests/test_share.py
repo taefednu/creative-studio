@@ -13,6 +13,7 @@ from sqlalchemy import select
 from app import db
 from app.accounts import nickcheck
 from app.config import get_settings
+from app.feed.models import Post
 from app.main import app
 from app.moderation import HeldItem
 from app.works.image.models import Work
@@ -155,6 +156,51 @@ def test_adult_can_turn_back_on_only_what_he_turned_off(world):
         s.commit()
     assert parent.get("/api/parent/shares").json() == []
     assert parent.post(f"/api/works/{wid}/share/resume").status_code == 409
+    assert TestClient(app).get("/api/feed/best").json()["items"] == []
+
+
+def _set_status(wid, status):
+    with db.new_session() as s:
+        s.scalar(select(Share).where(Share.work_id == wid)).status = status
+        s.commit()
+
+
+@pytest.mark.parametrize("status", ["refused", "off_teach"])
+def test_stop_cannot_launder_someone_elses_refusal(world, status):
+    """Выключить уже отказанное и включить заново значило бы обойти отказ взрослого."""
+    parent, kid, cid, tmp = world
+    wid = make_work(cid, tmp)
+    kid.post(f"/api/works/{wid}/share")
+    parent.post(f"/api/review/items/{item_of(wid)}/approve")
+    parent.delete(f"/api/works/{wid}/share")
+    _set_status(wid, status)
+    assert parent.delete(f"/api/works/{wid}/share").json()["status"] == "refused"
+    assert parent.post(f"/api/works/{wid}/share/resume").status_code == 404
+    # и ребёнок не превратит отказ в свою выключенную ссылку, чтобы попросить снова
+    assert kid.delete(f"/api/works/{wid}/share").json()["status"] == "refused"
+    assert kid.post(f"/api/works/{wid}/share").json()["status"] == "refused"
+    assert TestClient(app).get("/api/feed/best").json()["items"] == []
+
+
+def test_stop_of_waiting_request_is_refusal_not_a_way_to_publish(world):
+    parent, kid, cid, tmp = world
+    wid = make_work(cid, tmp)
+    kid.post(f"/api/works/{wid}/share")
+    assert parent.delete(f"/api/works/{wid}/share").json()["status"] == "refused"
+    assert parent.post(f"/api/works/{wid}/share/resume").status_code == 404
+    assert TestClient(app).get("/api/feed/best").json()["items"] == []
+
+
+def test_stop_of_link_with_hidden_post_cannot_bring_it_back(world):
+    parent, kid, cid, tmp = world
+    wid = make_work(cid, tmp)
+    kid.post(f"/api/works/{wid}/share")
+    parent.post(f"/api/review/items/{item_of(wid)}/approve")
+    with db.new_session() as s:
+        s.scalar(select(Post).where(Post.work_id == wid)).status = "hidden"
+        s.commit()
+    parent.delete(f"/api/works/{wid}/share")
+    assert parent.post(f"/api/works/{wid}/share/resume").status_code == 404
     assert TestClient(app).get("/api/feed/best").json()["items"] == []
 
 

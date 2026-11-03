@@ -143,11 +143,15 @@ def stop_share(work_id: int, db: Db, v: V):
     is_author = v.role == "child" and v.id == author.id
     if not (is_author or _is_adult_of(db, v, author)):
         raise HTTPException(404, "not_found")
+    # Отказ не перезаписываем: иначе его можно превратить в «выключил сам» и вернуть
+    if s.status == "refused" or s.status in ADULT_OFF.values():
+        return _view(db, s)
+    was_live = _live_work(db, s.token) is not None  # только то, что реально было открыто, можно потом включить
     if s.post_id is not None:
         p = db.get(Post, s.post_id)
         if p is not None and p.status == "published":
             p.status = "deleted" if is_author else "hidden"
-    s.status = "off" if is_author else ADULT_OFF[v.role]
+    s.status = "off" if is_author else ADULT_OFF[v.role] if was_live else "refused"
     s.post_id = None
     db.commit()
     return _view(db, s)
