@@ -100,7 +100,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
   }, [more, items.length])
 
   const close = useCallback(() => setOpen(null), [])
-  const Title = child ? 'h2' : 'h1' // на главной заголовок страницы в баннере
+  const Title = guest ? 'h2' : 'h1' // у гостя заголовок страницы на первом экране
 
   // Обновляем только изменённый пост: перезагрузка ленты вернула бы её к первой странице и сбила прокрутку
   async function refreshPost(id: number) {
@@ -114,7 +114,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
   }
 
   return (
-    <div className={child ? 'mt-6' : ''}>
+    <div>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:flex-nowrap">
         <div className="order-1 mt-1 md:mt-0">
           <Title data-testid="feed-title" className={`w-fit font-extrabold text-heading ${child ? 'text-2xl md:text-[28px] md:leading-[34px]' : 'text-3xl leading-9 md:text-[44px] md:leading-[42px]'}`}>

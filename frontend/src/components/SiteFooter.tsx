@@ -19,11 +19,34 @@ function Col({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
+function Promo({ testid, tint, art, title, text, cta, href, to }: { testid: string; tint: string; art: string; title: string; text: string; cta: string; href?: string; to?: string }) {
+  const body = (
+    <>
+      <span className="block max-w-[70%] text-xl font-black leading-tight text-heading lg:text-[32px]">{title}</span>
+      <span className="mt-2 block max-w-[62%] text-sm font-semibold leading-snug text-text lg:text-lg">{text}</span>
+      <span className="mt-auto block pt-3 text-base font-extrabold text-primary">{cta} →</span>
+      <img src={art} alt="" className="pointer-events-none absolute bottom-2 right-3 h-[92px] w-auto lg:bottom-auto lg:top-1/2 lg:h-[168px] lg:-translate-y-1/2" />
+    </>
+  )
+  const cls = `relative flex min-h-[176px] flex-col overflow-hidden rounded-card p-5 lg:min-h-[248px] lg:p-8 ${tint}`
+  return href ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" data-testid={testid} className={cls}>{body}</a>
+  ) : (
+    <Link to={to ?? '/'} data-testid={testid} className={cls}>{body}</Link>
+  )
+}
+
 /** Подвал главной, как на mentorium.uz. Документы и контакты общие с Mentorium, поэтому ведут на его сайт. */
 export default function SiteFooter({ guest }: { guest?: boolean }) {
   const { t } = useTranslation()
+  const third = guest ? 'safe' : 'tasks'
   const external = { target: '_blank', rel: 'noopener noreferrer' }
   return (
+    <>
+    <section data-testid="home-promo" className="grid gap-2 px-4 pb-8 pt-4 md:px-8 lg:grid-cols-2 lg:gap-3 lg:pb-12">
+      <Promo testid="home-coins" tint="bg-banner-sun" art="/art/coins-big.webp" title={t('home.coins.title')} text={t('home.coins.text')} cta={t('home.coins.cta')} href="https://mentorium.uz/" />
+      <Promo testid={`home-${third}`} tint="bg-banner-sky" art={guest ? '/art/shield.webp' : '/art/clipboard.webp'} title={t(`home.${third}.title`)} text={t(`home.${third}.text`)} cta={t(`home.${third}.cta`)} to={guest ? '/login' : '/tasks'} />
+    </section>
     <footer data-testid="site-footer" className="relative overflow-hidden bg-footer pt-12 text-footer-text lg:pt-[70px]">
       <div className="relative grid grid-cols-2 gap-x-2 gap-y-8 px-4 md:px-8 lg:grid-cols-5 lg:gap-x-3 xl:grid-cols-6">
         <div className="col-span-2 xl:col-span-3">
@@ -74,5 +97,6 @@ export default function SiteFooter({ guest }: { guest?: boolean }) {
         <img src="/art/robot-wave.webp" alt="" className="absolute bottom-6 right-0 hidden h-[156px] w-auto lg:block" />
       </div>
     </footer>
+    </>
   )
 }

@@ -352,3 +352,44 @@ body {
     height: 14px;
   }
 }
+
+/* Первый экран: заголовок проявляется на появлении героя, стрелка прыгает и зовёт вниз */
+.film-in {
+  animation: film-in 0.5s var(--ease-out) both;
+}
+@keyframes film-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+button.film-in {
+  animation-name: film-in-center;
+}
+button.film-in[data-testid='home-film-replay'] {
+  animation-name: film-in;
+}
+@keyframes film-in-center {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+  }
+}
+.film-arrow {
+  animation: film-arrow 1s var(--ease-in-out) infinite;
+}
+@keyframes film-arrow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(14px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .film-in,
+  .film-arrow {
+    animation: none;
+  }
+}

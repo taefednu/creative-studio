@@ -26,6 +26,10 @@
   --color-footer-line: #2c2560;
   --color-banner-sun: #fff1c9;
   --color-banner-sky: #d9f6fb;
+  --color-primary-press: #5a2fd6;
+  --gradient-film-side: linear-gradient(90deg, rgba(21, 16, 63, 0.82) 0%, rgba(21, 16, 63, 0.55) 30%, rgba(21, 16, 63, 0) 55%);
+  --gradient-film-top: linear-gradient(180deg, rgba(21, 16, 63, 0.6), rgba(21, 16, 63, 0));
+  --shadow-press: 0 5px 0 var(--color-primary-press);
   --color-scrim: rgba(31, 42, 92, 0.55);
   --radius-card: 20px;
   --gradient-primary: linear-gradient(180deg, var(--color-primary-light), var(--color-primary));

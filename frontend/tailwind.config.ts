@@ -46,8 +46,8 @@ export default {
       },
       fontFamily: { sans: ['Nunito', 'system-ui', 'sans-serif'] },
       borderRadius: { card: 'var(--radius-card)' },
-      boxShadow: { card: 'var(--shadow-card)', primary: 'var(--shadow-primary)', pop: 'var(--shadow-pop)' },
-      backgroundImage: { 'primary-grad': v('gradient-primary') },
+      boxShadow: { press: 'var(--shadow-press)', card: 'var(--shadow-card)', primary: 'var(--shadow-primary)', pop: 'var(--shadow-pop)' },
+      backgroundImage: { 'primary-grad': v('gradient-primary'), 'film-side': v('gradient-film-side'), 'film-top': v('gradient-film-top') },
     },
   },
 } satisfies Config
