@@ -23,8 +23,13 @@ const btnSide =
 export default function ReviewQueue({
   title,
   classFilter = null,
+  single = false,
+  onCount,
 }: {
   title?: string
+  /** Узкая колонка: карточки одна под другой. */
+  single?: boolean
+  onCount?: (n: number) => void
   classFilter?: string | null
 }) {
   const { t } = useTranslation()
@@ -34,6 +39,10 @@ export default function ReviewQueue({
   const [busy, setBusy] = useState<number | null>(null)
   const [failed, setFailed] = useState(false)
   const [zoom, setZoom] = useState<string | null>(null)
+  const count = items?.length
+  useEffect(() => {
+    if (count !== undefined) onCount?.(count)
+  }, [count, onCount])
 
   useEffect(() => {
     if (!zoom) return
@@ -101,7 +110,7 @@ export default function ReviewQueue({
         </div>
       )}
       {items && items.length > 0 && (
-        <div data-testid="review-grid" className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div data-testid="review-grid" className={`grid grid-cols-1 gap-3 ${single ? '' : 'md:grid-cols-2 xl:grid-cols-4'}`}>
           {items.map((it) => (
             <ReviewCard key={it.id} it={it} kind={kind(it)} where={where(it)} busy={busy === it.id} onOpen={() => setOpen(it)} onZoom={setZoom} onAct={(w) => void act(it, w)} />
           ))}

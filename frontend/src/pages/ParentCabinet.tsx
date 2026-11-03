@@ -163,6 +163,9 @@ export default function ParentCabinet() {
   const [pick, setPick] = useState<number | null>(null)
   const [stats, setStats] = useState<Record<number, Analytics>>({})
   const [adding, setAdding] = useState(false)
+  // Решений мало: они слева, дети рядом, чтобы экран не пустовал. Решений много: сетка на всю ширину
+  const [waiting, setWaiting] = useState(0)
+  const few = waiting <= 1
 
   const ids = kids?.map((k) => k.id).join(',') ?? ''
   useEffect(() => {
@@ -200,9 +203,10 @@ export default function ParentCabinet() {
         <h1 data-testid="page-title" className="mb-3 text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">
           {t('review.okTitle')}
         </h1>
-        <ReviewQueue />
-
-        <section data-testid="kids" className="mt-8">
+        <div className={few ? 'lg:grid lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:items-start lg:gap-10' : ''}>
+        <ReviewQueue single={few} onCount={setWaiting} />
+        <div className="min-w-0">
+        <section data-testid="kids" className={`mt-8 ${few ? 'lg:mt-0' : ''}`}>
           <h2 className={h2}>{t('cab.myKids')}</h2>
           {kids && kids.length === 0 && <p className="mt-2 text-muted">{t('parent.noChildren')}</p>}
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
@@ -292,7 +296,7 @@ export default function ParentCabinet() {
           <section data-testid="open-links" className="mt-8">
             <h2 className={h2}>{t('cab.links.title')}</h2>
             <p className="mt-1 text-sm font-bold text-muted">{t('cab.links.note')}</p>
-            <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-3">
               {links.map((l) => (
                 <li key={l.work_id} data-testid="open-link" className="flex items-center gap-3 rounded-2xl bg-surface p-2 pr-3 shadow-card">
                   <a href={l.path} target="_blank" rel="noreferrer" className="shrink-0">
@@ -308,6 +312,8 @@ export default function ParentCabinet() {
           </section>
         )}
         <ParentNotes />
+        </div>
+        </div>
       </main>
       {adding && <AddKidModal onClose={() => setAdding(false)} onAdded={load} />}
     </div>
