@@ -24,6 +24,7 @@ const primaryBtn =
   'btn-press w-full rounded-[14px] bg-primary px-6 h-[52px] lg:h-14 text-xl short:h-12 short:text-lg font-extrabold text-primary-fg shadow-press disabled:opacity-50 disabled:shadow-none'
 
 function ChildForm({ onDone, onNew }: { onDone: (r: Role) => void; onNew: () => void }) {
+  const [forgot, setForgot] = useState(false)
   const { t } = useTranslation()
   const [nick, setNick] = useState('')
   const [pics, setPics] = useState<number[]>([])
@@ -47,24 +48,18 @@ function ChildForm({ onDone, onNew }: { onDone: (r: Role) => void; onNew: () => 
 
   return (
     <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4 short:gap-2" data-testid="child-form">
-      <div>
-        <label htmlFor="nick" className={label}>
-          {t('auth.nick')}
-        </label>
-        <input
-          id="nick"
-          data-testid="nick"
-          className={input}
-          value={nick}
-          maxLength={40}
-          autoComplete="off"
-          onChange={(e) => setNick(e.target.value)}
-        />
-      </div>
-      <div>
-        <span className={label}>{t('auth.picturePassword')}</span>
-        <PictureGrid value={pics} onChange={setPics} />
-      </div>
+      <input
+        id="nick"
+        data-testid="nick"
+        className={input}
+        value={nick}
+        maxLength={40}
+        autoComplete="off"
+        placeholder={t('auth.nick')}
+        aria-label={t('auth.nick')}
+        onChange={(e) => setNick(e.target.value)}
+      />
+      <PictureGrid value={pics} onChange={setPics} />
       <ErrorText code={err} />
       <button
         type="submit"
@@ -74,10 +69,15 @@ function ChildForm({ onDone, onNew }: { onDone: (r: Role) => void; onNew: () => 
       >
         {t('auth.childLogin')}
       </button>
-      <p className="text-center text-sm font-bold leading-5 text-primary underline">{t('auth.qrHelp')}</p>
-      <button type="button" data-testid="child-new" onClick={onNew} className="text-center text-sm font-extrabold leading-5 text-heading underline">
-        {t('auth.noAccount')}
-      </button>
+      <div className="flex items-center justify-between text-sm font-bold text-muted">
+        <button type="button" data-testid="child-forgot" aria-expanded={forgot} onClick={() => setForgot((v) => !v)} className="underline">
+          {t('auth.forgot')}
+        </button>
+        <button type="button" data-testid="child-new" onClick={onNew} className="underline">
+          {t('auth.create')}
+        </button>
+      </div>
+      {forgot && <p data-testid="qr-help" className="-mt-1 text-sm font-bold text-text">{t('auth.qrHelp')}</p>}
     </form>
   )
 }
@@ -354,24 +354,17 @@ export default function Login() {
           ) : (
             <EmailForm key={role} role={role} startMode={startMode} onDone={(r) => void done(r)} />
           )}
-
-          <div className="my-1 flex items-center gap-3 text-base leading-5 text-muted">
-            <span className="h-px flex-1 bg-border" />
-            {t('auth.or')}
-            <span className="h-px flex-1 bg-border" />
-          </div>
           <button
             type="button"
             data-testid="mentorium-login"
             aria-expanded={platform}
             onClick={() => setPlatform((v) => !v)}
-            className="flex min-h-12 short:min-h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-border bg-surface px-3 py-1 text-base font-extrabold text-heading"
+            className="mt-3 flex min-h-12 short:min-h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-border bg-surface px-3 py-1 text-base font-extrabold text-heading"
           >
             <img src="/icon-192.png" alt="" className="h-7 w-7 shrink-0 -translate-y-px" />
             {t('auth.mentorium')}
           </button>
           {platform && <PlatformForm onDone={(r) => void done(r)} onClose={() => setPlatform(false)} />}
-          <p className="text-center text-base font-bold text-primary underline short:hidden">{t('auth.classHint')}</p>
           </div>
         </main>
       </section>

@@ -30,13 +30,17 @@ export default function PictureGrid({ value, onChange }: Props) {
         <button
           type="button"
           data-testid="pic-clear"
+          aria-label={t('auth.clear')}
+          title={t('auth.clear')}
           onClick={() => {
             onChange([])
             reshuffle()
           }}
-          className="ml-2 text-xs font-bold text-muted underline"
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted hover:text-primary ${value.length ? '' : 'invisible'}`}
         >
-          {t('auth.clear')}
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 12a8 8 0 1 0 2.5-5.8M4 4v4.5h4.5" />
+          </svg>
         </button>
       </div>
       <div ref={grid} data-testid="pic-grid" className="grid grid-cols-4 gap-2 sm:grid-cols-6">
