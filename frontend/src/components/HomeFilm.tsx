@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { scrollToSmooth } from '../features/smoothScroll'
 
-// Секунды ролика: герой появляется («бац») и скоро конец. Сверено с монтажом film2.mp4.
-const TITLE_AT = 3
-const ARROW_AT = 5
+// Секунды ролика: герой появляется («бац») и скоро конец. Сверено с монтажом hero.mp4.
+const TITLE_AT = 2.75
+const ARROW_AT = 4.6
 // Не начал играть за это время (слабая сеть): сразу финальный кадр, а не пустой экран
 const START_LIMIT_MS = 2500
 
