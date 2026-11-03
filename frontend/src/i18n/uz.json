@@ -359,7 +359,7 @@
     "nav": "Asosiy menyu",
     "account": "Akkaunt",
     "myKids": "Bolalarim",
-    "kid": { "add": "Qoʻshish", "urgentAbove": "Avval yuqoridagi shoshilinch xabarni koʻring.", "clearTitle": "Signal yoʻq", "clearText": "Hammasi joyida: {{nick}} boʻyicha qaroringizni kutayotgan narsa yoʻq.", "noWorks": "{{nick}}da hali ishlar yoʻq.", "works": "{{nick}} ishlari", "more": "Batafsil", "less": "Yashirish",
+    "kid": { "tabNew": "Yangi bola", "tabLink": "Mentoriumda bor", "nick": "Bola taxallusi", "add": "Qoʻshish", "urgentAbove": "Avval yuqoridagi shoshilinch xabarni koʻring.", "clearTitle": "Signal yoʻq", "clearText": "Hammasi joyida: {{nick}} boʻyicha qaroringizni kutayotgan narsa yoʻq.", "noWorks": "{{nick}}da hali ishlar yoʻq.", "works": "{{nick}} ishlari", "more": "Batafsil", "less": "Yashirish",
       "ageClass": "{{age}} · {{name}} sinfi",
       "age": "{{age}} · sinfsiz",
       "lessons": "bu haftada Mentorium darslaridan tangalar",

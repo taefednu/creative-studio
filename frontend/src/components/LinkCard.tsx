@@ -57,9 +57,8 @@ export default function LinkCard({ onLinked }: { onLinked: () => void }) {
 
   const errKey = err && `cab.link.err.${err}`
   return (
-    <form onSubmit={(e) => void submit(e)} data-testid="link-card" className="flex flex-col gap-3 rounded-card border border-border bg-surface p-5 shadow-card">
-      <h2 className="text-3xl font-extrabold text-heading">{t('cab.link.title')}</h2>
-      <p className="text-muted">{t('cab.link.hint')}</p>
+    <form onSubmit={(e) => void submit(e)} data-testid="link-card" className="mx-auto flex w-full max-w-md flex-col gap-4">
+      <p className="text-center text-lg font-bold text-heading">{t('cab.link.hint')}</p>
       <div className="grid grid-cols-6 gap-2" data-testid="link-code">
         {cells.map((c, i) => (
           <input
@@ -95,7 +94,7 @@ export default function LinkCard({ onLinked }: { onLinked: () => void }) {
         type="submit"
         data-testid="link-submit"
         disabled={busy || cells.join('').length !== LEN}
-        className="h-[52px] rounded-full lg:h-[67px] bg-primary px-6 text-2xl font-extrabold uppercase text-primary-fg disabled:opacity-50"
+        className="btn-press h-14 w-full rounded-[14px] bg-primary px-6 text-lg font-extrabold text-primary-fg disabled:opacity-50"
       >
         {t('cab.link.submit')}
       </button>

@@ -52,8 +52,7 @@ const loadQueue = () => api<ReviewItem[]>('/api/review/queue')
 
 const input =
   'w-full rounded-2xl border border-border bg-surface px-4 py-2 font-bold text-heading outline-none focus:border-primary'
-const label = 'mb-1 block text-xs font-extrabold uppercase text-primary'
-const card = 'rounded-card border border-border bg-surface p-4 shadow-card'
+const label = 'mb-1.5 block text-sm font-extrabold text-heading'
 const dash = (v: number | null | undefined) => v ?? '—'
 
 /** Форма добавления ребёнка в окне поверх кабинета (затемнение — токен scrim). */
@@ -66,6 +65,7 @@ function AddKidModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =>
   const [animal, setAnimal] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [linking, setLinking] = useState(false)
 
   useEffect(() => {
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && !busy && onClose()
@@ -89,79 +89,100 @@ function AddKidModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =>
     }
   }
 
+  const tabCls = (on: boolean) => `h-11 min-w-0 flex-1 truncate rounded-full px-4 text-base font-extrabold transition-colors duration-150 sm:flex-none sm:px-5 ${on ? 'bg-primary-soft text-primary' : 'text-heading hover:bg-primary-soft'}`
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-scrim p-4 backdrop-blur-sm" data-testid="add-kid-modal">
-      <div className="my-auto flex w-full max-w-lg flex-col gap-3">
-      <form onSubmit={(e) => void addKid(e)} className={`${card} flex flex-col gap-4`} data-testid="add-kid" role="dialog" aria-modal="true">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-extrabold text-heading">{t('parent.addChild')}</h2>
-          <button type="button" data-testid="add-kid-close" onClick={onClose} className="text-sm font-bold text-muted underline">
-            {t('cab.kid.closeForm')}
+    <div
+      data-testid="add-kid-modal"
+      role="presentation"
+      onMouseDown={(e) => e.target === e.currentTarget && !busy && onClose()}
+      className="modal-bg fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm"
+    >
+      <div role="dialog" aria-modal="true" aria-labelledby="add-kid-title" className="modal-in flex max-h-full w-full max-w-[880px] flex-col gap-4 overflow-y-auto rounded-[28px] bg-surface p-5 shadow-pop md:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <h2 id="add-kid-title" className="text-[28px] font-black leading-9 tracking-tight text-heading">{t('parent.addChild')}</h2>
+          <button type="button" data-testid="add-kid-close" aria-label={t('cab.kid.closeForm')} title={t('cab.kid.closeForm')} onClick={onClose} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-heading transition-colors duration-150 hover:bg-primary-soft">
+            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
           </button>
         </div>
-        <div>
-          <span className={label}>{t('parent.avatar')}</span>
-          <div className="grid grid-cols-8 gap-1.5" data-testid="kid-avatars">
-            {ANIMALS.map((a) => (
-              <button key={a} type="button" data-testid={`kid-avatar-${a}`} aria-pressed={animal === a} aria-label={`${t('parent.avatar')}: ${a}`} onClick={() => setAnimal(a)} className={`aspect-square overflow-hidden rounded-full ${animal === a ? 'ring-4 ring-primary' : ''}`}>
-                <img src={`/art/avatars/${a}.webp`} alt="" className="h-full w-full object-cover" />
-              </button>
-            ))}
+        <div role="tablist" className="flex gap-1">
+          <button type="button" role="tab" aria-selected={!linking} data-testid="kid-tab-new" onClick={() => setLinking(false)} className={tabCls(!linking)}>{t('cab.kid.tabNew')}</button>
+          <button type="button" role="tab" aria-selected={linking} data-testid="kid-tab-link" onClick={() => setLinking(true)} className={tabCls(linking)}>{t('cab.kid.tabLink')}</button>
+        </div>
+        {linking ? (
+          <div className="flex min-h-[320px] flex-col justify-center lg:min-h-[374px]">
+            <LinkCard onLinked={onAdded} />
           </div>
-        </div>
-        <div>
-          <label htmlFor="kid-nick" className={label}>
-            {t('auth.nick')}
-          </label>
-          <input id="kid-nick" data-testid="kid-nick" className={input} value={nick} maxLength={20} autoComplete="off" onChange={(e) => setNick(e.target.value)} />
-          <p className="mt-1 text-xs text-muted">{t('parent.nickHint')}</p>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <span className={label}>{t('parent.age')}</span>
-            <ChipSelect
-              testid="kid-age"
-              label={t('parent.age')}
-              value={age}
-              onChange={setAge}
-              options={[
-                { value: '5-8', label: '5–8' },
-                { value: '9-12', label: '9–12' },
-              ]}
-              className="h-12 w-full"
-            />
-          </div>
-          <div>
-            <span className={label}>{t('parent.lang')}</span>
-            <ChipSelect
-              testid="kid-lang"
-              label={t('parent.lang')}
-              value={lang}
-              onChange={setLang}
-              options={[
-                { value: 'ru', label: 'Русский' },
-                { value: 'en', label: 'English' },
-                { value: 'uz', label: 'Oʻzbekcha' },
-              ]}
-              className="h-12 w-full"
-            />
-          </div>
-        </div>
-        <div>
-          <span className={label}>{t('auth.picturePassword')}</span>
-          <PictureGrid value={pics} onChange={setPics} />
-        </div>
-        <ErrorText code={err} />
-        <button
-          type="submit"
-          data-testid="kid-submit"
-          disabled={busy || nick.trim().length < 2 || pics.length !== PASSWORD_LENGTH}
-          className="rounded-full bg-primary px-6 py-3 font-extrabold uppercase text-primary-fg disabled:opacity-50"
-        >
-          {t('parent.create')}
-        </button>
-      </form>
-      <LinkCard onLinked={onAdded} />
+        ) : (
+          <form onSubmit={(e) => void addKid(e)} data-testid="add-kid" className="grid gap-5 lg:grid-cols-2 lg:gap-8">
+            <div className="flex min-w-0 flex-col gap-4">
+              <div>
+                <span className={label}>{t('parent.avatar')}</span>
+                <div className="grid grid-cols-4 gap-2" data-testid="kid-avatars">
+                  {ANIMALS.map((a) => (
+                    <button key={a} type="button" data-testid={`kid-avatar-${a}`} aria-pressed={animal === a} aria-label={`${t('parent.avatar')}: ${a}`} onClick={() => setAnimal(a)} className={`mx-auto aspect-square w-full max-w-[72px] overflow-hidden rounded-full transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transition-none ${animal === a ? 'ring-4 ring-primary' : 'border border-border'}`}>
+                      <img src={`/art/avatars/${a}.webp`} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label htmlFor="kid-nick" className={label}>{t('cab.kid.nick')}</label>
+                <input id="kid-nick" data-testid="kid-nick" className={input} value={nick} maxLength={20} autoComplete="off" onChange={(e) => setNick(e.target.value)} />
+                <p className="mt-1 text-xs font-semibold text-muted">{t('parent.nickHint')}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className={label}>{t('parent.age')}</span>
+                  <ChipSelect
+                    testid="kid-age"
+                    label={t('parent.age')}
+                    value={age}
+                    onChange={setAge}
+                    options={[
+                      { value: '5-8', label: '5–8' },
+                      { value: '9-12', label: '9–12' },
+                    ]}
+                    className="h-12 w-full"
+                  />
+                </div>
+                <div>
+                  <span className={label}>{t('parent.lang')}</span>
+                  <ChipSelect
+                    testid="kid-lang"
+                    label={t('parent.lang')}
+                    value={lang}
+                    onChange={setLang}
+                    options={[
+                      { value: 'ru', label: 'Русский' },
+                      { value: 'en', label: 'English' },
+                      { value: 'uz', label: 'Oʻzbekcha' },
+                    ]}
+                    className="h-12 w-full"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex min-w-0 flex-col gap-4">
+              <div>
+                <span className={label}>{t('auth.picturePassword')}</span>
+                <PictureGrid value={pics} onChange={setPics} compact />
+              </div>
+              <div className="mt-auto flex flex-col gap-3">
+                <ErrorText code={err} />
+                <button
+                  type="submit"
+                  data-testid="kid-submit"
+                  disabled={busy || nick.trim().length < 2 || pics.length !== PASSWORD_LENGTH}
+                  className="btn-press h-14 w-full rounded-[14px] bg-primary px-6 text-lg font-extrabold text-primary-fg disabled:opacity-50"
+                >
+                  {t('parent.create')}
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   )
