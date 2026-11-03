@@ -260,3 +260,14 @@ def test_shared_demo_kid_keeps_nick_others_can_change(w, fake, monkeypatch):
     assert r.status_code == 403 and r.json()["detail"] == "nick_demo"
     assert w.b.post("/api/child/nick", json={"nick": "Fine"}).status_code == 200
 
+
+def test_repeated_urgent_nick_makes_one_card(w, fake, monkeypatch):
+    d = D("support", urgent=True)
+    d.model_error = False
+    verdict(monkeypatch, d)
+    for nick in ("Dark1", "Dark2", "Dark3"):
+        assert w.a.post("/api/child/nick", json={"nick": nick}).status_code == 422
+    with db.new_session() as s:
+        n = s.scalars(select(HeldItem).where(HeldItem.child_id == w.a_id, HeldItem.item_type == "nickname", HeldItem.urgent.is_(True))).all()
+    assert len(n) == 1
+

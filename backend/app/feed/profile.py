@@ -98,7 +98,9 @@ def change_nick(body: NickBody, c: ChildDep, db: Db) -> dict:
             raise HTTPException(503, "nick_check_failed")
         _hold_for_adult(db, c, "nickname", c.id, ["check_failed"], nick)
         return {"status": "held", "nick": c.nick}
-    if (d.urgent or d.action == "support") and has_adult(db, c):
+    # Одна открытая срочная карточка на ребёнка: взрослый уже знает, повтор очередь не заваливает
+    open_urgent = db.scalar(select(HeldItem.id).where(HeldItem.child_id == c.id, HeldItem.item_type == "nickname", HeldItem.status == "pending", HeldItem.urgent.is_(True)).limit(1))
+    if (d.urgent or d.action == "support") and has_adult(db, c) and open_urgent is None:
         _hold_for_adult(db, c, "nickname", c.id, list(d.reason_codes), nick, urgent=True)
     raise HTTPException(422, "nick_rejected")
 
