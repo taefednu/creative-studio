@@ -21,7 +21,7 @@ export default function QrLanding() {
     started.current = true
     api('/api/child/qr-login', 'POST', { token })
       .then(refresh)
-      .then(() => navigate('/create', { replace: true }))
+      .then(() => navigate('/', { replace: true }))
       .catch(() => setFailed(true))
   }, [token, refresh, navigate])
 

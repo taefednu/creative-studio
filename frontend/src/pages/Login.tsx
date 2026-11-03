@@ -270,7 +270,7 @@ function DemoButtons() {
   if (!enabled) return null
   async function go(role: DemoRole) {
     await api('/api/demo/login', 'POST', { role })
-    window.location.assign(role === 'parent' || role === 'teacher' ? `/${role}` : '/create')
+    window.location.assign(role === 'parent' || role === 'teacher' ? `/${role}` : '/')
   }
   return (
     <div data-testid="demo-login" className="rounded-card bg-primary-soft p-3">
