@@ -276,7 +276,7 @@ function WorkCard({ w, big, open, onSubmitted, onClosed }: { w: Work; big: boole
         <button
           type="button"
           data-testid="work-share"
-          aria-label={`${style}: ${t('mw.share')}`}
+          aria-label={`${style}: ${t('publish.who')}`}
           onClick={() => setModal(true)}
           className="block aspect-square w-full overflow-hidden rounded-[22px] bg-primary-soft shadow-card"
         >
@@ -308,15 +308,15 @@ function WorkCard({ w, big, open, onSubmitted, onClosed }: { w: Work; big: boole
       </div>
       {modal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-scrim p-4">
-          <div role="dialog" aria-label={t('mw.share')} data-testid="work-modal" className="my-auto w-full max-w-md rounded-card bg-surface p-5 shadow-card">
+          <div role="dialog" aria-label={t('publish.who')} data-testid="work-modal" className="my-auto w-full max-w-md rounded-card bg-surface p-5 shadow-card">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h2 className="text-xl font-extrabold text-heading">{t('mw.share')}</h2>
+              <h2 className="text-xl font-extrabold text-heading">{t('publish.who')}</h2>
               <button type="button" data-testid="work-modal-close" aria-label={t('mw.close')} onClick={close} className="flex h-10 w-10 items-center justify-center rounded-full border border-border text-heading">
                 <Icon name="close" className="h-5 w-5" />
               </button>
             </div>
-            {w.image_url && <img src={w.image_url} alt={style} className="mb-3 aspect-square max-h-[50dvh] w-full rounded-2xl object-cover" />}
-            <PublishBox publicOk={w.kind === 'image' || w.kind === 'alive'} workId={w.id} onSupport={() => setSupport(true)} />
+            {w.image_url && <img src={w.image_url} alt={style} className="mb-3 h-[30dvh] w-full rounded-2xl bg-primary-soft object-contain" />}
+            <PublishBox noTitle publicOk={w.kind === 'image' || w.kind === 'alive'} workId={w.id} onSupport={() => setSupport(true)} />
             {cur && (
               <div className="mt-2 flex flex-col gap-2">
                 <button

@@ -83,7 +83,7 @@ def test_nothing_opens_until_adult_approves(world):
     assert guest.get(f"/s/{token}").status_code == 404
     assert parent.post(f"/api/review/items/{item_of(wid)}/approve").status_code == 200
     view = kid.get(f"/api/works/{wid}/share").json()
-    assert view == {"status": "live", "path": f"/s/{token}"}
+    assert (view["status"], view["path"]) == ("live", f"/s/{token}")
     # открытая часть без данных ребёнка, картинка настоящая
     page = guest.get(view["path"])
     assert page.status_code == 200 and f"/api/public/{token}/card.jpg" in page.text and 'og:image' in page.text
@@ -198,3 +198,13 @@ def test_teacher_sees_and_stops_links_of_own_class_only(world):
     assert teacher.delete(f"/api/works/{wid}/share").json()["status"] == "refused"
     assert TestClient(app).get(f"/s/{token}").status_code == 404
     assert teacher.get("/api/teacher/shares").json() == []
+
+
+def test_share_state_remembers_where_work_is_shown(world):
+    _, kid, cid, tmp = world
+    wid = make_work(cid, tmp)
+    r = kid.get(f"/api/works/{wid}/share").json()
+    assert r["posts"] == [] and r["status"] == "none"
+    assert kid.post("/api/posts", json={"work_id": wid, "audience": "family"}).status_code in (200, 201)
+    assert kid.get(f"/api/works/{wid}/share").json()["posts"] == [{"audience": "family", "status": "published"}]
+    assert TestClient(app).get(f"/api/works/{wid}/share").status_code == 401

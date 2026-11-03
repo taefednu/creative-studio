@@ -2,15 +2,12 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
 import Icon from './Icon'
-import type { ShareState } from './PublishBox'
+import type { ShareState } from '../features/works/publish'
 
-/** Что с просьбой поделиться: ждём взрослого, ссылка готова или взрослый отказал. Пока просьбы не было, ничего не показываем. */
+/** Взрослый разрешил показать всем: ссылка, скопировать, выключить. */
 export default function ShareLink({ workId, state, onChange }: { workId: number; state: ShareState; onChange: (s: ShareState) => void }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
-  if (state.status === 'waiting' || state.status === 'refused') {
-    return <p data-testid={`share-${state.status}`} className="rounded-2xl bg-primary-soft px-4 py-2.5 text-sm font-bold text-heading">{t(`publish.share.${state.status}`)}</p>
-  }
   if (state.status !== 'live' || !state.path) return null
   const url = `${window.location.origin}${state.path}`
   return (

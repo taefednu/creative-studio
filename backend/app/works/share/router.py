@@ -74,8 +74,11 @@ def _own(db: Session, work_id: int, c: Child) -> Work:
 
 @router.get("/api/works/{work_id}/share")
 def get_share(work_id: int, c: Annotated[Child, Depends(current_child)], db: Db):
+    from app.works.image.router import _shared  # image импортирует share: сверху будет цикл
+
     _own(db, work_id, c)
-    return _view(db, db.scalar(select(Share).where(Share.work_id == work_id)))
+    view = _view(db, db.scalar(select(Share).where(Share.work_id == work_id)))
+    return {**view, "posts": _shared(db, [work_id]).get(work_id, [])}  # экран помнит, кому работа уже показана
 
 
 @router.post("/api/works/{work_id}/share")
