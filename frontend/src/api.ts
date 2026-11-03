@@ -25,7 +25,8 @@ export async function api<T = unknown>(path: string, method = 'GET', body?: unkn
   }
   if (!res.ok) {
     const d = data?.detail
-    throw new ApiError(res.status, typeof d === 'string' ? d : 'validation')
+    const code = typeof d === 'string' ? d : typeof (d as { code?: unknown } | null)?.code === 'string' ? (d as { code: string }).code : 'validation'
+    throw new ApiError(res.status, code)
   }
   return data as T
 }

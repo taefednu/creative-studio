@@ -9,6 +9,7 @@ import { useLoad } from '../useLoad'
 import { HEADER_CLS, NAV_CLS } from './headerStyles'
 import LangSwitch from './LangSwitch'
 import Logo from './Logo'
+import PlatformLink from './PlatformLink'
 import TabPill from './TabPill'
 
 type Tab = { to: string; icon: string; key: string; end?: boolean; review?: boolean }
@@ -108,9 +109,10 @@ export default function CabinetHeader({ role }: { role: Exclude<Role, 'child'> }
             <div
               role="dialog"
               aria-label={t('cab.account')}
-              className="absolute right-0 top-full z-40 mt-2 w-60 rounded-card border border-border bg-surface p-4 shadow-card"
+              className="absolute right-0 top-full z-40 mt-2 w-72 rounded-card border border-border bg-surface p-4 shadow-card"
             >
               <p className="text-lg font-extrabold text-heading">{name}</p>
+              <div className="mt-3 empty:hidden"><PlatformLink note="adultNote" /></div>
               <button
                 type="button"
                 data-testid="logout"

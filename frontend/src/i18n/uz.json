@@ -1,5 +1,7 @@
 {
-  "notes": {"refusedMany": "Kattalar rasmlaringni ko'rsatishga ruxsat bermadi: {{count}} ta. Boshqasini chizamizmi?", "approvedMany": "Kattalar ko'rib chiqdi va rasmlaringga ruxsat berdi: {{count}} ta!", "clear": "Olib tashlash", "clearAll": "Hammasini tozalash", "title": "Bildirishnomalar", "empty": "Hozircha tinch. Rasmlaring haqidagi yangiliklar shu yerda chiqadi.", "task": "O'qituvchi yangi topshiriq berdi: {{title}}", "refused": "Kattalar bitta rasmingni ko'rsatishga ruxsat bermadi. Boshqasini chizamizmi?", "approved": "Kattalar ko'rib chiqdi va rasmingga ruxsat berdi!", "reaction": "Rasmingga munosabatlar: {{count}}", "comment": "Rasmingga yangi izohlar: {{count}}"},
+  "notes": {"nickapproved": "Kattalar yangi nikingga ruxsat berdi!", "nickrefused": "Kattalar yangi nikka ruxsat bermadi. Boshqasini o'ylaymizmi?", "avatarapproved": "Kattalar avataringga ruxsat berdi!", "avatarrefused": "Kattalar bu rasmni avatar qilishga ruxsat bermadi. Boshqasini tanlaymizmi?", "refusedMany": "Kattalar rasmlaringni ko'rsatishga ruxsat bermadi: {{count}} ta. Boshqasini chizamizmi?", "approvedMany": "Kattalar ko'rib chiqdi va rasmlaringga ruxsat berdi: {{count}} ta!", "clear": "Olib tashlash", "clearAll": "Hammasini tozalash", "title": "Bildirishnomalar", "empty": "Hozircha tinch. Rasmlaring haqidagi yangiliklar shu yerda chiqadi.", "task": "O'qituvchi yangi topshiriq berdi: {{title}}", "refused": "Kattalar bitta rasmingni ko'rsatishga ruxsat bermadi. Boshqasini chizamizmi?", "approved": "Kattalar ko'rib chiqdi va rasmingga ruxsat berdi!", "reaction": "Rasmingga munosabatlar: {{count}}", "comment": "Rasmingga yangi izohlar: {{count}}"},
+  "profile": {"open": "Mening profilim", "title": "Mening profilim", "nick": "Nik", "save": "Saqlash", "nickSaved": "Tayyor! Endi {{nick}} niki bilan kir.", "nickHeld": "{{nick}} nikini kattalarga ko'rsatamiz. Hozircha eskisi qoladi.", "animals": "Hayvoncha", "own": "Yoki o'z rasming", "ownHint": "Avatarni butun sinf ko'radi, shuning uchun avval kattalar ko'rib chiqadi.", "ownWaiting": "Kattalar ko'rishini kutyapmiz", "draw": "Yangisini chizish", "noWorks": "Hali rasm yo'q. Birinchisini chiz!"},
+  "link": {"open": "Mentorium profilini bog'lash", "title": "Mentorium profili", "childNote": "Rasmlaring va tangalaring o'zingda qoladi. Endi Mentorium orqali kir.", "adultNote": "Kabinetdagi hamma narsa qoladi. Ikkala yo'l bilan ham kirish mumkin.", "done": "Mentorium profili bog'landi", "submit": "Bog'lash"},
   "home": {"hero": {"title": "Rasmingni jonlantir", "text": "Qog'ozga chiz va suratga ol. Qahramon jonlanadi, sun'iy intellekt esa u haqida ertak yozadi.", "cta": "Rasmni jonlantirish", "replay": "Yana bir bor", "down": "Bolalar nima chizayotganini ko'r"}},
   "footer": {"brand": "5–12 yoshli bolalar uchun xavfsiz ijodiy studiya. Sun'iy intellekt bola ko'radigan hamma narsani tekshiradi.", "city": "Toshkent, O'zbekiston", "cta": "Chizishni boshlash", "sections": "Bo'limlar", "parents": "Ota-onalarga", "teachers": "O'qituvchilarga", "about": "Mentorium haqida", "contacts": "Aloqa", "docs": "Hujjatlar", "privacy": "Maxfiylik siyosati", "consent": "Ma'lumotlarni qayta ishlashga rozilik", "cookies": "Cookie siyosati", "copyright": "© {{year}} «INTERNATIONAL CODING PLATFORM» MChJ. Barcha huquqlar himoyalangan.", "models": "Meta modellarida ishlaydi", "top": "Yuqoriga"},
   "seo": {"title": "Mentorium Creative Studio: bolalar uchun xavfsiz AI ijodi", "description": "5–12 yoshli bolalar uchun xavfsiz ijodiy studiya: AI rasmlar va ertaklar, sinf lentasi, har bir so'z va rasm tekshiruvi."},
@@ -36,6 +38,13 @@
     "soon": "tez orada"
   },
   "errors": {
+    "nick_pending": "Yangi nik allaqachon kattalarni kutyapti.",
+    "nick_check_failed": "Hozir nikni tekshirib bo'lmayapti. Keyinroq urinib ko'r.",
+    "avatar_pending": "Bitta rasm allaqachon kattalarni kutyapti.",
+    "platform_wrong_role": "Bu Mentorium profili boshqa turda: roling bilan bir xil bo'lishi kerak.",
+    "platform_taken": "Bu Mentorium profili studiyada allaqachon bor. U orqali kir.",
+    "platform_already_linked": "Bu akkauntga boshqa Mentorium profili bog'langan.",
+    "platform_busy_work": "Hozir rasm chizilyapti. Tugashini kutib, qayta urinib ko'r.",
     "bad_audio": "Yozuvni o‘qib bo‘lmadi. Yana bir bor yozib ko‘r.",
     "audio_too_large": "Yozuv juda katta chiqdi. Qisqaroq ayt.",
     "audio_too_long": "Yozuv juda uzun: 30 soniyagacha gapirish mumkin.",
@@ -273,7 +282,7 @@
     "storyIdea": "Bolaning gʻoyasi: «{{text}}»",
     "storyNoImage": "Rasm hali yoʻq",
     "zoom": "Kattaroq ochish",
-    "effect": {"cleared_word": "Harflar topilmadi, shuning uchun rasm xiralashtirilmagan. Ism yoki boshqa shaxsiy ma'lumot ko'rsangiz, rad eting.", "drawn_face": "Bu yuz chizilganga o'xshaydi, shuning uchun xiralashtirilmagan. Unda haqiqiy odam bo'lsa, rad eting.", "share": "Tasdiqlang, rasmni hamma ko‘radi: umumiy lentada va havola orqali. Bolaning laqabi va ismi ko‘rsatilmaydi.", "story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.",
+    "effect": {"nickname": "Tasdiqlang, bolaning niki shu bo'ladi: uni sinf ko'radi.", "avatar": "Tasdiqlang, bu rasm bolaning avatari bo'ladi: uni sinf ko'radi.", "cleared_word": "Harflar topilmadi, shuning uchun rasm xiralashtirilmagan. Ism yoki boshqa shaxsiy ma'lumot ko'rsangiz, rad eting.", "drawn_face": "Bu yuz chizilganga o'xshaydi, shuning uchun xiralashtirilmagan. Unda haqiqiy odam bo'lsa, rad eting.", "share": "Tasdiqlang, rasmni hamma ko‘radi: umumiy lentada va havola orqali. Bolaning laqabi va ismi ko‘rsatilmaydi.", "story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.",
       "blurred": "Bola faqat xiralashtirilgan nusxani koʻrmoqda. Hamma shaxsiy narsa yashirilgan boʻlsa, tasdiqlang. Rad etsangiz, ish undan yoʻqoladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
     "title": "Ushlab turilganlar",
     "badge": "Ushlab turilgan: {{count}}",
@@ -293,9 +302,10 @@
     "modalFailed": "Ochib bo‘lmadi. Qayta urinib ko‘ring.",
     "retry": "Qayta urinish",
     "now": "hozirgina",
-    "types": { "share": "Hammaga ko‘rsatish", "story": "Ertak", "prompt": "Soʻrov", "image": "Rasm", "post": "Post", "comment": "Izoh", "nickname": "Taxallus", "assignment": "Topshiriq", "submission": "Topshirilgan ish", "upload": "Yuklash" },
+    "types": { "avatar": "Avatar", "share": "Hammaga ko‘rsatish", "story": "Ertak", "prompt": "Soʻrov", "image": "Rasm", "post": "Post", "comment": "Izoh", "nickname": "Taxallus", "assignment": "Topshiriq", "submission": "Topshirilgan ish", "upload": "Yuklash" },
     "where": { "class": "{{name}} sinfida", "classNoName": "Sinfda", "family": "Oila", "personal": "Shaxsiy" },
     "reasons": {
+      "avatar_review": "Avatar uchun rasm",
       "personal_info": "Shaxsiy maʻlumot",
       "off_platform_contact": "Platformadan tashqari aloqa",
       "bullying": "Xafa qiluvchi soʻzlar",

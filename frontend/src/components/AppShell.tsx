@@ -11,6 +11,7 @@ import { HEADER_CLS, NAV_CLS } from './headerStyles'
 import LangSwitch from './LangSwitch'
 import Logo from './Logo'
 import NotifBell from './NotifBell'
+import ProfileWindow from './ProfileWindow'
 import Avatar from './Avatar'
 import TabPill from './TabPill'
 
@@ -53,6 +54,7 @@ export default function AppShell() {
   const [code, setCode] = useState('')
   const [err, setErr] = useState<string | null>(null)
   const [menu, setMenu] = useState(false)
+  const [profile, setProfile] = useState(false)
   const [link, setLink] = useState<{ code: string; min: number } | string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -169,6 +171,9 @@ export default function AppShell() {
                     <p data-testid="my-nick" className="text-lg font-extrabold text-heading">
                       {me.nick}
                     </p>
+                    <button type="button" data-testid="profile-open" onClick={() => { setMenu(false); setProfile(true) }} className="mt-3 w-full rounded-full bg-primary-soft px-4 py-2 text-sm font-extrabold text-primary">
+                      {t('profile.open')}
+                    </button>
                     {me.class && (
                       <p data-testid="my-class" className="mt-1 text-sm font-bold text-muted">
                         {t('child.myClass', { name: me.class.name })}
@@ -247,6 +252,7 @@ export default function AppShell() {
           )}
         </div>
       </header>
+      {profile && me && <ProfileWindow nick={me.nick} needsAdult={me.needs_adult} onChanged={load} onClose={() => setProfile(false)} />}
       <main className="px-4 pb-5 pt-1.5 md:px-8 md:pb-0 lg:pt-4">
         {me?.needs_adult && (
           <p data-testid="needs-adult" className="mb-4 rounded-card border border-border bg-primary-soft p-3 text-sm font-bold text-heading">

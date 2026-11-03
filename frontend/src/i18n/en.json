@@ -1,5 +1,7 @@
 {
-  "notes": {"refusedMany": "A grown-up didn't allow some of your pictures to be shown: {{count}}. Let's draw others!", "approvedMany": "A grown-up looked and allowed your pictures: {{count}}!", "clear": "Remove", "clearAll": "Clear all", "title": "Notifications", "empty": "All quiet. News about your pictures will show up here.", "task": "Your teacher set a new task: {{title}}", "refused": "A grown-up didn't allow one of your pictures to be shown. Let's draw another one!", "approved": "A grown-up looked and allowed your picture!", "reaction": "Reactions on your picture: {{count}}", "comment": "New comments on your picture: {{count}}"},
+  "notes": {"nickapproved": "A grown-up allowed your new nickname!", "nickrefused": "A grown-up didn't allow the new nickname. Let's think of another one!", "avatarapproved": "A grown-up allowed your avatar!", "avatarrefused": "A grown-up didn't allow this picture as your avatar. Let's pick another one!", "refusedMany": "A grown-up didn't allow some of your pictures to be shown: {{count}}. Let's draw others!", "approvedMany": "A grown-up looked and allowed your pictures: {{count}}!", "clear": "Remove", "clearAll": "Clear all", "title": "Notifications", "empty": "All quiet. News about your pictures will show up here.", "task": "Your teacher set a new task: {{title}}", "refused": "A grown-up didn't allow one of your pictures to be shown. Let's draw another one!", "approved": "A grown-up looked and allowed your picture!", "reaction": "Reactions on your picture: {{count}}", "comment": "New comments on your picture: {{count}}"},
+  "profile": {"open": "My profile", "title": "My profile", "nick": "Nickname", "save": "Save", "nickSaved": "Done! From now on sign in as {{nick}}.", "nickHeld": "We'll show {{nick}} to a grown-up. Your old nickname stays for now.", "animals": "Animal", "own": "Or your picture", "ownHint": "Your whole class sees your avatar, so a grown-up looks at it first.", "ownWaiting": "Waiting for a grown-up to look", "draw": "Draw a new one", "noWorks": "No pictures yet. Draw your first one!"},
+  "link": {"open": "Link a Mentorium profile", "title": "Mentorium profile", "childNote": "Your pictures and coins stay with you. From now on sign in with Mentorium.", "adultNote": "Everything in your account stays. You can sign in either way.", "done": "Mentorium profile linked", "submit": "Link"},
   "home": {"hero": {"title": "Bring your drawing to life", "text": "Draw on paper and take a photo. Your hero comes alive, and AI writes a story about it.", "cta": "Bring it to life", "replay": "Watch again", "down": "See what kids are making"}},
   "footer": {"brand": "A safe creative studio for kids aged 5–12. AI checks everything a child sees.", "city": "Tashkent, Uzbekistan", "cta": "Start drawing", "sections": "Sections", "parents": "For parents", "teachers": "For teachers", "about": "About Mentorium", "contacts": "Contacts", "docs": "Documents", "privacy": "Privacy policy", "consent": "Data processing consent", "cookies": "Cookie policy", "copyright": "© {{year}} INTERNATIONAL CODING PLATFORM LLC. All rights reserved.", "models": "Powered by Meta models", "top": "Back to top"},
   "seo": {"title": "Mentorium Creative Studio: safe AI creativity for kids", "description": "A safe creative studio for kids aged 5–12: AI pictures and stories, a class feed, and every word and image checked."},
@@ -36,6 +38,13 @@
     "soon": "soon"
   },
   "errors": {
+    "nick_pending": "Your new nickname is already waiting for a grown-up.",
+    "nick_check_failed": "We can't check the nickname right now. Try again later.",
+    "avatar_pending": "One picture is already waiting for a grown-up.",
+    "platform_wrong_role": "This Mentorium profile is a different type: it must match your role.",
+    "platform_taken": "This Mentorium profile is already in the studio. Sign in with it.",
+    "platform_already_linked": "Another Mentorium profile is already linked to this account.",
+    "platform_busy_work": "A picture is being drawn. Wait for it and try again.",
     "bad_audio": "We could not read that recording. Please try again.",
     "audio_too_large": "That recording is too big. Try a shorter one.",
     "audio_too_long": "That recording is too long: you can talk for up to 30 seconds.",
@@ -273,7 +282,7 @@
     "storyIdea": "The child's idea: “{{text}}”",
     "storyNoImage": "No picture yet",
     "zoom": "Open larger",
-    "effect": {"cleared_word": "No letters were found, so the drawing isn't blurred. Reject if you can see a name or other personal details.", "drawn_face": "This face looks drawn, so it isn't blurred. Reject if it shows a real person.", "share": "Approve and everyone can see the picture: in the public feed and by link. The child’s nickname and name are not shown.", "story": "Approve and the child will see the story; missing pages will be painted.", "prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.",
+    "effect": {"nickname": "Approve, and the child gets this nickname: the class will see it.", "avatar": "Approve, and this picture becomes the child's avatar: the class will see it.", "cleared_word": "No letters were found, so the drawing isn't blurred. Reject if you can see a name or other personal details.", "drawn_face": "This face looks drawn, so it isn't blurred. Reject if it shows a real person.", "share": "Approve and everyone can see the picture: in the public feed and by link. The child’s nickname and name are not shown.", "story": "Approve and the child will see the story; missing pages will be painted.", "prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.",
       "blurred": "The child already sees only the blurred version. Approve if everything personal is hidden. Reject and the work disappears for them.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
     "title": "Held for review",
     "badge": "Held: {{count}}",
@@ -293,9 +302,10 @@
     "modalFailed": "Could not open this. Try again.",
     "retry": "Try again",
     "now": "just now",
-    "types": { "share": "Show to everyone", "story": "Story", "prompt": "Prompt", "image": "Picture", "post": "Post", "comment": "Comment", "nickname": "Nickname", "assignment": "Assignment", "submission": "Submission", "upload": "Upload" },
+    "types": { "avatar": "Avatar", "share": "Show to everyone", "story": "Story", "prompt": "Prompt", "image": "Picture", "post": "Post", "comment": "Comment", "nickname": "Nickname", "assignment": "Assignment", "submission": "Submission", "upload": "Upload" },
     "where": { "class": "In class {{name}}", "classNoName": "In class", "family": "Family", "personal": "Personal" },
     "reasons": {
+      "avatar_review": "Picture for an avatar",
       "personal_info": "Personal info",
       "off_platform_contact": "Off-platform contact",
       "bullying": "Unkind words",

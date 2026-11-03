@@ -102,10 +102,11 @@ const KNOWN = [
   'cleared_word',
   'sam_failed',
   'remix_source_gone',
+  'avatar_review',
 ]
 
 // Типы, у которых есть своя подпись «что будет после одобрения»; остальным общая
-const EFFECTS = ['prompt', 'image', 'post', 'comment', 'upload', 'submission', 'story', 'share']
+const EFFECTS = ['prompt', 'image', 'post', 'comment', 'upload', 'submission', 'story', 'share', 'nickname', 'avatar']
 
 /** Что значат кнопки для этой работы. Размытая загрузка уже у ребёнка: решаем, оставить ли её, а не показать ли. */
 export function effectKey(it: Pick<ReviewItem, 'item_type' | 'reason_codes'>): string {

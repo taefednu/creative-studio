@@ -9,7 +9,7 @@ import Icon from './Icon'
 import { useLoad } from '../useLoad'
 
 type Note = {
-  kind: 'task' | 'refused' | 'approved' | 'reaction' | 'comment'
+  kind: 'task' | 'refused' | 'approved' | 'reaction' | 'comment' | 'nickapproved' | 'nickrefused' | 'avatarapproved' | 'avatarrefused'
   at: string
   unread: boolean
   link: string
@@ -22,7 +22,14 @@ type Note = {
 
 const loadNotes = () => api<{ items: Note[]; unread: number }>('/api/child/notifications')
 const MANY = { refused: 'notes.refusedMany', approved: 'notes.approvedMany' } as const
-const ICON: Partial<Record<Note['kind'], string>> = { refused: '/art/shield.webp', approved: '/art/robot-happy.webp' }
+const ICON: Partial<Record<Note['kind'], string>> = {
+  refused: '/art/shield.webp',
+  approved: '/art/robot-happy.webp',
+  nickrefused: '/art/shield.webp',
+  avatarrefused: '/art/shield.webp',
+  nickapproved: '/art/robot-happy.webp',
+  avatarapproved: '/art/robot-happy.webp',
+}
 
 /** Колокольчик ребёнка: что нового о его работах и заданиях. Открыл — прочитано; новое событие зажжёт снова. */
 export default function NotifBell() {
