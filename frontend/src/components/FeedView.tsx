@@ -1,3 +1,4 @@
+import LoadFailed from './LoadFailed'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ApiError, api } from '../api'
@@ -97,7 +98,8 @@ export function FeedSkeleton() {
 export default function FeedView({ kinds, classId, title, classes, nick, child, guest }: Props) {
   const { t, i18n } = useTranslation()
   const [kind, setKind] = useState<FeedKind>(kinds[0])
-  const [page, setPage] = useState<{ key: string; items: Post[]; cursor: number | null } | null>(null)
+  const [page, setPage] = useState<{ key: string; items: Post[]; cursor: number | null; failed?: boolean } | null>(null)
+  const [attempt, setAttempt] = useState(0)
   const [open, setOpen] = useState<number | null>(null)
   const [style, setStyle] = useState('')
   const key = `${kind}:${classId ?? ''}`
@@ -106,11 +108,11 @@ export default function FeedView({ kinds, classId, title, classes, nick, child, 
     let alive = true
     api<FeedPage>(feedUrl(kind, classId))
       .then((p) => alive && setPage({ key, items: p.items, cursor: p.next_cursor }))
-      .catch(() => alive && setPage({ key, items: [], cursor: null }))
+      .catch(() => alive && setPage({ key, items: [], cursor: null, failed: true }))
     return () => {
       alive = false
     }
-  }, [kind, classId, key])
+  }, [kind, classId, key, attempt])
 
   const loaded = page?.key === key
   const items = (loaded ? page.items : []).filter((p) => !nick || p.nick === nick)
@@ -186,7 +188,8 @@ export default function FeedView({ kinds, classId, title, classes, nick, child, 
           />
         )}
       </div>
-      {loaded && items.length === 0 && (
+      {loaded && page?.failed && <LoadFailed onRetry={() => { setPage(null); setAttempt((n) => n + 1) }} />}
+      {loaded && items.length === 0 && !page?.failed && (
         <p data-testid="feed-empty" className="mt-6 text-text">
           {t(child ? 'feed.empty' : 'feed.emptyAdult')}
         </p>

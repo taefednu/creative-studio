@@ -14,6 +14,7 @@ import PictureGrid from '../components/PictureGrid'
 import QrBox from '../components/QrBox'
 import OpenLinks from '../components/OpenLinks'
 import ParentNotes from '../components/ParentNotes'
+import LoadFailed from '../components/LoadFailed'
 import ReviewQueue from '../components/ReviewQueue'
 import WeekChart from '../components/WeekChart'
 import { ANIMALS } from '../features/avatar/animal'
@@ -301,7 +302,7 @@ function KidWorks({ kid }: { kid: Kid }) {
 
 export default function ParentCabinet() {
   const { t } = useTranslation()
-  const [kids, load] = useLoad(loadKids)
+  const [kids, load, kidsFailed] = useLoad(loadKids)
   const [queue, reloadQueue, queueFailed] = useLoad(loadQueue)
   const [qr, setQr] = useState<{ id: number; nick: string; token: string } | null>(null)
   const [pick, setPick] = useState<number | null>(null)
@@ -360,6 +361,7 @@ export default function ParentCabinet() {
       <CabinetHeader role="parent" />
       <main className="overflow-x-clip px-4 py-4 md:px-8">
         <ReviewQueue urgentOnly />
+        {kidsFailed && !kids && <LoadFailed onRetry={load} />}
         {kids && kids.length === 0 && (
           <section data-testid="kids" className="flex flex-col items-start gap-4">
             <h1 data-testid="page-title" className="text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">{t('cab.myKids')}</h1>

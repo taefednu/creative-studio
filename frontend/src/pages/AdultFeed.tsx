@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import CabinetHeader from '../components/CabinetHeader'
 import FeedView, { FeedSkeleton } from '../components/FeedView'
+import LoadFailed from '../components/LoadFailed'
 import ReviewQueue from '../components/ReviewQueue'
 import { useLoad } from '../useLoad'
 
@@ -12,7 +13,8 @@ function TeacherFeed() {
   const { t } = useTranslation()
   const { classId } = useParams()
   const navigate = useNavigate()
-  const [rooms] = useLoad(loadRooms)
+  const [rooms, reload, failed] = useLoad(loadRooms)
+  if (failed && !rooms) return <LoadFailed onRetry={reload} />
   if (!rooms) return <FeedSkeleton />
   if (rooms.length === 0) {
     return (

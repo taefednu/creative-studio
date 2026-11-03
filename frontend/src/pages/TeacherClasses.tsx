@@ -9,6 +9,7 @@ import ErrorText, { errorKey } from '../components/ErrorText'
 import Icon from '../components/Icon'
 import OpenLinks from '../components/OpenLinks'
 import QrBox from '../components/QrBox'
+import LoadFailed from '../components/LoadFailed'
 import ReviewQueue from '../components/ReviewQueue'
 import ClassTasks from './TeacherTasks'
 import { sampleFor } from '../features/assignments/calendar'
@@ -115,7 +116,7 @@ function RoomCard({ r, kids, banner, waiting }: { r: Room; kids: Kid[] | undefin
 export default function TeacherClasses() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [rooms, load] = useLoad(loadRooms)
+  const [rooms, load, roomsFailed] = useLoad(loadRooms)
   const [queue, reloadQueue] = useLoad(loadQueue)
   const [tpl] = useLoad(loadTemplates)
   const [kids, setKids] = useState<Record<number, Kid[]>>({})
@@ -184,6 +185,7 @@ export default function TeacherClasses() {
             <span className="hidden sm:inline">{t('cl2.new')}</span>
           </button>
         </div>
+        {roomsFailed && !rooms && <LoadFailed onRetry={load} />}
         {rooms && rooms.length === 0 && <p data-testid="rooms-empty" className="mt-4 text-lg font-bold text-text">{t('teacher.noClasses')}</p>}
         <section data-testid="rooms" className="stagger mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {rooms?.map((r) => (
@@ -224,7 +226,7 @@ export default function TeacherClasses() {
 export function TeacherClass() {
   const { t } = useTranslation()
   const { classId } = useParams()
-  const [rooms] = useLoad(loadRooms)
+  const [rooms, reloadRooms, roomsFailed] = useLoad(loadRooms)
   const [queue, reloadQueue] = useLoad(loadQueue)
   const [kids, setKids] = useState<Kid[] | null>(null)
   const [qrErr, setQrErr] = useState<string | null>(null)
@@ -269,6 +271,7 @@ export function TeacherClass() {
       <CabinetHeader role="teacher" />
       <main className="px-4 py-4 md:px-8">
         <ReviewQueue urgentOnly />
+        {roomsFailed && !rooms && <LoadFailed onRetry={reloadRooms} />}
         {room && (
           <>
             <div className="flex min-w-0 items-center gap-2">

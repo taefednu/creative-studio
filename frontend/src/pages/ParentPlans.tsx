@@ -1,3 +1,4 @@
+import LoadFailed from '../components/LoadFailed'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
 import CabinetHeader from '../components/CabinetHeader'
@@ -13,7 +14,7 @@ const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD
 /** Тарифы: числа и цены из данных, покупки нет, платёжных полей нет. */
 export default function ParentPlans() {
   const { t } = useTranslation()
-  const [data] = useLoad(loadTariffs)
+  const [data, reload, failed] = useLoad(loadTariffs)
   const [tpl] = useLoad(loadTemplates)
   const price = tpl?.price
   return (
@@ -28,6 +29,7 @@ export default function ParentPlans() {
             {t('pl.soonChip')}
           </p>
         </div>
+        {failed && !data && <LoadFailed onRetry={reload} />}
         {data && data.packs.length === 0 && <p className="text-muted">{t('cab.plans.empty')}</p>}
         <div data-testid="plans" className="stagger mx-auto w-full max-w-[720px] divide-y divide-border rounded-card border border-border bg-surface px-4 shadow-card">
           {data?.packs.map((p, i) => (

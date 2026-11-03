@@ -715,6 +715,9 @@ body {
     opacity 0.14s var(--ease-out),
     transform 0.14s var(--ease-out);
 }
+.boot-in {
+  animation: modal-bg 0.3s var(--ease-out) 0.3s backwards;
+}
 /* Снимок закрытого окна (features/windowExit.ts): поверх всего, нажать нельзя */
 .win-closing {
   pointer-events: none;
@@ -751,6 +754,7 @@ body {
   .stagger > *,
   .tick-in,
   .err-in,
+  .boot-in,
   .bell-ring {
     animation: none;
   }

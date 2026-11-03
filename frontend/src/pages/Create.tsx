@@ -1,3 +1,4 @@
+import LoadFailed from '../components/LoadFailed'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -32,7 +33,7 @@ export default function Create() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { reloadMe } = useOutletContext<ShellContext>()
-  const [tplData] = useLoad(loadTemplates)
+  const [tplData, reloadTemplates, tplFailed] = useLoad(loadTemplates)
   const templates = tplData?.templates
   const withCustom = templates && [...templates, CUSTOM]
   const price = tplData?.price
@@ -225,6 +226,7 @@ export default function Create() {
             <span className={`${TILE_TEXT} ${tpl === CUSTOM.id ? 'text-primary' : 'text-heading'}`}>{t('templates.custom')}</span>
           </button>
         )}
+        {tplFailed && !templates && <div className="col-span-full row-start-2"><LoadFailed onRetry={reloadTemplates} /></div>}
         <h2 data-testid="style-heading" className="col-span-4 col-start-2 row-start-1 text-lg font-extrabold leading-6 text-heading md:text-xl">
           {t('create.chooseStyle')}
         </h2>

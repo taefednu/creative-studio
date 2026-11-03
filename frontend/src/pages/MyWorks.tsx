@@ -4,6 +4,7 @@ import { Link, useOutletContext } from 'react-router-dom'
 import { api } from '../api'
 import type { ShellContext } from '../components/AppShell'
 import Avatar from '../components/Avatar'
+import LoadFailed from '../components/LoadFailed'
 import ProfileWindow from '../components/ProfileWindow'
 import ChipSelect from '../components/ChipSelect'
 import Icon from '../components/Icon'
@@ -24,7 +25,7 @@ const FILTERS: WorkFilter[] = ['all', 'shared', 'waiting']
 
 export default function MyWorks() {
   const { t } = useTranslation()
-  const [works, reloadWorks] = useLoad(loadWorks)
+  const [works, reloadWorks, worksFailed] = useLoad(loadWorks)
   const [tasks, reloadTasks] = useLoad(loadAssignments)
   const [filter, setFilter] = useState<WorkFilter>('all')
   const open = tasks?.filter(isOpen) ?? []
@@ -168,6 +169,7 @@ export default function MyWorks() {
           {t('mw.none')}
         </p>
       )}
+      {worksFailed && !works && <LoadFailed onRetry={reloadWorks} />}
       <div data-testid="works-grid" className="stagger mt-3 grid grid-flow-dense grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-6">
         {items.map((x, i) =>
           x.story ? (
