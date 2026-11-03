@@ -468,3 +468,21 @@ def test_view_idea_and_drawn_only_while_painting():
         w.status = st
         assert _view(w)["idea"] is None and _view(w)["drawn"] is False
 
+
+def test_custom_style_uses_only_checked_text(kid, fake):
+    _, c = kid
+    fake.text = D("rewrite", safe_text="a dragon made of candy")
+    wid = draw(c, template="custom", text="RAW дракон").json()["id"]
+    assert len(fake.text_calls) == 1  # свой стиль проходит ту же проверку текста
+    assert status(c, wid)["status"] == "proposed" and fake.gen_calls == []
+    c.post(f"/api/works/{wid}/accept")
+    assert fake.gen_calls[0][0] == "A friendly children's illustration, safe for kids. Subject: a dragon made of candy"
+    assert status(c, wid)["template_id"] == "custom"
+
+
+def test_custom_style_needs_text_and_stays_out_of_showcase(kid, fake, api):
+    _, c = kid
+    r = c.post("/api/works", json={"template_id": "custom", "text": "  ", "request_id": "custom-empty-1"})
+    assert r.status_code == 422 and r.json()["detail"] == "text_required"
+    assert fake.gen_calls == []
+    assert "custom" not in [t["id"] for t in api.get("/api/templates").json()["templates"]]

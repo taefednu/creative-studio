@@ -25,7 +25,7 @@ type Props = {
 
 const roundOn = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary md:h-12 md:w-12'
 
-/** Панель создания: одна на ленте (поверх) и на «Создать» (в потоке). Создаёт работу и ведёт на /create?work=<id>. */
+/** Панель создания: на ленте поверх и со всем выбором, на «Создать» в потоке: стиль и загрузка там плитками. Создаёт работу и ведёт на /create?work=<id>. */
 export default function CreatePanel({ templates, price, tpl, onTpl, floating, guest, assignmentId }: Props) {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -35,6 +35,7 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
   const [err, setErr] = useState<string | null>(null)
   const [helping, setHelping] = useState(false)
   const requestId = useRef<string | null>(null)
+  const chosen = templates.find((x) => x.id === tpl)
 
   // тот же запрос с теми же полями — тот же request_id (двойной клик, сеть); правка полей — новый запрос
   useEffect(() => {
@@ -67,31 +68,45 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
   return (
     <div
       data-testid="create-panel"
-      className={`max-w-[835px] rounded-[28px] border border-border bg-surface p-2 shadow-card md:p-[11px] ${
-        floating ? 'sticky bottom-[80px] z-20 -mx-2 mb-4 mt-3 w-[calc(100%+16px)] md:mx-auto md:mb-6 md:w-full lg:bottom-6 xl:w-[calc((100%-60px)/6*4+36px)] xl:max-w-none' : 'sticky bottom-[80px] z-20 -mx-2 mt-3 w-[calc(100%+16px)] md:mt-[15px] md:mx-auto md:w-full lg:static'
-      }`}
+      className={
+        floating
+          ? 'sticky bottom-[80px] z-20 -mx-2 mb-4 mt-3 w-[calc(100%+16px)] max-w-[835px] rounded-[28px] border border-border bg-surface p-2 shadow-card md:mx-auto md:mb-6 md:w-full md:p-[11px] lg:bottom-6 xl:w-[calc((100%-60px)/6*4+36px)] xl:max-w-none'
+          : 'mx-auto mt-2 w-full max-w-[960px] shrink-0 rounded-[28px] border border-border bg-surface p-2 shadow-pop md:mt-4 md:p-[11px]'
+      }
     >
       {err && (
         <div className="mb-2">
           <ErrorText code={err} />
         </div>
       )}
-      <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-2 md:gap-y-2.5">
-        <input
-          data-testid="prompt-input"
-          value={text}
-          maxLength={200}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={t('create.placeholder')}
-          aria-label={t('create.placeholder')}
-          className="h-11 w-full min-w-0 rounded-full border border-border bg-bg px-4 text-heading outline-none focus:border-primary md:h-[45px]"
-        />
+      <div className={floating ? 'grid grid-cols-[1fr_auto] gap-x-3 gap-y-2 md:gap-y-2.5' : 'flex flex-wrap items-center gap-2 md:flex-nowrap md:gap-3'}>
+        <div className={floating ? 'contents' : 'flex w-full min-w-0 items-center gap-2 md:flex-1 md:gap-3'}>
+          {/* На «Создать» стиль выбран плиткой: здесь видно, в каком стиле нарисуем */}
+          {!floating && chosen && (
+            <img src={chosen.image_url} alt="" data-testid="panel-style-thumb" title={t(`templates.${chosen.id}`)} className="h-12 w-12 shrink-0 rounded-xl object-cover md:h-14 md:w-14 md:rounded-2xl" />
+          )}
+          <input
+            data-testid="prompt-input"
+            value={text}
+            maxLength={200}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={t(floating ? 'create.placeholder' : tpl === 'custom' ? 'create.placeholderCustom' : 'create.placeholderIdea')}
+            aria-label={t('create.placeholder')}
+            className={`w-full min-w-0 rounded-full border border-border bg-bg text-heading outline-none focus:border-primary ${
+              floating ? 'h-11 px-4 md:h-[45px]' : 'h-12 px-4 text-base md:h-14 md:px-5 md:text-lg'
+            }`}
+          />
+        </div>
         <button
           type="button"
           data-testid="draw"
-          disabled={!guest && (!tpl || sending)}
+          disabled={!guest && (!tpl || sending || (tpl === 'custom' && !text.trim()))}
           onClick={() => void draw()}
-          className="row-span-2 flex w-[88px] flex-col items-center justify-center gap-1 rounded-2xl bg-primary px-1 text-[11px] md:px-0 font-extrabold uppercase text-primary-fg shadow-card disabled:opacity-60 md:w-[168px] md:text-xl"
+          className={`btn-press flex items-center justify-center rounded-2xl bg-primary font-extrabold uppercase text-primary-fg disabled:opacity-60 ${
+            floating
+              ? 'row-span-2 w-[88px] flex-col gap-1 px-1 text-[11px] md:w-[168px] md:px-0 md:text-xl'
+              : 'order-last h-12 flex-1 gap-2 px-5 text-base md:h-14 md:flex-none md:text-lg'
+          }`}
         >
           {t('create.draw')}
           <span className="flex items-center gap-1">
@@ -109,7 +124,7 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
               setText(v.slice(0, 200))
             }}
           />
-          <UploadPopup guest={guest} className={roundOn} assignmentId={assignmentId} />
+          {floating && <UploadPopup guest={guest} className={roundOn} assignmentId={assignmentId} price={price} />}
           <button
             type="button"
             data-testid="prompt-help"
@@ -120,14 +135,16 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
             <Icon name="wand" />
             <span className="hidden md:inline">{t('ideas.open')}</span>
           </button>
-          <ChipSelect
-            testid="panel-style"
-            label={t('panel.style')}
-            value={tpl ?? ''}
-            onChange={onTpl}
-            options={templates.map((x) => ({ value: x.id, label: t(`templates.${x.id}`), thumb: x.image_url }))}
-            className="h-11 min-w-0 flex-1 [&_button]:text-[0px] md:h-12 md:flex-initial md:[&_button]:text-base"
-          />
+          {floating && (
+            <ChipSelect
+              testid="panel-style"
+              label={t('panel.style')}
+              value={tpl ?? ''}
+              onChange={onTpl}
+              options={templates.map((x) => ({ value: x.id, label: t(`templates.${x.id}`), thumb: x.image_url }))}
+              className="h-11 min-w-0 flex-1 [&_button]:text-[0px] md:h-12 md:flex-initial md:[&_button]:text-base"
+            />
+          )}
         </div>
       </div>
       {helping && (

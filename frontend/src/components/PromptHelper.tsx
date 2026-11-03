@@ -1,22 +1,36 @@
 import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { IDEA_STEPS, ideaArt } from '../features/works/promptIdeas'
 import type { IdeaStep } from '../features/works/promptIdeas'
+import ErrorText from './ErrorText'
 import Icon from './Icon'
+import VoiceButton from './VoiceButton'
 
 type Props = { onClose: () => void; onDone: (phrase: string) => void }
 
+// Подсказка в поле: пример из словаря идей
+const EXAMPLE: Record<IdeaStep, string> = { who: 'dragon', where: 'moon', what: 'fly' }
+
 /**
- * Конструктор «Помоги придумать»: кто → где → что делает, фраза складывается на глазах.
+ * «Помоги придумать»: робот спрашивает кто → где → что делает, ребёнок отвечает картинкой, текстом или голосом, фраза складывается на глазах.
  * Монету не тратит: только заполняет поле, рисует ребёнок сам. Текст дальше проходит ту же проверку, что и написанный руками.
  * Портал: на ленте панель создания сдвинута transform, и fixed внутри неё считался бы от панели.
  */
 export default function PromptHelper({ onClose, onDone }: Props) {
   const { t } = useTranslation()
   const [picked, setPicked] = useState<Partial<Record<IdeaStep, string>>>({})
+  const [draft, setDraft] = useState('')
+  const [err, setErr] = useState<string | null>(null)
   const step = IDEA_STEPS.find((s) => !picked[s])
-  const word = (s: IdeaStep) => t(`ideas.${s}.${picked[s]}`)
+
+  function answer(e: FormEvent) {
+    e.preventDefault()
+    if (step && draft.trim()) setPicked({ ...picked, [step]: draft.trim() })
+    setDraft('')
+    setErr(null)
+  }
 
   useEffect(() => {
     const key = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -26,9 +40,9 @@ export default function PromptHelper({ onClose, onDone }: Props) {
 
   const phrase = () =>
     t('ideas.phrase', {
-      who: word('who'),
-      where: word('where'),
-      what: word('what'),
+      who: picked.who,
+      where: picked.where,
+      what: picked.what,
       interpolation: { escapeValue: false },
     })
 
@@ -69,7 +83,10 @@ export default function PromptHelper({ onClose, onDone }: Props) {
               type="button"
               data-testid={`helper-slot-${s}`}
               disabled={!picked[s]}
-              onClick={() => setPicked({ ...picked, [s]: undefined })}
+              onClick={() => {
+                setPicked({ ...picked, [s]: undefined })
+                setDraft(picked[s] ?? '')
+              }}
               className={`min-h-12 rounded-2xl border px-2 py-1 text-sm font-extrabold ${
                 s === step
                   ? 'border-primary bg-primary-soft text-primary'
@@ -78,26 +95,63 @@ export default function PromptHelper({ onClose, onDone }: Props) {
                     : 'border-border bg-bg text-muted'
               }`}
             >
-              {picked[s] ? word(s) : t(`ideas.slot.${s}`)}
+              {picked[s] ?? t(`ideas.slot.${s}`)}
             </button>
           ))}
         </div>
 
         {step ? (
-          <div className="mt-3 grid grid-cols-4 gap-2">
-            {ideaArt(step).map(({ id, src }) => (
+          <form onSubmit={answer} className="mt-3">
+            <div className="grid grid-cols-4 gap-2">
+              {ideaArt(step).map(({ id, src }) => (
                 <button
                   key={id}
                   type="button"
                   data-testid={`idea-${step}-${id}`}
-                  onClick={() => setPicked({ ...picked, [step]: id })}
+                  onClick={() => {
+                    setPicked({ ...picked, [step]: t(`ideas.${step}.${id}`) })
+                    setDraft('')
+                    setErr(null)
+                  }}
                   className="flex flex-col items-center gap-1 rounded-2xl border border-border bg-surface p-1 text-center text-xs font-bold text-heading transition-transform hover:border-primary active:scale-95 motion-reduce:transition-none md:text-sm"
                 >
                   <img src={src} alt="" className="aspect-square w-full rounded-xl object-cover" />
                   <span className="min-h-8 leading-4">{t(`ideas.${step}.${id}`)}</span>
                 </button>
-            ))}
-          </div>
+              ))}
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                key={step}
+                data-testid="helper-input"
+                value={draft}
+                maxLength={60}
+                autoFocus={window.matchMedia('(pointer: fine)').matches}
+                autoComplete="off"
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder={t('ideas.example', { word: t(`ideas.${step}.${EXAMPLE[step]}`) })}
+                aria-label={t(`ideas.ask.${step}`)}
+                className="h-14 w-full min-w-0 flex-1 rounded-full border border-border bg-bg px-5 text-lg text-heading outline-none focus:border-primary"
+              />
+              <VoiceButton
+                className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary"
+                onError={setErr}
+                onText={(v) => {
+                  setErr(null)
+                  setDraft(v.slice(0, 60))
+                }}
+              />
+            </div>
+            <ErrorText code={err} />
+            <button
+              type="submit"
+              data-testid="helper-next"
+              disabled={!draft.trim()}
+              className="btn-press mt-4 h-12 w-full rounded-full bg-primary font-extrabold text-primary-fg disabled:opacity-50"
+            >
+              {t('ideas.next')}
+            </button>
+          </form>
         ) : (
           <div className="mt-4">
             <p data-testid="helper-phrase" className="rounded-2xl bg-primary-soft p-4 text-center text-xl font-extrabold text-heading">
@@ -108,7 +162,10 @@ export default function PromptHelper({ onClose, onDone }: Props) {
               <button
                 type="button"
                 data-testid="helper-again"
-                onClick={() => setPicked({})}
+                onClick={() => {
+                  setPicked({})
+                  setDraft('')
+                }}
                 className="flex-1 rounded-full border border-border bg-surface py-3 font-extrabold text-heading"
               >
                 {t('ideas.again')}

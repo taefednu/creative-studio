@@ -139,7 +139,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
           </Title>
         </div>
         {kinds.length > 1 && (
-          <div className="order-3 flex max-w-full basis-full gap-2 overflow-x-auto md:order-2 md:basis-auto md:gap-1.5" role="tablist">
+          <div className="order-3 -mb-1.5 flex max-w-full basis-full gap-2 overflow-x-auto pb-1.5 md:order-2 md:basis-auto md:gap-1.5" role="tablist">
             {kinds.map((k) => (
               <button
                 key={k}
@@ -149,7 +149,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
                 data-testid={`feed-${k}`}
                 onClick={() => setKind(k)}
                 className={`h-10 whitespace-nowrap shrink-0 rounded-full px-4 text-sm s380:px-[26px] font-extrabold md:h-[45px] md:px-9 md:text-base ${
-                  kind === k ? 'bg-primary text-primary-fg shadow-card' : 'border border-border bg-surface text-heading shadow-card'
+                  kind === k ? 'bg-primary text-primary-fg' : 'border border-border bg-surface text-heading'
                 }`}
               >
                 {t(`feed.tab.${k}`)}

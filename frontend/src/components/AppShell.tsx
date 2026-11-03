@@ -167,6 +167,32 @@ export default function AppShell() {
                         {t('child.myClass', { name: me.class.name })}
                       </p>
                     )}
+                    {!me.class && (
+                      <form onSubmit={(e) => void join(e)} data-testid="join-class" className="mt-3">
+                        <label htmlFor="class-code" className="text-sm font-extrabold text-heading">
+                          {t('child.classCode')}
+                        </label>
+                        <div className="mt-1 flex gap-2">
+                          <input
+                            id="class-code"
+                            data-testid="class-code-input"
+                            value={code}
+                            maxLength={12}
+                            autoComplete="off"
+                            onChange={(e) => setCode(e.target.value.toUpperCase())}
+                            className="h-10 w-full min-w-0 rounded-full border border-border bg-surface px-3 font-extrabold uppercase tracking-widest text-heading outline-none focus:border-primary"
+                          />
+                          <button
+                            type="submit"
+                            disabled={!code.trim()}
+                            className="h-10 shrink-0 rounded-full bg-primary px-4 text-sm font-extrabold text-primary-fg disabled:opacity-50"
+                          >
+                            {t('child.join')}
+                          </button>
+                        </div>
+                        <ErrorText code={err} />
+                      </form>
+                    )}
                     <p className="mt-3 flex items-start gap-2 text-sm text-muted">
                       <img src="/art/coin.webp" alt="" className="h-5 w-5 shrink-0" />
                       {t('child.moreCoins')}
@@ -214,36 +240,6 @@ export default function AppShell() {
         </div>
       </header>
       <main className="px-4 pb-5 pt-1.5 md:px-8 md:pb-0 lg:pt-4">
-        {me && !me.class && (
-          <form
-            onSubmit={(e) => void join(e)}
-            data-testid="join-class"
-            className="mb-4 flex flex-wrap items-center gap-2 rounded-card border border-border bg-surface p-4 shadow-card"
-          >
-            <label htmlFor="class-code" className="text-sm font-extrabold text-heading">
-              {t('child.classCode')}
-            </label>
-            <input
-              id="class-code"
-              data-testid="class-code-input"
-              value={code}
-              maxLength={12}
-              autoComplete="off"
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              className="w-36 rounded-2xl border border-border bg-surface px-3 py-2 font-extrabold uppercase tracking-widest text-heading outline-none focus:border-primary"
-            />
-            <button
-              type="submit"
-              disabled={!code.trim()}
-              className="rounded-full bg-primary px-5 py-2 text-sm font-extrabold uppercase text-primary-fg disabled:opacity-50"
-            >
-              {t('child.join')}
-            </button>
-            <div className="w-full">
-              <ErrorText code={err} />
-            </div>
-          </form>
-        )}
         {me?.needs_adult && (
           <p data-testid="needs-adult" className="mb-4 rounded-card border border-border bg-primary-soft p-3 text-sm font-bold text-heading">
             {t('cab.child.needsAdult')}

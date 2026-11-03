@@ -18,7 +18,7 @@ from app.db import get_session
 from app.moderation import HeldItem, register
 from app.works.image import pipeline
 from app.works.image.models import Work
-from app.works.image.templates import BY_ID, TEMPLATES
+from app.works.image.templates import BY_ID, CUSTOM, TEMPLATES
 from app.works.image.thumbs import thumb_response
 from app.works.remix import source as remix_source
 
@@ -67,6 +67,8 @@ def create_work(
 ):
     if body.template_id not in BY_ID:
         raise HTTPException(422, "bad_template")
+    if body.template_id == CUSTOM.id and not (body.text or "").strip():
+        raise HTTPException(422, "text_required")
     # двойной клик: тот же request_id — тот же work, вторая генерация не создаётся
     existing = db.scalar(select(Work).where(Work.child_id == c.id, Work.request_id == body.request_id))
     if existing:

@@ -202,23 +202,6 @@ body {
     transform: translate(calc(-50% + var(--fly-x, 0px)), -46px) scale(1.1);
   }
 }
-.fan-float {
-  animation: fan-float 5s ease-in-out infinite alternate;
-}
-@keyframes fan-float {
-  to {
-    translate: 0 -8px;
-  }
-}
-.spark-twinkle {
-  animation: spark-twinkle 2.4s ease-in-out infinite alternate;
-}
-@keyframes spark-twinkle {
-  to {
-    opacity: 0.35;
-    scale: 0.8;
-  }
-}
 .coin-flip {
   animation: coin-flip 0.5s var(--ease-in-out);
 }
@@ -235,8 +218,6 @@ body {
   .skeleton::after,
   .modal-in,
   .react-pop,
-  .fan-float,
-  .spark-twinkle,
   .coin-flip,
   .coin-tick {
     animation: none;
@@ -315,32 +296,144 @@ body {
     filter: blur(6px);
   }
 }
-.gen-scan {
-  background: linear-gradient(to bottom, transparent, var(--color-primary-soft));
-  animation: gen-scan 1.6s linear infinite;
+.gen-fill {
+  animation: gen-fill 0.7s var(--ease-out) both;
 }
-@keyframes gen-scan {
+@keyframes gen-fill {
   from {
-    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+.gen-painter {
+  transform-box: fill-box;
+  transform-origin: 30% 80%;
+  animation: gen-robot 0.9s ease-in-out infinite alternate;
+}
+.gen-lens {
+  animation: gen-lens 3.2s var(--ease-in-out) infinite alternate;
+}
+@keyframes gen-lens {
+  0% {
+    transform: translate(-90%, -70%);
+  }
+  50% {
+    transform: translate(80%, -10%);
+  }
+  100% {
+    transform: translate(-40%, 80%);
+  }
+}
+.gen-badge {
+  animation: gen-badge 0.32s var(--ease-pop) 0.6s backwards;
+}
+@keyframes gen-badge {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+}
+.drawing-aura {
+  background: conic-gradient(var(--color-primary), var(--color-heart), var(--color-star), var(--color-success), var(--color-primary));
+  /* Коробка при повороте шире страницы: её режет overflow-clip на сцене, запас рисует свечение без прокрутки */
+  filter: blur(44px);
+  opacity: 0;
+  transition: opacity 2.4s var(--ease-out);
+  animation: drawing-aura 7s linear infinite;
+}
+@keyframes drawing-aura {
+  to {
+    rotate: 360deg;
+  }
+}
+.drawing-stage[data-phase='look'] .drawing-aura {
+  opacity: 0.25;
+}
+.drawing-stage[data-phase='glow'] .drawing-aura {
+  opacity: 0.95;
+}
+.drawing-stage[data-phase='reveal'] .drawing-aura {
+  opacity: 0;
+  transition-duration: 1.8s;
+}
+.drawing-wash {
+  background: conic-gradient(var(--color-primary), var(--color-heart), var(--color-star), var(--color-success), var(--color-primary));
+  filter: blur(40px);
+  opacity: 0;
+  transition: opacity 3.2s var(--ease-in-out);
+  animation: drawing-aura 9s linear infinite reverse;
+}
+.drawing-stage[data-phase='glow'] .drawing-wash {
+  opacity: 0.6;
+}
+.drawing-stage[data-phase='reveal'] .drawing-wash {
+  opacity: 0;
+  transition-duration: 1.4s;
+}
+.drawing-photo {
+  transition: filter 3.2s var(--ease-in-out);
+}
+.drawing-stage[data-phase='glow'] .drawing-photo,
+.drawing-stage[data-phase='reveal'] .drawing-photo {
+  filter: blur(26px) saturate(1.6) brightness(1.1);
+}
+.drawing-light {
+  background: linear-gradient(115deg, transparent 35%, color-mix(in oklch, var(--color-surface) 70%, transparent) 50%, transparent 65%);
+  animation: drawing-light 2.2s var(--ease-in-out) infinite;
+}
+@keyframes drawing-light {
+  from {
+    transform: translateX(-100%);
   }
   to {
-    transform: translateY(400%);
+    transform: translateX(100%);
   }
 }
-.gen-ring {
-  fill: none;
-  stroke: var(--color-success);
-  vector-effect: non-scaling-stroke;
-  stroke-width: 4px;
-  stroke-dasharray: 100;
-  animation: gen-ring 2s var(--ease-in-out) infinite;
+.drawing-breath {
+  background: radial-gradient(circle, color-mix(in oklch, var(--color-surface) 55%, transparent), transparent 70%);
+  animation: drawing-breath 2.6s ease-in-out infinite alternate;
 }
-@keyframes gen-ring {
+@keyframes drawing-breath {
   from {
-    stroke-dashoffset: 100;
+    opacity: 0.15;
+    transform: scale(0.85);
   }
   to {
-    stroke-dashoffset: -100;
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+.drawing-result {
+  animation: drawing-result 1.8s var(--ease-out) both;
+}
+@keyframes drawing-result {
+  from {
+    opacity: 0;
+    filter: blur(26px) saturate(1.6) brightness(1.25);
+    transform: scale(1.03);
+  }
+}
+.upload-art {
+  transition: scale 0.3s var(--ease-out);
+}
+.upload-zone[data-over] .upload-art {
+  scale: 1.06;
+}
+@media (hover: hover) and (pointer: fine) {
+  .upload-zone:hover .upload-art {
+    scale: 1.04;
+  }
+}
+.upload-zone[data-over] {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.upload-preview {
+  animation: upload-preview 0.26s var(--ease-out);
+}
+@keyframes upload-preview {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
   }
 }
 .gen-robot {
@@ -368,8 +461,16 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .gen-title,
   .gen-word-in,
-  .gen-scan,
-  .gen-ring,
+  .gen-fill,
+  .gen-painter,
+  .gen-lens,
+  .gen-badge,
+  .upload-preview,
+  .drawing-aura,
+  .drawing-wash,
+  .drawing-light,
+  .drawing-breath,
+  .drawing-result,
   .gen-robot,
   .gen-reveal,
   .story-turn,
@@ -381,9 +482,6 @@ body {
   .gen-word-fall {
     animation: none;
     opacity: 0;
-  }
-  .gen-ring {
-    stroke-dashoffset: 0;
   }
 }
 

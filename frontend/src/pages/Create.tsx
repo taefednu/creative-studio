@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { ApiError, api } from '../api'
 import type { ShellContext } from '../components/AppShell'
 import StoryForm from '../components/StoryForm'
 import UploadPopup from '../components/UploadPopup'
 import CreatePanel from '../components/CreatePanel'
 import ErrorText, { errorKey } from '../components/ErrorText'
+import DrawingStage from '../components/DrawingStage'
 import GenStage from '../components/GenStage'
+import Icon from '../components/Icon'
 import PublishBox from '../components/PublishBox'
 import SubmitBox from '../components/SubmitBox'
 import SupportCard from '../components/SupportCard'
@@ -19,46 +21,11 @@ import type { TemplateInfo, Work } from '../features/works/works'
 import { useSession } from '../features/auth/session'
 import { useLoad } from '../useLoad'
 
-const FAN_IDS = ['castle', 'superhero', 'watercolor', 'space_pet']
-const FAN_STYLE = [
-  'rotate-[-9deg] translate-y-3',
-  'rotate-[-3deg] -translate-y-1',
-  'rotate-[3deg] translate-y-0',
-  'rotate-[9deg] translate-y-4',
-]
-
-function Spark({ className }: { className: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={`spark-twinkle absolute ${className}`} aria-hidden="true">
-      <path d="M12 1l2.6 8.4L23 12l-8.4 2.6L12 23l-2.6-8.4L1 12l8.4-2.6z" fill="currentColor" />
-    </svg>
-  )
-}
-
-function Fan({ templates }: { templates: TemplateInfo[] }) {
-  const items = FAN_IDS.map((id) => templates.find((x) => x.id === id)).filter(
-    (x): x is TemplateInfo => !!x,
-  )
-  return (
-    <div
-      data-testid="fan"
-      className="relative mx-auto flex h-[140px] max-w-[835px] items-center justify-center sm:h-[200px] lg:h-[245px] short:hidden"
-    >
-      <Spark className="left-[8%] top-[20%] h-6 w-6 text-star md:left-[22%] md:h-8 md:w-8" />
-      <Spark className="right-[8%] top-[28%] h-5 w-5 text-primary md:right-[22%] md:h-7 md:w-7" />
-      <Spark className="right-[4%] top-[8%] h-4 w-4 text-star md:right-[18%] md:h-6 md:w-6" />
-      {items.map((it, i) => (
-        <img
-          key={it.id}
-          src={it.image_url}
-          alt=""
-          className={`-ml-5 h-[90px] w-[90px] sm:h-[120px] sm:w-[120px] rounded-2xl border-4 border-surface bg-surface object-cover shadow-card first:ml-0 md:-ml-3 md:h-[160px] md:w-[160px] md:rounded-3xl lg:h-[205px] lg:w-[205px] fan-float ${FAN_STYLE[i]}`}
-          style={{ animationDelay: `${i * -1.2}s` }}
-        />
-      ))}
-    </div>
-  )
-}
+// Своего стиля нет в витрине шаблонов: только здесь, стиль описывают текстом
+const CUSTOM: TemplateInfo = { id: 'custom', image_url: '/art/custom-style.webp' }
+const TILE = 'flex min-h-0 snap-start flex-col gap-1 rounded-2xl border-4 p-1 shadow-card md:rounded-3xl md:p-1.5'
+const TILE_IMG = 'relative min-h-0 w-full flex-1 overflow-hidden rounded-xl md:rounded-2xl'
+const TILE_TEXT = 'line-clamp-2 h-10 w-full shrink-0 px-1 text-center text-sm font-extrabold leading-5 md:line-clamp-1 md:h-auto md:text-base'
 
 export default function Create() {
   const { t } = useTranslation()
@@ -66,6 +33,7 @@ export default function Create() {
   const { reloadMe } = useOutletContext<ShellContext>()
   const [tplData] = useLoad(loadTemplates)
   const templates = tplData?.templates
+  const withCustom = templates && [...templates, CUSTOM]
   const price = tplData?.price
   const [params] = useSearchParams()
   const [selected, setSelected] = useState<string | null>(params.get('template'))
@@ -78,12 +46,19 @@ export default function Create() {
   const [retry, setRetry] = useState(0)
   const [loadErr, setLoadErr] = useState<string | null>(null)
   const { refresh } = useSession()
+  const flow = useLocation().state as DrawingFlow | null
 
-  const known = templates?.some((x) => x.id === selected)
+  const known = withCustom?.some((x) => x.id === selected)
   const tpl = (known ? selected : null) ?? templates?.[0]?.id ?? null
   const work = loaded?.id === workParam ? loaded : null
   const workId = work?.id ?? null
   const workStatus = work?.status ?? null
+
+  // стиль из ссылки: на телефоне его плитка может быть за краем полосы
+  const linked = params.get('template')
+  useEffect(() => {
+    if (linked && templates) document.querySelector(`[data-testid="tpl-${linked}"]`)?.scrollIntoView({ inline: 'center', block: 'nearest' })
+  }, [linked, templates])
 
   // работа по ссылке /create?work=<id>: чужая или несуществующая (404) — на «Создать»; сбой сети — повтор
   useEffect(() => {
@@ -143,6 +118,9 @@ export default function Create() {
             {t('create.retry')}
           </button>
         </div>
+      ) : flow?.drawing ? (
+        // между экранами фото не должно мигать: работа ещё едет, рисунок уже есть
+        <DrawingStage src={flow.drawing} phase={flow.auto ? 'look' : 'glow'} title={t(flow.auto ? 'gen.readUpload' : 'gen.alive')} />
       ) : null
     }
     return (
@@ -151,7 +129,7 @@ export default function Create() {
         onAgain={() => navigate(paramTask ? `/create?assignment=${paramTask}` : '/create')}
         onMine={() => navigate('/my-works')}
         onChoose={setLoaded}
-        templates={templates}
+        templates={withCustom}
         assignmentId={assignmentId}
         coinLine={t(work.status === 'refused' && work.reason_codes.includes('content_policy') ? 'create.coinBack' : 'create.coinKept')}
       />
@@ -159,40 +137,59 @@ export default function Create() {
   }
 
   return (
-    <div className="mx-auto max-w-[1672px] ">
-      {templates && <Fan templates={templates} />}
-      <div className="mt-1 text-center md:mt-0">
-        <h1
-          data-testid="create-title"
-          className="inline-block text-2xl font-extrabold leading-[34px] text-heading md:text-[36px] md:leading-10"
-        >
-          {t('create.title')}
-        </h1>
-      </div>
-      <div className="mt-2 flex justify-center">
-        <UploadPopup
-          below
-          testid="hero-cta"
-          label={t('story.heroCta')}
-          assignmentId={assignmentId}
-          className="hero-cta flex h-11 items-center rounded-full bg-primary px-5 text-sm font-extrabold text-primary-fg shadow-card md:text-base"
-        />
-      </div>
-      <p className="mt-1 text-center md:mt-[5px]">
-        <span data-testid="create-sub" className="inline-block rounded-full bg-primary-soft px-5 py-1 text-sm font-bold text-muted md:py-0.5 md:text-lg">
-          {t('create.sub')}
-        </span>
-      </p>
-      <div data-testid="teacher-task-slot" className="mt-3 md:mt-[15px] md:min-h-[55px]">
+    <div className="mx-auto flex -mb-7 h-[calc(100dvh-154px)] min-h-[520px] max-w-[1672px] flex-col lg:mb-0 lg:h-[calc(100dvh-104px)]">
+      <h1 data-testid="create-title" className="text-balance text-center text-[34px] font-black leading-[38px] tracking-tight text-heading md:text-[52px] md:leading-[56px]">
+        {t('create.title')}
+      </h1>
+      <div data-testid="teacher-task-slot" className="mt-3 empty:hidden">
         <TeacherTask assignmentId={assignmentId} />
       </div>
-      <h2 data-testid="style-heading" className="mt-3 w-fit text-sm font-extrabold uppercase leading-5 text-primary md:mt-[18px] md:text-lg md:leading-5">
-        {t('create.chooseStyle')}
-      </h2>
+      {/* Телефон: два ряда листаются вбок, вертикального скролла нет. От md: все плитки видны сразу */}
       <div
         data-testid="templates"
-        className="mt-2 grid grid-cols-4 gap-2 md:mt-[6px] md:grid-cols-8 md:gap-[11px]"
+        className="-mx-4 mt-2 grid min-h-0 w-[calc(100%+32px)] flex-1 auto-cols-[38vw] snap-x grid-flow-col grid-rows-[auto_1fr_1fr] gap-2 overflow-x-auto scroll-px-4 px-4 py-2 [scrollbar-width:none] md:mx-auto md:mt-4 md:w-full md:max-w-[1180px] md:grid-flow-row md:grid-cols-5 md:gap-x-4 md:gap-y-3 md:overflow-visible md:px-0 md:py-0"
       >
+        {templates && (
+          <UploadPopup
+            boxClassName="col-start-1 row-span-2 row-start-1 mr-2 min-h-0 snap-start md:mr-6"
+            className={`${TILE} h-full w-full border-transparent bg-primary-soft`}
+            assignmentId={assignmentId}
+            price={price}
+            label={
+              <>
+                <span className={TILE_IMG}>
+                  <img src="/art/my-drawing.webp" alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  <span className="absolute bottom-3 right-3 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-fg">
+                    <Icon name="plus" />
+                  </span>
+                </span>
+                <span className={`${TILE_TEXT} text-heading`}>{t('create.myDrawing')}</span>
+              </>
+            }
+          />
+        )}
+        {templates && (
+          <button
+            type="button"
+            data-testid="tpl-custom"
+            aria-pressed={tpl === CUSTOM.id}
+            onClick={() => setSelected(CUSTOM.id)}
+            className={`${TILE} col-start-1 row-start-3 mr-2 bg-primary-soft md:mr-6 ${tpl === CUSTOM.id ? 'border-primary' : 'border-transparent'}`}
+          >
+            <span className={TILE_IMG}>
+              <img src={CUSTOM.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              {tpl === CUSTOM.id && (
+                <span className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-fg">
+                  <Icon name="check" />
+                </span>
+              )}
+            </span>
+            <span className={`${TILE_TEXT} ${tpl === CUSTOM.id ? 'text-primary' : 'text-heading'}`}>{t('templates.custom')}</span>
+          </button>
+        )}
+        <h2 data-testid="style-heading" className="col-span-4 col-start-2 row-start-1 text-lg font-extrabold leading-6 text-heading md:text-xl">
+          {t('create.chooseStyle')}
+        </h2>
         {templates?.map((x) => (
           <button
             key={x.id}
@@ -200,21 +197,27 @@ export default function Create() {
             data-testid={`tpl-${x.id}`}
             aria-pressed={tpl === x.id}
             onClick={() => setSelected(x.id)}
-            className={`flex flex-col items-center gap-1 rounded-2xl border-4 bg-surface p-1.5 text-center shadow-card h-[137px] md:h-[225px] short:h-[clamp(150px,calc(100dvh-430px),225px)] ${
-              tpl === x.id ? 'border-primary' : 'border-transparent'
-            }`}
+            className={`${TILE} bg-surface ${tpl === x.id ? 'border-primary' : 'border-transparent'}`}
           >
-            <img src={x.image_url} alt="" className="min-h-0 w-full flex-1 rounded-xl object-cover" />
-            <span className="line-clamp-2 px-0.5 text-[11px] font-extrabold leading-tight text-heading md:px-1 md:text-base">
-              {t(`templates.${x.id}`)}
+            <span className={TILE_IMG}>
+              <img src={x.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              {tpl === x.id && (
+                <span className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-fg">
+                  <Icon name="check" />
+                </span>
+              )}
             </span>
+            <span className={`${TILE_TEXT} ${tpl === x.id ? 'text-primary' : 'text-heading'}`}>{t(`templates.${x.id}`)}</span>
           </button>
         ))}
       </div>
-      {templates && <CreatePanel templates={templates} price={price} tpl={tpl} onTpl={setSelected} assignmentId={assignmentId} />}
+      {withCustom && <CreatePanel templates={withCustom} price={price} tpl={tpl} onTpl={setSelected} assignmentId={assignmentId} />}
     </div>
   )
 }
+
+/** Состояние перехода: своё фото с этого устройства и «оживить сразу, как рисунок пройдёт проверку». */
+type DrawingFlow = { drawing?: string; auto?: boolean }
 
 const ICON = 'h-6 w-6 shrink-0 lg:h-9 lg:w-9'
 const stroke = { fill: 'none', stroke: 'currentColor', strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round' } as const
@@ -299,19 +302,39 @@ function WorkView({
   const storyPrice = tplData?.story_price
   const [heroBusy, setHeroBusy] = useState(false)
   const [heroRid] = useState(() => crypto.randomUUID())
-  async function bringAlive() {
+  const flow = useLocation().state as DrawingFlow | null
+  const drawing = flow?.drawing
+  const workId = work.id
+  const bringAlive = useCallback(async (requestId: string) => {
     setHeroBusy(true)
     setErr(null)
     try {
-      const r = await api<{ id: number }>(`/api/works/${work.id}/alive`, 'POST', { request_id: heroRid })
+      const r = await api<{ id: number }>(`/api/works/${workId}/alive`, 'POST', { request_id: requestId })
       reloadMe()
-      navigate(`/create?work=${r.id}`)
+      // replace: «назад» не должен вернуть на экран, который оживляет рисунок сам
+      navigate(`/create?work=${r.id}`, { replace: true, state: { drawing } })
     } catch (x) {
       setErr(errorKey(x))
     } finally {
       setHeroBusy(false)
     }
-  }
+  }, [workId, drawing, navigate, reloadMe])
+  // Оживление сразу после проверки: только рисунок, который её прошёл. Запрос привязан к работе: перезагрузка не спишет монету второй раз
+  const auto = work.kind === 'upload' && s === 'ready' && !!flow?.auto && !err
+  const started = useRef(false)
+  useEffect(() => {
+    if (!auto || started.current) return
+    started.current = true
+    void bringAlive(`auto-alive-${workId}`)
+  }, [auto, workId, bringAlive])
+  // Готовая картинка сначала проступает на том же месте, где только что светился рисунок
+  const reveal = work.kind === 'alive' && s === 'ready' && !!work.image_url && !!drawing
+  const [revealed, setRevealed] = useState(false)
+  useEffect(() => {
+    if (!reveal || revealed) return
+    const timer = setTimeout(() => setRevealed(true), 2200)
+    return () => clearTimeout(timer)
+  }, [reveal, revealed])
   if (POLLING.includes(s) && !sawDrawing) setSawDrawing(true)
   const upload = work.kind === 'upload'
   // что SAM спрятал на загрузке: коды blurred_<что>, текст из i18n по коду; оригинал ребёнку не показывается
@@ -375,6 +398,12 @@ function WorkView({
     )
   }
 
+  if (auto) return <DrawingStage src={drawing ?? null} phase="glow" title={t('gen.alive')} />
+  if (reveal && !revealed) return <DrawingStage src={drawing ?? null} result={work.image_url} phase="reveal" title={t('create.aliveTitle')} />
+  if (drawing && (s === 'checking' || s === 'generating')) {
+    const looking = work.kind === 'upload'
+    return <DrawingStage src={drawing} phase={looking ? 'look' : 'glow'} title={t(looking ? 'gen.readUpload' : work.drawn ? 'gen.verify' : 'gen.alive')} />
+  }
   if (s === 'checking' || s === 'generating') {
     return <GenStage work={work} sample={tpl?.image_url} styleName={tpl ? t(`templates.${tpl.id}`) : undefined} />
   }
@@ -383,8 +412,8 @@ function WorkView({
     return (
       <div data-testid="work-ready" className="mx-auto max-w-[1672px] lg:flex lg:justify-center lg:gap-5">
         <div data-testid="result-image" className="relative mt-3 overflow-hidden rounded-3xl border-4 border-primary bg-surface lg:mt-0 lg:aspect-square lg:h-[calc(100dvh-112px)] lg:max-h-[700px] lg:shrink-0">
-          <img data-testid="result-img" src={work.image_url} alt="" className={`aspect-square w-full object-cover lg:h-full ${sawDrawing ? 'gen-reveal' : ''}`} />
-          <span className="absolute bottom-3 left-3 rounded-full bg-success-soft px-3 py-1 text-sm font-extrabold text-success lg:text-base">{t('create.checkedByAi')}</span>
+          <img data-testid="result-img" src={work.image_url} alt="" className={`aspect-square w-full object-cover lg:h-full ${sawDrawing && !revealed ? 'gen-reveal' : ''}`} />
+          <span className={`absolute bottom-3 left-3 flex items-center gap-1 rounded-full bg-success-soft py-1 pl-2 pr-3 text-sm font-extrabold text-success lg:text-base ${sawDrawing ? 'gen-badge' : ''}`}><Icon name="check" />{t('create.checkedByAi')}</span>
           {work.hero_of_work_id && (
             <figure data-testid="hero-source" className="hero-source absolute right-3 top-3 w-[28%] rotate-3 overflow-hidden rounded-2xl border-4 border-surface bg-surface shadow-pop">
               <img src={`/api/works/${work.hero_of_work_id}/image?thumb=1`} alt={t('story.yourDrawing')} className="aspect-square w-full object-cover" />
@@ -400,7 +429,7 @@ function WorkView({
           {blurred.map((c) => <SideText key={c} testid={`blurred-${c}`}>{t(`create.blurred.${c}`)}</SideText>)}
           <div className="flex-1" />
           {upload && (
-            <button type="button" data-testid="hero-go" disabled={heroBusy} onClick={() => void bringAlive()} className="hero-cta flex h-14 items-center justify-center gap-2 rounded-full bg-primary text-lg font-extrabold text-primary-fg shadow-card disabled:opacity-60">
+            <button type="button" data-testid="hero-go" disabled={heroBusy} onClick={() => void bringAlive(heroRid)} className="hero-cta flex h-14 items-center justify-center gap-2 rounded-full bg-primary text-lg font-extrabold text-primary-fg shadow-card disabled:opacity-60">
               {t('story.hero')}
               <img src="/art/coin.webp" alt="" className="h-7 w-7" />
               {price}

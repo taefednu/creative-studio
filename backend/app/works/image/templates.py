@@ -52,12 +52,14 @@ TEMPLATES: tuple[Template, ...] = (
         "a fairy tale castle by a lake under a big moon",
     ),
 )
-BY_ID = {t.id: t for t in TEMPLATES}
+# Свой стиль: суффикса нет, стиль ребёнок описывает в тексте, а текст проходит обычную проверку. Без текста рисовать нечего
+CUSTOM = Template("custom", "", "")
+BY_ID = {t.id: t for t in (*TEMPLATES, CUSTOM)}
 
 
 def build_remix_prompt(template: Template | None, text: str | None) -> str:
     """Ремикс: правка исходной картинки. Стиль шаблона и проверенный текст — данные, не инструкция."""
-    style = f", {template.style}" if template else ""
+    style = f", {template.style}" if template and template.style else ""
     change = text.strip() if text and text.strip() else "a new creative version of the picture"
     return (
         f"A friendly children's illustration, safe for kids{style}. "
@@ -68,7 +70,8 @@ def build_remix_prompt(template: Template | None, text: str | None) -> str:
 def build_prompt(template: Template, text: str | None) -> str:
     """Шаблон + проверенный текст как данные; сырой ввод сюда не попадает."""
     subject = text.strip() if text and text.strip() else template.default_theme
-    return f"A friendly children's illustration, safe for kids, {template.style}. Subject: {subject}"
+    style = f", {template.style}" if template.style else ""
+    return f"A friendly children's illustration, safe for kids{style}. Subject: {subject}"
 
 
 def build_alive_prompt() -> str:
