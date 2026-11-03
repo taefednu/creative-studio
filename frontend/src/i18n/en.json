@@ -303,9 +303,10 @@
     "modalFailed": "Could not open this. Try again.",
     "retry": "Try again",
     "now": "just now",
-    "childRejected": "A grown-up decided not to publish: “{{text}}”",
-    "childRejectedMany": "A grown-up decided not to publish some of your work. Total: {{count}}.",
-    "childRejectedNoText": "A grown-up decided not to publish this.",
+    "childRejected": "A grown-up didn't allow one of your pictures to be shown.",
+    "childRejectedMany": "A grown-up didn't allow some of your pictures to be shown: {{count}}.",
+    "childRejectedGo": "Let's draw another one!",
+    "childRejectedGoMany": "Let's draw new ones!",
     "types": { "share": "Show to everyone", "story": "Story", "prompt": "Prompt", "image": "Picture", "post": "Post", "comment": "Comment", "nickname": "Nickname", "assignment": "Assignment", "submission": "Submission", "upload": "Upload" },
     "where": { "class": "In class {{name}}", "classNoName": "In class", "family": "Family", "personal": "Personal" },
     "reasons": {
@@ -477,11 +478,6 @@
     "6": "Sat"
   },
   "tp": {
-    "hero_one": "Your teacher has {{count}} task for you",
-    "hero_few": "Your teacher has {{count}} tasks for you",
-    "hero_many": "Your teacher has {{count}} tasks for you",
-    "hero_other": "Your teacher has {{count}} tasks for you",
-    "allDone": "All handed in! New tasks will show up here",
     "handed": "Handed in",
     "review": "Under review",
     "sample": "Picture for the task"

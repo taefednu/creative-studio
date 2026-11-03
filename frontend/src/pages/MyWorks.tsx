@@ -195,11 +195,8 @@ export default function MyWorks() {
         <p data-testid="rejected-note" className="mt-3 flex items-center gap-3 rounded-card bg-primary-soft px-4 py-3 font-bold text-heading">
           <img src="/art/shield.webp" alt="" className="h-8 w-8 shrink-0 object-contain" />
           <span className="min-w-0 flex-1">
-            {unseen.length > 1
-              ? t('review.childRejectedMany', { count: unseen.length })
-              : unseen[0].text
-                ? t('review.childRejected', { text: unseen[0].text })
-                : t('review.childRejectedNoText')}
+            {t(unseen.length > 1 ? 'review.childRejectedMany' : 'review.childRejected', { count: unseen.length })}{' '}
+            <Link to="/create" className="whitespace-nowrap text-primary underline">{t(unseen.length > 1 ? 'review.childRejectedGoMany' : 'review.childRejectedGo')}</Link>
           </span>
           <button type="button" data-testid="rejected-close" aria-label={t('mw.close')} onClick={() => dismissRejected(Math.max(...unseen.map((r) => r.id)))} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted">
             <Icon name="close" />

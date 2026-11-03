@@ -14,10 +14,11 @@ export default function Tasks() {
   const { cls, ready } = useOutletContext<ShellContext>()
   const [list, reload, failed] = useLoad(loadAssignments)
   if (!ready) return null
-  const open = list?.filter(isOpen).length ?? 0
+  // Что ещё надо сделать, сверху; сданное ниже
+  const sorted = [...(list ?? [])].sort((x, y) => Number(isOpen(y)) - Number(isOpen(x)))
   return (
     <div>
-      <h1 data-testid="tasks-title" className="w-fit text-3xl font-extrabold leading-9 text-heading md:text-4xl md:leading-10">
+      <h1 data-testid="tasks-title" className="w-fit text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">
         {t('nav.tasks')}
       </h1>
       {!cls && (
@@ -38,16 +39,8 @@ export default function Tasks() {
           {t('task.empty')}
         </p>
       )}
-      {cls && list && list.length > 0 && (
-        <div data-testid="tasks-hero" className="relative mt-3 flex min-h-[88px] items-center gap-3 rounded-card border border-border bg-surface pl-2 pr-4 shadow-card md:mt-3 md:h-[72px] md:gap-3">
-          <img src="/art/robot-wave.webp" alt="" className="h-[84px] w-[84px] shrink-0 object-contain md:h-[68px] md:w-[68px]" />
-          <p className="text-lg font-extrabold leading-6 text-heading md:text-2xl md:leading-8">
-            {open > 0 ? t('tp.hero', { count: open }) : t('tp.allDone')}
-          </p>
-        </div>
-      )}
       <div data-testid="tasks-grid" className="mt-4 grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {cls && list?.map((a) => <TaskCard key={a.id} a={a} />)}
+        {cls && sorted.map((a) => <TaskCard key={a.id} a={a} />)}
       </div>
     </div>
   )

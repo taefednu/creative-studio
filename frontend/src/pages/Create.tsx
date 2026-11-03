@@ -14,8 +14,9 @@ import Icon from '../components/Icon'
 import PublishBox from '../components/PublishBox'
 import SubmitBox from '../components/SubmitBox'
 import SupportCard from '../components/SupportCard'
-import { loadAssignments, shownTask, submitTarget, taskTitle } from '../features/assignments/assignments'
+import { loadAssignments, shownTask, submitTarget, taskTiles, taskTitle } from '../features/assignments/assignments'
 import { dueLabel } from '../features/assignments/due'
+import type { Assignment } from '../features/assignments/assignments'
 import { BLURRED, POLLING, hintKey, loadTemplates } from '../features/works/works'
 import type { TemplateInfo, Work } from '../features/works/works'
 import { useSession } from '../features/auth/session'
@@ -35,7 +36,7 @@ export default function Create() {
   const templates = tplData?.templates
   const withCustom = templates && [...templates, CUSTOM]
   const price = tplData?.price
-  const [params] = useSearchParams()
+  const [params, setParams] = useSearchParams()
   const [selected, setSelected] = useState<string | null>(params.get('template'))
   const workParam = Number(params.get('work')) || null
   const paramTask = Number(params.get('assignment')) || null
@@ -44,6 +45,12 @@ export default function Create() {
   const assignmentId = paramTask ?? shownTask(tasks, null)?.id ?? null
   const task = paramTask ? shownTask(tasks, paramTask) : null
   const taskDue = task && dueLabel(task.due_at)
+  const tiles = taskTiles(tasks)
+  function pickTask(a: Assignment) {
+    if (a.id === paramTask) return setParams({}, { replace: true })
+    setParams({ assignment: String(a.id), ...(a.cover_template ? { template: a.cover_template } : {}) }, { replace: true })
+    if (a.cover_template) setSelected(a.cover_template)
+  }
   const [loaded, setLoaded] = useState<Work | null>(null)
   const [retry, setRetry] = useState(0)
   const [loadErr, setLoadErr] = useState<string | null>(null)
@@ -139,9 +146,10 @@ export default function Create() {
 
   return (
     <div className="mx-auto flex -mb-7 h-[calc(100dvh-154px)] min-h-[520px] max-w-[1672px] flex-col lg:mb-0 lg:h-[calc(100dvh-104px)]">
-      {task && (
-        <p data-testid="task-strip" className="text-center text-sm font-extrabold text-primary md:text-base">
-          {t('create.teacherTask')}
+      {/* Строка под подпись задания занята всегда: при выборе задания плитки не прыгают */}
+      {tiles.length > 0 && (
+        <p data-testid="task-strip" className="h-5 text-center text-sm font-extrabold text-primary md:h-6 md:text-base">
+          {task && t('create.teacherTask')}
           {taskDue && <span className="font-bold text-muted"> · {t(taskDue.key, { count: taskDue.count })}</span>}
         </p>
       )}
@@ -151,7 +159,7 @@ export default function Create() {
       {/* Телефон: два ряда листаются вбок, вертикального скролла нет. От md: все плитки видны сразу */}
       <div
         data-testid="templates"
-        className="-mx-4 mt-2 grid min-h-0 w-[calc(100%+32px)] flex-1 auto-cols-[38vw] snap-x grid-flow-col grid-rows-[auto_1fr_1fr] gap-2 overflow-x-auto scroll-px-4 px-4 py-2 [scrollbar-width:none] md:mx-auto md:mt-4 md:w-full md:max-w-[1180px] md:grid-flow-row md:grid-cols-5 md:gap-x-4 md:gap-y-3 md:overflow-visible md:px-0 md:py-0"
+        className={`-mx-4 mt-2 grid min-h-0 w-[calc(100%+32px)] flex-1 auto-cols-[38vw] snap-x grid-flow-col grid-rows-[auto_1fr_1fr] gap-2 overflow-x-auto scroll-px-4 px-4 py-2 [scrollbar-width:none] md:mx-auto md:mt-4 md:w-full md:grid-flow-row md:gap-x-4 md:gap-y-3 md:overflow-visible md:px-0 md:py-0 ${tiles.length ? 'md:grid-cols-6' : 'md:max-w-[1180px] md:grid-cols-5'}`}
       >
         {templates && (
           <UploadPopup
@@ -191,7 +199,37 @@ export default function Create() {
             <span className={`${TILE_TEXT} ${tpl === CUSTOM.id ? 'text-primary' : 'text-heading'}`}>{t('templates.custom')}</span>
           </button>
         )}
-        <h2 data-testid="style-heading" className="col-span-4 col-start-2 row-start-1 text-lg font-extrabold leading-6 text-heading md:text-xl">
+        {tiles.length > 0 && (
+          <h2 data-testid="tasks-heading" className="col-start-2 row-start-1 text-lg font-extrabold leading-6 text-primary md:text-xl">
+            {t('nav.tasks')}
+          </h2>
+        )}
+        {tiles.map((a, i) => {
+          const due = dueLabel(a.due_at)
+          const on = a.id === paramTask
+          return (
+            <button
+              key={a.id}
+              type="button"
+              data-testid="task-tile"
+              aria-pressed={on}
+              onClick={() => pickTask(a)}
+              className={`${TILE} col-start-2 bg-primary-soft ${tiles.length === 1 ? 'row-span-2 row-start-2' : i ? 'row-start-3' : 'row-start-2'} ${on ? 'border-primary' : 'border-transparent'}`}
+            >
+              <span className={TILE_IMG}>
+                {a.cover_url && <img src={a.cover_url} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                {due && <span className="absolute left-2 top-2 rounded-full bg-surface px-2.5 py-0.5 text-xs font-extrabold text-primary">{t(due.key, { count: due.count })}</span>}
+                {on && (
+                  <span className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-fg">
+                    <Icon name="check" />
+                  </span>
+                )}
+              </span>
+              <span className={`line-clamp-2 h-10 w-full shrink-0 px-1 text-center text-sm font-extrabold leading-5 ${on ? 'text-primary' : 'text-heading'}`}>{taskTitle(a, i18n.language)}</span>
+            </button>
+          )
+        })}
+        <h2 data-testid="style-heading" className={`col-span-4 row-start-1 text-lg font-extrabold leading-6 text-heading md:text-xl ${tiles.length ? 'col-start-3' : 'col-start-2'}`}>
           {t('create.chooseStyle')}
         </h2>
         {templates?.map((x) => (

@@ -303,9 +303,10 @@
     "modalFailed": "Ochib bo‘lmadi. Qayta urinib ko‘ring.",
     "retry": "Qayta urinish",
     "now": "hozirgina",
-    "childRejected": "Kattalar buni eʻlon qilmaslikka qaror qildi: «{{text}}»",
-    "childRejectedMany": "Kattalar ba'zi ishlaringni e'lon qilmaslikka qaror qildi. Jami: {{count}}.",
-    "childRejectedNoText": "Kattalar buni eʻlon qilmaslikka qaror qildi.",
+    "childRejected": "Kattalar bitta rasmingni ko'rsatishga ruxsat bermadi.",
+    "childRejectedMany": "Kattalar rasmlaringni ko'rsatishga ruxsat bermadi: {{count}}.",
+    "childRejectedGo": "Boshqasini chizamizmi?",
+    "childRejectedGoMany": "Boshqalarini chizamizmi?",
     "types": { "share": "Hammaga ko‘rsatish", "story": "Ertak", "prompt": "Soʻrov", "image": "Rasm", "post": "Post", "comment": "Izoh", "nickname": "Taxallus", "assignment": "Topshiriq", "submission": "Topshirilgan ish", "upload": "Yuklash" },
     "where": { "class": "{{name}} sinfida", "classNoName": "Sinfda", "family": "Oila", "personal": "Shaxsiy" },
     "reasons": {
@@ -477,11 +478,6 @@
     "6": "Shan"
   },
   "tp": {
-    "hero_one": "O‘qituvchida sen uchun {{count}} ta topshiriq bor",
-    "hero_few": "O‘qituvchida sen uchun {{count}} ta topshiriq bor",
-    "hero_many": "O‘qituvchida sen uchun {{count}} ta topshiriq bor",
-    "hero_other": "O‘qituvchida sen uchun {{count}} ta topshiriq bor",
-    "allDone": "Hammasi topshirildi! Yangi topshiriqlar shu yerda chiqadi",
     "handed": "Topshirildi",
     "review": "Tekshiruvda",
     "sample": "Topshiriq rasmi"
