@@ -9,6 +9,7 @@ import LangSwitch from '../components/LangSwitch'
 import SiteFooter from '../components/SiteFooter'
 import TabPill from '../components/TabPill'
 import Logo from '../components/Logo'
+import { useSmoothScroll } from '../features/smoothScroll'
 import { loadTemplates } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
@@ -18,9 +19,14 @@ export default function Showcase() {
   const [tplData] = useLoad(loadTemplates)
   const [picked, setPicked] = useState<string | null>(null)
   const templates = tplData?.templates
+  useSmoothScroll()
   const [overFilm, setOverFilm] = useState(true)
+  const [covered, setCovered] = useState(false) // лента закрыла ролик: не рисуем его под ней
   useEffect(() => {
-    const check = () => setOverFilm(window.scrollY < window.innerHeight - 80)
+    const check = () => {
+      setOverFilm(window.scrollY < window.innerHeight - 80)
+      setCovered(window.scrollY >= window.innerHeight)
+    }
     check()
     window.addEventListener('scroll', check, { passive: true })
     window.addEventListener('resize', check)
@@ -54,7 +60,7 @@ export default function Showcase() {
           </Link>
         </div>
       </header>
-      <HomeFilm feedId="home-feed" />
+      <HomeFilm feedId="home-feed" covered={covered} />
       <div id="home-feed" data-testid="home-sheet" className="home-sheet relative scroll-mt-0 rounded-t-[32px] bg-bg pt-[76px] shadow-pop lg:pt-[88px]">
         <main className="px-4 pb-5 md:px-8 md:pb-0">
           <FeedView

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { scrollToSmooth } from '../features/smoothScroll'
 
 // Секунды ролика: герой появляется («бац») и скоро конец. Сверено с монтажом film2.mp4.
 const TITLE_AT = 3
@@ -11,7 +12,7 @@ const START_LIMIT_MS = 2500
 type Phase = 'film' | 'title' | 'arrow'
 
 /** Первый экран гостя: рисунок становится героем. Ролик стоит на месте, лента наезжает поверх него. */
-export default function HomeFilm({ feedId }: { feedId: string }) {
+export default function HomeFilm({ feedId, covered }: { feedId: string; covered?: boolean }) {
   const { t } = useTranslation()
   const video = useRef<HTMLVideoElement>(null)
   const [calm] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
@@ -59,7 +60,7 @@ export default function HomeFilm({ feedId }: { feedId: string }) {
 
   const shown = phase !== 'film'
   return (
-    <section data-testid="home-film" className="sticky top-0 flex h-dvh flex-col overflow-hidden bg-bg lg:block">
+    <section data-testid="home-film" className={`sticky top-0 flex h-dvh flex-col overflow-hidden bg-bg lg:block ${covered ? 'invisible' : ''}`}>
       <div className="film-sink relative h-[54dvh] shrink-0 overflow-hidden lg:absolute lg:inset-0 lg:h-full">
         {still ? (
           <img src="/film/hero-last.webp" alt="" className="h-full w-full object-cover" />
@@ -115,7 +116,10 @@ export default function HomeFilm({ feedId }: { feedId: string }) {
           type="button"
           data-testid="home-film-down"
           aria-label={t('home.hero.down')}
-          onClick={() => document.getElementById(feedId)?.scrollIntoView({ behavior: 'smooth' })}
+          onClick={() => {
+            const feed = document.getElementById(feedId)
+            if (feed) scrollToSmooth(feed)
+          }}
           className="film-down film-in absolute bottom-[96px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 lg:bottom-7"
         >
           <span className="hidden rounded-full bg-surface px-4 py-1.5 text-base font-extrabold text-heading shadow-pop lg:block">{t('home.hero.down')}</span>

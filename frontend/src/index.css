@@ -459,23 +459,12 @@ body {
     translate: 0 -6px;
   }
 }
-.promo {
-  transition: translate 0.2s var(--ease-out);
-}
-.promo-art {
-  transition: scale 0.25s var(--ease-out), rotate 0.25s var(--ease-out);
-}
 @media (hover: hover) and (pointer: fine) {
   .home-sheet .feed-card {
     transition: translate 0.2s var(--ease-out);
   }
-  .home-sheet .feed-card:hover,
-  .promo:hover {
+  .home-sheet .feed-card:hover {
     translate: 0 -4px;
-  }
-  .promo:hover .promo-art {
-    scale: 1.06;
-    rotate: 3deg;
   }
 }
 .film-dim {
@@ -502,21 +491,6 @@ body {
     .film-leave {
       animation-name: film-leave;
     }
-    .home-sheet .feed-card {
-      animation: sheet-card linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 40%;
-    }
-    .promo {
-      animation: sheet-card linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 50%;
-    }
-    .promo-art {
-      animation: promo-art linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 45%;
-    }
   }
 }
 @keyframes film-sink {
@@ -533,19 +507,6 @@ body {
   to {
     opacity: 0;
     translate: 0 -70px;
-  }
-}
-@keyframes sheet-card {
-  from {
-    opacity: 0;
-    translate: 0 28px;
-    scale: 0.97;
-  }
-}
-@keyframes promo-art {
-  from {
-    translate: 0 36px;
-    rotate: -8deg;
   }
 }
 @media (prefers-reduced-motion: reduce) {

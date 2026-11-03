@@ -4,12 +4,14 @@ import CreatePanel from '../components/CreatePanel'
 import FeedView, { FeedSkeleton } from '../components/FeedView'
 import type { ShellContext } from '../components/AppShell'
 import type { FeedKind } from '../features/feed/feed'
+import { useSmoothScroll } from '../features/smoothScroll'
 import { loadTemplates } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
 /** Вкладка «Лента» ребёнка: «Мой класс» (если есть класс), «Семья» (если есть родитель), «Лучшее». */
 export default function Feed() {
   const { cls, hasParent, ready } = useOutletContext<ShellContext>()
+  useSmoothScroll()
   const [tplData] = useLoad(loadTemplates)
   const [picked, setPicked] = useState<string | null>(null)
   if (!ready) return <FeedSkeleton />
