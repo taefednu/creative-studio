@@ -269,7 +269,7 @@ function DemoButtons() {
     <div data-testid="demo-login" className="flex flex-wrap items-center gap-1.5 rounded-2xl bg-primary-soft p-1 text-sm font-extrabold text-primary">
       <span className="px-2">{t('demo.try')}</span>
       {(['child', 'parent', 'teacher'] as const).map((r) => (
-        <button key={r} type="button" data-testid={`demo-${r}`} onClick={() => void go(r)} className="rounded-full bg-surface px-3 py-1.5 text-heading shadow-card">
+        <button key={r} type="button" data-testid={`demo-${r}`} onClick={() => void go(r)} className="rounded-full border border-border bg-surface px-3 py-1.5 text-heading">
           {t(`demo.${r}`)}
         </button>
       ))}
