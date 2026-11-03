@@ -27,7 +27,7 @@ import { useLoad } from '../useLoad'
 const CUSTOM: TemplateInfo = { id: 'custom', image_url: '/art/custom-style.webp' }
 const TILE = 'flex min-h-0 snap-start flex-col gap-1 rounded-2xl border-4 p-1 shadow-card md:rounded-3xl md:p-1.5'
 const TILE_IMG = 'relative min-h-0 w-full flex-1 overflow-hidden rounded-xl md:rounded-2xl'
-const TILE_TEXT = 'line-clamp-2 h-10 w-full shrink-0 px-1 text-center text-sm font-extrabold leading-5 md:line-clamp-1 md:h-auto md:text-base'
+const TILE_TEXT = 'line-clamp-2 h-10 w-full shrink-0 break-words px-1 text-center text-sm font-extrabold leading-5 md:line-clamp-1 md:h-auto md:text-base'
 
 export default function Create() {
   const { t, i18n } = useTranslation()

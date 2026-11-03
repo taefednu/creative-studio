@@ -270,7 +270,6 @@
       "blurred": "The child already sees only the blurred version. Approve if everything personal is hidden. Reject and the work disappears for them.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
     "okTitle": "Waiting for your decision",
     "moreLeft": "{{count}} more",
-    "empty": "Nothing is waiting for a decision.",
     "approve": "Approve",
     "reject": "Reject",
     "open": "Open",

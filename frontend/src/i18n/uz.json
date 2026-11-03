@@ -270,7 +270,6 @@
       "blurred": "Bola faqat xiralashtirilgan nusxani koʻrmoqda. Hamma shaxsiy narsa yashirilgan boʻlsa, tasdiqlang. Rad etsangiz, ish undan yoʻqoladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
     "okTitle": "Qaroringizni kutmoqda",
     "moreLeft": "Yana {{count}}",
-    "empty": "Qaror kutayotgan narsa yoʻq.",
     "approve": "Tasdiqlash",
     "reject": "Rad etish",
     "open": "Ochish",
