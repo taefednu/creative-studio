@@ -304,6 +304,7 @@
     "retry": "Qayta urinish",
     "now": "hozirgina",
     "childRejected": "Kattalar buni eʻlon qilmaslikka qaror qildi: «{{text}}»",
+    "childRejectedMany": "Kattalar ba'zi ishlaringni e'lon qilmaslikka qaror qildi. Jami: {{count}}.",
     "childRejectedNoText": "Kattalar buni eʻlon qilmaslikka qaror qildi.",
     "types": { "share": "Hammaga ko‘rsatish", "story": "Ertak", "prompt": "Soʻrov", "image": "Rasm", "post": "Post", "comment": "Izoh", "nickname": "Taxallus", "assignment": "Topshiriq", "submission": "Topshirilgan ish", "upload": "Yuklash" },
     "where": { "class": "{{name}} sinfida", "classNoName": "Sinfda", "family": "Oila", "personal": "Shaxsiy" },

@@ -304,6 +304,7 @@
     "retry": "Повторить",
     "now": "только что",
     "childRejected": "Взрослый решил не публиковать: «{{text}}»",
+    "childRejectedMany": "Взрослый решил не публиковать некоторые работы. Всего: {{count}}.",
     "childRejectedNoText": "Взрослый решил не публиковать это.",
     "types": { "share": "Показать всем", "story": "Сказка", "prompt": "Запрос", "image": "Картинка", "post": "Пост", "comment": "Комментарий", "nickname": "Ник", "assignment": "Задание", "submission": "Сдача задания", "upload": "Загрузка" },
     "where": { "class": "В классе {{name}}", "classNoName": "В классе", "family": "Семья", "personal": "Личное" },

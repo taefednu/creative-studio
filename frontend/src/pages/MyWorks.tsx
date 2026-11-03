@@ -18,6 +18,16 @@ import { filterWorks, galleryOrder, loadTemplates, artistProgress, BADGES, style
 import type { BadgeId, Work, WorkFilter } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
+// Прочитал, что взрослый отказал: больше не напоминаем, новый отказ покажем снова
+const REJECTED_SEEN = 'studio.rejectedSeen'
+const readSeenRejected = () => {
+  try {
+    return Number(localStorage.getItem(REJECTED_SEEN)) || 0
+  } catch {
+    return 0
+  }
+}
+
 const loadWorks = () => api<Work[]>('/api/works/mine')
 const loadRejected = () => api<{ id: number; item_type: string; text: string | null }[]>('/api/held/mine')
 const FILTERS: WorkFilter[] = ['all', 'shared', 'waiting']
@@ -26,6 +36,16 @@ export default function MyWorks() {
   const { t } = useTranslation()
   const [works, reloadWorks] = useLoad(loadWorks)
   const [rejected] = useLoad(loadRejected)
+  const [seenRejected, setSeenRejected] = useState(readSeenRejected)
+  const unseen = rejected?.filter((r) => r.id > seenRejected) ?? []
+  function dismissRejected(id: number) {
+    setSeenRejected(id)
+    try {
+      localStorage.setItem(REJECTED_SEEN, String(id))
+    } catch {
+      /* без памяти напоминание вернётся в следующий раз */
+    }
+  }
   const [tasks, reloadTasks] = useLoad(loadAssignments)
   const [filter, setFilter] = useState<WorkFilter>('all')
   const open = tasks?.filter(isOpen) ?? []
@@ -171,12 +191,21 @@ export default function MyWorks() {
           )}
         </section>
       )}
-      {rejected?.map((r) => (
-        <p key={r.id} data-testid="rejected-note" className="mt-3 flex items-center gap-3 rounded-card border border-border bg-primary-soft px-4 py-3 font-bold text-heading">
+      {unseen.length > 0 && (
+        <p data-testid="rejected-note" className="mt-3 flex items-center gap-3 rounded-card bg-primary-soft px-4 py-3 font-bold text-heading">
           <img src="/art/shield.webp" alt="" className="h-8 w-8 shrink-0 object-contain" />
-          {r.text ? t('review.childRejected', { text: r.text }) : t('review.childRejectedNoText')}
+          <span className="min-w-0 flex-1">
+            {unseen.length > 1
+              ? t('review.childRejectedMany', { count: unseen.length })
+              : unseen[0].text
+                ? t('review.childRejected', { text: unseen[0].text })
+                : t('review.childRejectedNoText')}
+          </span>
+          <button type="button" data-testid="rejected-close" aria-label={t('mw.close')} onClick={() => dismissRejected(Math.max(...unseen.map((r) => r.id)))} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted">
+            <Icon name="close" />
+          </button>
         </p>
-      ))}
+      )}
       {works && works.length === 0 && (
         <div data-testid="works-empty" className="mt-6 flex flex-col items-center gap-3 rounded-card border border-border bg-surface p-8 text-center shadow-card">
           <img src="/art/robot-wave.webp" alt="" className="h-36 w-36 object-contain" />
@@ -242,8 +271,6 @@ function Placeholder({ w }: { w: Work }) {
   const { t } = useTranslation()
   const robot = (src: string) => <img src={src} alt="" className="absolute inset-2 h-[calc(100%-1rem)] w-[calc(100%-1rem)] object-contain" />
   const area = 'relative flex aspect-square items-center justify-center overflow-hidden rounded-[22px] bg-primary-soft p-2 text-center font-extrabold text-heading'
-  if (w.status === 'refused') return <div className={area}>{robot('/art/robot-happy.webp')}</div>
-  if (w.status === 'failed') return <div className={area}>{robot('/art/robot-brush.webp')}</div>
   if (w.status === 'held') return <div className={area}>{robot('/art/shield.webp')}</div>
   return <div className={`${area} text-lg`}>{t(`myWorks.status.${w.status}`)}</div>
 }
@@ -279,7 +306,7 @@ function WorkCard({ w, big, open, onSubmitted, onClosed }: { w: Work; big: boole
   const style = t(`templates.${w.template_id}`)
   const chips = [...new Map((w.shared ?? []).map((s) => [`${s.audience}-${s.status}`, s])).values()]
   // подпись под плиткой без картинки: призыв вместо стиля; support и прочее — стиль, как у остальных
-  const cta = w.image_url ? null : w.status === 'refused' ? t('mw.retry') : w.status === 'failed' ? t('mw.failed') : w.status === 'held' ? t('mw.showAdult') : null
+  const cta = !w.image_url && w.status === 'held' ? t('mw.showAdult') : null
   return (
     <div data-testid="work-card" className={`feed-card group relative ${big ? 'col-span-2 row-span-2' : ''}`}>
       {w.status === 'ready' && w.image_url ? (

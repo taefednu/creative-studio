@@ -94,7 +94,8 @@ export function styleAlbum(templates: TemplateInfo[], works: Work[]) {
 
 /** Фильтры «Моих работ»: «Показанные» — есть опубликованный пост, «Ждут» — пост ждёт взрослого или сама работа на проверке. */
 export function filterWorks(list: Work[], f: WorkFilter): Work[] {
-  if (f === 'all') return list
+  // Отклонённое и несостоявшееся не работа: картинки нет, плитка с роботом ничего ребёнку не говорит
+  if (f === 'all') return list.filter((w) => w.status !== 'refused' && w.status !== 'failed')
   if (f === 'waiting') return list.filter((w) => w.status === 'held' || (w.shared ?? []).some((s) => s.status === 'waiting'))
   return list.filter((w) => (w.shared ?? []).some((s) => s.status === 'published'))
 }

@@ -16,6 +16,14 @@ describe('filterWorks', () => {
   })
 })
 
+describe('filterWorks: без картинки', () => {
+  it('отклонённое и несостоявшееся не показываем, ожидание и тёплый ответ остаются', () => {
+    const of = (id: number, status: string) => ({ id, status }) as Work
+    const l = [of(1, 'refused'), of(2, 'failed'), of(3, 'held'), of(4, 'support'), of(5, 'ready')]
+    expect(filterWorks(l, 'all').map((x) => x.id)).toEqual([3, 4, 5])
+  })
+})
+
 describe('filterWorks: работа на проверке', () => {
   it('held попадает в «Ждут» даже без постов', () => {
     const held = { ...w(5), status: 'held' as const }

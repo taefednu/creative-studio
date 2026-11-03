@@ -304,6 +304,7 @@
     "retry": "Try again",
     "now": "just now",
     "childRejected": "A grown-up decided not to publish: “{{text}}”",
+    "childRejectedMany": "A grown-up decided not to publish some of your work. Total: {{count}}.",
     "childRejectedNoText": "A grown-up decided not to publish this.",
     "types": { "share": "Show to everyone", "story": "Story", "prompt": "Prompt", "image": "Picture", "post": "Post", "comment": "Comment", "nickname": "Nickname", "assignment": "Assignment", "submission": "Submission", "upload": "Upload" },
     "where": { "class": "In class {{name}}", "classNoName": "In class", "family": "Family", "personal": "Personal" },
