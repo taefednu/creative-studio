@@ -53,12 +53,6 @@ export function firstKid<T extends { nick: string }>(kids: T[], counts: Record<s
   return kids.find((k) => counts[k.nick]) ?? kids[0]
 }
 
-/** Остальные дети по кругу от выбранного: смена ребёнка проворачивает всё кольцо. */
-export function ringAfter<T extends { id: number }>(kids: T[], id: number): T[] {
-  const i = kids.findIndex((k) => k.id === id)
-  return [...kids.slice(i + 1), ...kids.slice(0, Math.max(i, 0))]
-}
-
 /** Стопка решений: «Ещё» отправляет верхнюю работу под низ, ни одна не пропадает. */
 export function stackOrder<T>(items: T[], skipped: number): T[] {
   const n = skipped % (items.length || 1)
@@ -108,6 +102,16 @@ const KNOWN = [
   'sam_failed',
   'remix_source_gone',
 ]
+
+// Типы, у которых есть своя подпись «что будет после одобрения»; остальным общая
+const EFFECTS = ['prompt', 'image', 'post', 'comment', 'upload', 'submission', 'story', 'share']
+
+/** Что значат кнопки для этой работы. Размытая загрузка уже у ребёнка: решаем, оставить ли её, а не показать ли. */
+export function effectKey(it: Pick<ReviewItem, 'item_type' | 'reason_codes'>): string {
+  if (nothingBlurred(it.reason_codes)) return `review.effect.${it.reason_codes.includes('drawn_face') ? 'drawn_face' : 'cleared_word'}`
+  if (it.item_type === 'upload' && it.reason_codes.some((c) => c.startsWith('blurred_'))) return 'review.effect.blurred'
+  return `review.effect.${EFFECTS.includes(it.item_type) ? it.item_type : 'other'}`
+}
 
 /** Ничего не размыто (лицо нарисовано, надписи не оказалось): две одинаковые картинки рядом ничего не сравнивают. */
 export function nothingBlurred(codes: string[]): boolean {

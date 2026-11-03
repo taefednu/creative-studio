@@ -308,6 +308,33 @@ def test_analytics_achieved_only_from_ready_works():
     assert get() == {"alive": True, "story": True, "shared": True, "styles": True}
 
 
+def test_parent_sees_all_ready_works_of_own_child_only():
+    p = login("parent")
+    cid, _ = child_of(p)
+    with db.new_session() as s:
+        s.add(Work(child_id=cid, template_id="clay", status="ready", request_id="r-1-aaaa", file_path="x"))
+        s.add(Work(child_id=cid, template_id="clay", status="ready", request_id="r-2-aaaa", file_path="x"))
+        s.add(Work(child_id=cid, template_id="clay", status="held", request_id="r-3-aaaa", file_path="x"))
+        s.add(Work(child_id=cid, template_id="clay", status="refused", request_id="r-4-aaaa", file_path="x"))
+        s.flush()
+        s.add(Post(work_id=1, child_id=cid, audience="family", status="published"))
+        s.add(Post(work_id=2, child_id=cid, audience="family", status="hidden"))
+        s.commit()
+    rows = p.get(f"/api/parent/children/{cid}/works").json()
+    assert [(r["id"], r["post_id"]) for r in rows] == [(2, None), (1, 1)]  # снятый пост не даёт ссылки
+    assert rows[0]["image_url"] == "/api/works/2/image"
+    other = login("parent", "other@x.io")
+    assert other.get(f"/api/parent/children/{cid}/works").status_code == 404
+    assert TestClient(app).get(f"/api/parent/children/{cid}/works").status_code == 401
+    # брат или сестра: ни списка, ни чужой непоказанной картинки, в ленте семьи только показанное
+    p.post("/api/parent/children", json={"nick": "Sibling", "age_group": "5-8", "lang": "ru", "pictures": [3, 7, 1]})
+    sib = TestClient(app)
+    assert sib.post("/api/child/login", json={"nick": "Sibling", "pictures": [3, 7, 1]}).status_code == 200
+    assert sib.get(f"/api/parent/children/{cid}/works").status_code in (401, 403)
+    assert sib.get("/api/works/2/image").status_code == 404
+    assert [x["id"] for x in sib.get("/api/feed/family").json()["items"]] == [1]
+
+
 def test_children_list_names_class():
     p = login("parent")
     cid, _ = child_of(p)

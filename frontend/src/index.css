@@ -638,8 +638,7 @@ body {
 @keyframes stack-in {
   from {
     opacity: 0.6;
-    rotate: 2deg;
-    scale: 0.97;
+    translate: 0 6px;
   }
 }
 .stack-left,
@@ -647,16 +646,13 @@ body {
   opacity: 0;
   transition:
     opacity 0.18s var(--ease-out),
-    translate 0.18s var(--ease-out),
-    rotate 0.18s var(--ease-out);
+    translate 0.18s var(--ease-out);
 }
 .stack-left {
-  translate: -48px 0;
-  rotate: -4deg;
+  translate: -24px 0;
 }
 .stack-right {
-  translate: 48px 0;
-  rotate: 4deg;
+  translate: 24px 0;
 }
 @media (prefers-reduced-motion: reduce) {
   .stack-in {
@@ -665,7 +661,6 @@ body {
   .stack-left,
   .stack-right {
     translate: none;
-    rotate: none;
   }
 }
 @keyframes nav-in {

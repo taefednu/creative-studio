@@ -32,6 +32,8 @@ router = APIRouter()
 Db = Annotated[Session, Depends(get_session)]
 
 SHAREABLE = ("image", "alive")
+# Ссылку выключил взрослый: включить обратно может только он, ребёнок и второй взрослый нет
+ADULT_OFF = {"parent": "off_parent", "teacher": "off_teach"}
 OG = {
     "ru": ("Смотри, что я создал!", "Картинка проверена ИИ. Создай свою в Mentorium Creative Studio."),
     "en": ("Look what I made!", "Checked by AI. Make your own in Mentorium Creative Studio."),
@@ -62,7 +64,26 @@ def _view(db: Session, s: Share | None) -> dict:
         return {"status": "none", "path": None}
     live = s.status == "live" and _live_work(db, s.token) is not None
     status = "off" if s.status == "live" and not live else s.status
+    if status in ADULT_OFF.values():  # для ребёнка это отказ взрослого, кто именно и как вернуть ему не важно
+        status = "refused"
     return {"status": status, "path": f"/s/{s.token}" if live else None}
+
+
+def _is_adult_of(db: Session, v, author: Child) -> bool:
+    if v.role == "parent":
+        return v.id == author.parent_id
+    if v.role == "teacher":
+        cid = class_of(db, author.id)
+        room = db.get(Classroom, cid) if cid is not None else None
+        return room is not None and room.teacher_id == v.id
+    return False
+
+
+def _publish(db: Session, s: Share, w: Work) -> None:
+    post = Post(work_id=w.id, work_kind=w.kind, child_id=s.child_id, audience="public", status="published", best=True)
+    db.add(post)
+    db.flush()
+    s.status, s.post_id = "live", post.id
 
 
 def _own(db: Session, work_id: int, c: Child) -> Work:
@@ -89,7 +110,7 @@ def ask_share(work_id: int, c: AdultChild, db: Db):
     if w.kind not in SHAREABLE or any(x.remix_of_post_id is not None for x in _origin_chain(db, w)):
         raise HTTPException(409, "not_shareable")
     s = db.scalar(select(Share).where(Share.work_id == work_id))
-    if s is not None and s.status in ("waiting", "live", "refused"):
+    if s is not None and s.status in ("waiting", "live", "refused", *ADULT_OFF.values()):
         return _view(db, s)  # двойной клик; отказ взрослого сильнее повторной просьбы
     if s is None:
         s = Share(work_id=work_id, child_id=c.id, token=secrets.token_urlsafe(24))
@@ -120,39 +141,85 @@ def stop_share(work_id: int, db: Db, v: V):
     if s is None or author is None:
         raise HTTPException(404, "not_found")
     is_author = v.role == "child" and v.id == author.id
-    is_parent = v.role == "parent" and v.id == author.parent_id
-    is_teacher = False
-    if v.role == "teacher":
-        cid = class_of(db, author.id)
-        room = db.get(Classroom, cid) if cid is not None else None
-        is_teacher = room is not None and room.teacher_id == v.id
-    if not (is_author or is_parent or is_teacher):
+    if not (is_author or _is_adult_of(db, v, author)):
         raise HTTPException(404, "not_found")
     if s.post_id is not None:
         p = db.get(Post, s.post_id)
         if p is not None and p.status == "published":
             p.status = "deleted" if is_author else "hidden"
-    s.status = "off" if is_author else "refused"
+    s.status = "off" if is_author else ADULT_OFF[v.role]
     s.post_id = None
     db.commit()
     return _view(db, s)
 
 
-def _links(db: Session, rows) -> list[dict]:
-    return [
-        {"work_id": s.work_id, "nick": nick, "path": f"/s/{s.token}", "image_url": f"/api/public/{s.token}/card.jpg"}
-        for s, nick in rows
-        if _live_work(db, s.token) is not None
-    ]
+@router.post("/api/works/{work_id}/share/resume")
+def resume_share(work_id: int, db: Db, v: V):
+    """Взрослый передумал: включает то, что выключил сам. Адрес новый: старый мог уйти, из-за этого и выключали."""
+    s = db.scalar(select(Share).where(Share.work_id == work_id))
+    author = db.get(Child, s.child_id) if s is not None else None
+    w = db.get(Work, work_id)
+    if s is None or author is None or w is None or not _is_adult_of(db, v, author) or s.status != ADULT_OFF[v.role]:
+        raise HTTPException(404, "not_found")
+    if w.status != "ready" or not _chain_ready(db, w):  # работу сняли: включать нечего
+        raise HTTPException(409, "work_not_ready")
+    s.token = secrets.token_urlsafe(24)
+    _publish(db, s, w)
+    db.commit()
+    return _view(db, s)
+
+
+@router.get("/api/works/{work_id}/share/card.jpg")
+def off_card(work_id: int, db: Db, v: V):
+    """Картинка выключенной ссылки для взрослого, который может её вернуть: открытая карточка уже не отвечает."""
+    s = db.scalar(select(Share).where(Share.work_id == work_id))
+    author = db.get(Child, s.child_id) if s is not None else None
+    w = db.get(Work, work_id)
+    if s is None or author is None or w is None or not _is_adult_of(db, v, author) or s.status != ADULT_OFF[v.role]:
+        raise HTTPException(404, "not_found")
+    if w.status != "ready" or not w.file_path or not Path(w.file_path).is_file():
+        raise HTTPException(404, "not_found")
+    return _card(w.file_path, "private, max-age=300")
+
+
+def _links(db: Session, rows, off_status: str) -> list[dict]:
+    """Открытые ссылки и те, что этот взрослый выключил сам: их можно вернуть, пока работа цела."""
+    out = []
+    for s, nick in rows:
+        if s.status == "live" and _live_work(db, s.token) is not None:
+            out.append(
+                {
+                    "work_id": s.work_id,
+                    "nick": nick,
+                    "on": True,
+                    "path": f"/s/{s.token}",
+                    "image_url": f"/api/public/{s.token}/card.jpg",
+                }
+            )
+        elif s.status == off_status:
+            w = db.get(Work, s.work_id)
+            if w is not None and w.status == "ready" and _chain_ready(db, w):
+                out.append(
+                    {
+                        "work_id": s.work_id,
+                        "nick": nick,
+                        "on": False,
+                        "path": None,
+                        "image_url": f"/api/works/{s.work_id}/share/card.jpg",
+                    }
+                )
+    return out
 
 
 @router.get("/api/parent/shares")
 def parent_shares(p: Annotated[Parent, Depends(current_parent)], db: Db):
     """Какие работы детей этого родителя сейчас открыты всем: чтобы было что выключить."""
     rows = db.execute(
-        select(Share, Child.nick).join(Child, Child.id == Share.child_id).where(Child.parent_id == p.id, Share.status == "live")
+        select(Share, Child.nick)
+        .join(Child, Child.id == Share.child_id)
+        .where(Child.parent_id == p.id, Share.status.in_(("live", ADULT_OFF["parent"])))
     ).all()
-    return _links(db, rows)
+    return _links(db, rows, ADULT_OFF["parent"])
 
 
 @router.get("/api/teacher/shares")
@@ -163,9 +230,9 @@ def teacher_shares(t: Annotated[Teacher, Depends(current_teacher)], db: Db):
         .join(Child, Child.id == Share.child_id)
         .join(ClassMembership, ClassMembership.child_id == Child.id)
         .join(Classroom, Classroom.id == ClassMembership.class_id)
-        .where(Classroom.teacher_id == t.id, Share.status == "live")
+        .where(Classroom.teacher_id == t.id, Share.status.in_(("live", ADULT_OFF["teacher"])))
     ).all()
-    return _links(db, rows)
+    return _links(db, rows, ADULT_OFF["teacher"])
 
 
 # ---- решение взрослого ----
@@ -180,10 +247,7 @@ def _approve(db: Session, item: HeldItem) -> None:
         s.status = "refused"
         db.commit()
         return
-    post = Post(work_id=w.id, work_kind=w.kind, child_id=s.child_id, audience="public", status="published", best=True)
-    db.add(post)
-    db.flush()
-    s.status, s.post_id = "live", post.id
+    _publish(db, s, w)
     db.commit()
 
 
@@ -214,11 +278,15 @@ def public_card(token: str, db: Db):
     live = _live_work(db, token)
     if live is None:
         raise HTTPException(404, "not_found")
-    im = Image.open(live[1].file_path).convert("RGB")
+    return _card(live[1].file_path, "public, max-age=300")
+
+
+def _card(path: str, cache: str) -> Response:
+    im = Image.open(path).convert("RGB")
     im.thumbnail((1200, 1200))
     out = io.BytesIO()
     im.save(out, "JPEG", quality=88)
-    return Response(out.getvalue(), media_type="image/jpeg", headers={"Cache-Control": "public, max-age=300", "X-Robots-Tag": "noindex"})
+    return Response(out.getvalue(), media_type="image/jpeg", headers={"Cache-Control": cache, "X-Robots-Tag": "noindex"})
 
 
 def _page(request: Request, static_dir: str | None, tags: str) -> str:

@@ -124,6 +124,49 @@ def test_adult_stop_kills_link_for_good(world):
     assert kid.post(f"/api/works/{wid}/share").json()["status"] == "refused"
 
 
+def test_adult_can_turn_back_on_only_what_he_turned_off(world):
+    parent, kid, cid, tmp = world
+    wid = make_work(cid, tmp)
+    kid.post(f"/api/works/{wid}/share")
+    parent.post(f"/api/review/items/{item_of(wid)}/approve")
+    old = token_of(wid)
+    parent.delete(f"/api/works/{wid}/share")
+    rows = parent.get("/api/parent/shares").json()
+    assert [(r["work_id"], r["on"], r["path"]) for r in rows] == [(wid, False, None)]
+    # картинка для взрослого есть, для остальных нет; ребёнку это отказ
+    assert parent.get(rows[0]["image_url"]).headers["content-type"] == "image/jpeg"
+    assert TestClient(app).get(rows[0]["image_url"]).status_code == 401
+    assert kid.get(rows[0]["image_url"]).status_code == 404
+    assert kid.post(f"/api/works/{wid}/share/resume").status_code == 404
+    assert kid.get(f"/api/works/{wid}/share").json()["status"] == "refused"
+
+    view = parent.post(f"/api/works/{wid}/share/resume").json()
+    assert view["status"] == "live" and token_of(wid) != old
+    guest = TestClient(app)
+    assert guest.get(f"/s/{old}").status_code == 404 and guest.get(view["path"]).status_code == 200
+    assert len(guest.get("/api/feed/best").json()["items"]) == 1
+    assert kid.get(f"/api/works/{wid}/share").json()["path"] == view["path"]
+    assert [r["on"] for r in parent.get("/api/parent/shares").json()] == [True]
+    # включать нечего: второй раз и после снятия работы
+    assert parent.post(f"/api/works/{wid}/share/resume").status_code == 404
+    parent.delete(f"/api/works/{wid}/share")
+    with db.new_session() as s:
+        s.get(Work, wid).status = "refused"
+        s.commit()
+    assert parent.get("/api/parent/shares").json() == []
+    assert parent.post(f"/api/works/{wid}/share/resume").status_code == 409
+    assert TestClient(app).get("/api/feed/best").json()["items"] == []
+
+
+def test_refused_request_is_not_offered_to_turn_on(world):
+    parent, kid, cid, tmp = world
+    wid = make_work(cid, tmp)
+    kid.post(f"/api/works/{wid}/share")
+    parent.post(f"/api/review/items/{item_of(wid)}/reject")
+    assert parent.get("/api/parent/shares").json() == []
+    assert parent.post(f"/api/works/{wid}/share/resume").status_code == 404
+
+
 def test_child_stop_then_new_link_needs_adult_again(world):
     parent, kid, cid, tmp = world
     wid = make_work(cid, tmp)
@@ -172,7 +215,7 @@ def test_parent_sees_open_links_and_level_count(world):
     rows = parent.get("/api/parent/shares").json()
     assert [r["work_id"] for r in rows] == [wid] and rows[0]["nick"] == "SecretNick"
     parent.delete(f"/api/works/{wid}/share")
-    assert parent.get("/api/parent/shares").json() == []
+    assert [r["on"] for r in parent.get("/api/parent/shares").json()] == [False]  # выключенную можно вернуть
     assert parent.get(f"/api/parent/children/{cid}/analytics").json()["pictures_total"] == 1  # загрузка не в счёт
     other = TestClient(app)
     other.post("/api/parent/register", json={"email": "q@x.io", "password": "correct-horse-1"})
@@ -197,7 +240,10 @@ def test_teacher_sees_and_stops_links_of_own_class_only(world):
     token = token_of(wid)
     assert teacher.delete(f"/api/works/{wid}/share").json()["status"] == "refused"
     assert TestClient(app).get(f"/s/{token}").status_code == 404
-    assert teacher.get("/api/teacher/shares").json() == []
+    assert [(r["work_id"], r["on"]) for r in teacher.get("/api/teacher/shares").json()] == [(wid, False)]
+    # чужой учитель не вернёт, свой вернёт
+    assert stranger.post(f"/api/works/{wid}/share/resume").status_code == 404
+    assert teacher.post(f"/api/works/{wid}/share/resume").json()["status"] == "live"
 
 
 def test_share_state_remembers_where_work_is_shown(world):

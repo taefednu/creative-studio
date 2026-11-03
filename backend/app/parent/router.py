@@ -38,6 +38,34 @@ def _count(db: Session, model, *where) -> int:
     return int(db.scalar(select(func.count()).select_from(model).where(*where)) or 0)
 
 
+@router.get("/parent/children/{child_id}/works")
+def child_works(child_id: int, p: Annotated[Parent, Depends(current_parent)], db: Db):
+    """Все готовые работы ребёнка своему родителю. post_id: показана семье, оттуда работу можно скрыть."""
+    child = db.get(Child, child_id)
+    if child is None or child.parent_id != p.id:
+        raise HTTPException(404, "not_found")
+    works = db.scalars(
+        select(Work).where(Work.child_id == child.id, Work.status == "ready").order_by(Work.id.desc()).limit(60)
+    ).all()
+    shown = dict(
+        db.execute(
+            select(Post.work_id, Post.id).where(
+                Post.work_id.in_([w.id for w in works]), Post.audience == "family", Post.status == "published"
+            )
+        ).all()
+    )
+    return [
+        {
+            "id": w.id,
+            "kind": w.kind,
+            "hero_of_work_id": w.hero_of_work_id,
+            "image_url": f"/api/works/{w.id}/image",
+            "post_id": shown.get(w.id),
+        }
+        for w in works
+    ]
+
+
 @router.get("/parent/children/{child_id}/analytics")
 def analytics(child_id: int, p: Annotated[Parent, Depends(current_parent)], db: Db):
     child = db.get(Child, child_id)

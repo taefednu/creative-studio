@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
 import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
@@ -7,7 +7,7 @@ import Avatar from '../components/Avatar'
 import CabinetHeader from '../components/CabinetHeader'
 import ChipSelect from '../components/ChipSelect'
 import ErrorText, { errorKey } from '../components/ErrorText'
-import FeedView from '../components/FeedView'
+import PostModal from '../components/PostModal'
 import Icon from '../components/Icon'
 import LinkCard from '../components/LinkCard'
 import PictureGrid from '../components/PictureGrid'
@@ -17,10 +17,11 @@ import ParentNotes from '../components/ParentNotes'
 import ReviewQueue from '../components/ReviewQueue'
 import WeekChart from '../components/WeekChart'
 import { ANIMALS } from '../features/avatar/animal'
-import { firstKid, notifyCabinet, REVIEW_EVENT, ringAfter, waitingByNick } from '../features/review/review'
+import { firstKid, notifyCabinet, REVIEW_EVENT, waitingByNick } from '../features/review/review'
 import type { ReviewItem } from '../features/review/review'
 import { weekBars } from '../features/review/week'
-import { BADGES, rankProgress } from '../features/works/works'
+import { BADGES, rankProgress, withoutHeroSources } from '../features/works/works'
+import type { Work } from '../features/works/works'
 import { PASSWORD_LENGTH } from '../features/auth/pictures'
 import { useLoad } from '../useLoad'
 
@@ -179,73 +180,56 @@ function KidFace({ kid, className }: { kid: Kid; className: string }) {
   )
 }
 
-/** Остальные дети по кругу от выбранного. Много детей: листается, «+» всегда на виду. */
-function KidRing({ kids, sel, counts, onPick, onAdd }: { kids: Kid[]; sel: Kid | null; counts: Record<string, number>; onPick: (k: Kid) => void; onAdd: () => void }) {
+/** Остальные дети: нажал, и он становится выбранным. На телефоне строкой, на компьютере списком; много детей листаются, «+» на виду. */
+function KidList({ kids, sel, counts, onPick, onAdd }: { kids: Kid[]; sel: Kid | null; counts: Record<string, number>; onPick: (k: Kid) => void; onAdd: () => void }) {
   const { t } = useTranslation()
-  const box = useRef<HTMLDivElement>(null)
-  const [more, setMore] = useState(false)
-  const measure = useCallback(() => {
-    const b = box.current
-    if (b) setMore(b.scrollTop + b.clientHeight < b.scrollHeight - 1 || b.scrollLeft + b.clientWidth < b.scrollWidth - 1)
-  }, [])
-  useEffect(() => {
-    measure()
-    const ro = new ResizeObserver(measure)
-    if (box.current) ro.observe(box.current)
-    return () => ro.disconnect()
-  }, [measure, kids.length])
-  useEffect(() => {
-    box.current?.scrollTo(0, 0) // в скобках: новый Chrome возвращает отсюда обещание, а React принял бы его за очистку и упал
-  }, [sel?.id])
   return (
-    <div data-testid="kid-ring" className="relative flex items-center gap-2 md:absolute md:inset-y-4 md:right-3 md:w-[92px] md:flex-col">
-      <div
-        ref={box}
-        role="group"
-        aria-label={t('cab.myKids')}
-        onScroll={measure}
-        className={`flex min-h-0 min-w-0 flex-1 gap-1 overflow-auto p-1 [scrollbar-width:none] md:w-full md:flex-col md:items-center md:gap-3 ${more ? '[mask-image:linear-gradient(to_right,black_80%,transparent)] md:[mask-image:linear-gradient(to_bottom,black_80%,transparent)]' : ''}`}
-      >
-        {(sel ? ringAfter(kids, sel.id) : kids).map((k) => (
-          <button key={k.id} type="button" data-testid={`kid-${k.id}`} title={k.nick} onClick={() => onPick(k)} className="flex w-[72px] shrink-0 flex-col items-center gap-1 transition-transform duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.97] motion-reduce:transition-none md:w-[84px]">
-            <span className="relative">
-              <KidFace kid={k} className="h-14 w-14 md:h-16 md:w-16" />
+    <div data-testid="kid-list" className="flex items-center gap-2 lg:flex-col lg:items-stretch">
+      <div role="group" aria-label={t('cab.myKids')} className="flex min-w-0 flex-1 gap-1 overflow-auto p-1 [scrollbar-width:none] lg:max-h-[300px] lg:flex-col lg:gap-0 lg:divide-y lg:divide-border">
+        {kids.filter((k) => k.id !== sel?.id).map((k) => (
+          <button key={k.id} type="button" data-testid={`kid-${k.id}`} title={k.nick} onClick={() => onPick(k)} className="flex w-[72px] shrink-0 flex-col items-center gap-1 rounded-2xl transition-colors duration-150 lg:w-full lg:flex-row lg:gap-3 lg:px-1 lg:py-2 lg:text-left lg:hover:bg-primary-soft">
+            <span className="relative shrink-0">
+              <KidFace kid={k} className="h-14 w-14" />
               {!!counts[k.nick] && (
                 <span data-testid={`kid-badge-${k.id}`} className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-danger px-1.5 text-xs font-extrabold text-primary-fg">
                   {counts[k.nick]}
                 </span>
               )}
             </span>
-            <span className="w-full truncate text-center text-sm font-extrabold leading-5 text-heading">{k.nick}</span>
+            <span className="w-full min-w-0 truncate text-center text-sm font-extrabold leading-5 text-heading lg:flex-1 lg:text-left lg:text-lg">{k.nick}</span>
+            <svg viewBox="0 0 24 24" className="hidden h-5 w-5 shrink-0 text-muted lg:block" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m9 5 7 7-7 7" />
+            </svg>
           </button>
         ))}
       </div>
-      <button type="button" data-testid="add-child-tile" aria-label={t('cab.kid.addChild')} title={t('cab.kid.addChild')} onClick={onAdd} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary md:h-12 md:w-12">
-        <Icon name="plus" className="h-6 w-6" />
+      <button type="button" data-testid="add-child-tile" onClick={onAdd} aria-label={t('cab.kid.addChild')} className="flex h-12 w-12 shrink-0 items-center justify-center gap-3 rounded-full bg-primary-soft font-extrabold text-primary transition-colors duration-150 hover:bg-primary-light lg:h-14 lg:w-full lg:justify-start lg:rounded-2xl lg:px-3">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface"><Icon name="plus" className="h-5 w-5" /></span>
+        <span className="hidden lg:inline">{t('cab.kid.addChild')}</span>
       </button>
     </div>
   )
 }
 
-/** Карточка выбранного ребёнка: те же уровень и награды, что он сам видит в «Моих работах». */
+/** Выбранный ребёнок: те же уровень и награды, что он сам видит в «Моих работах». */
 function KidHero({ kid, st }: { kid: Kid; st?: Analytics }) {
   const { t } = useTranslation()
   const path = st ? rankProgress(st.pictures_total, st.achieved) : null
   return (
-    <div className="relative flex min-w-0 items-center gap-3 md:gap-6">
-      <div className="relative shrink-0 rounded-full bg-primary p-1">
-        <KidFace kid={kid} className="h-20 w-20 md:h-[150px] md:w-[150px] xl:h-[180px] xl:w-[180px]" />
-        {path && <span data-testid="kid-level" style={vt('kid-level')} className="kid-swap absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface bg-primary text-sm font-black text-primary-fg md:bottom-1 md:right-1 md:h-11 md:w-11 md:border-4 md:text-xl">{path.level}</span>}
+    <div className="flex min-w-0 items-center gap-3 lg:gap-4">
+      <div className="relative shrink-0 rounded-full bg-primary p-0.5">
+        <KidFace kid={kid} className="h-20 w-20 lg:h-24 lg:w-24" />
+        {path && <span data-testid="kid-level" style={vt('kid-level')} className="kid-swap absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface bg-primary text-sm font-black text-primary-fg">{path.level}</span>}
       </div>
-      <div style={vt('kid-text')} className="kid-swap min-w-0 flex-1 md:max-w-[520px]">
-        <h1 data-testid="page-title" className="break-words text-[28px] font-black leading-8 tracking-tight text-heading md:text-5xl md:leading-[56px]">{kid.nick}</h1>
+      <div style={vt('kid-text')} className="kid-swap min-w-0 flex-1">
+        <h1 data-testid="page-title" className="break-words text-[28px] font-black leading-8 tracking-tight text-heading lg:text-[32px] lg:leading-9">{kid.nick}</h1>
         {path && (
           <>
-            <p data-testid="kid-rank" className="truncate text-sm font-extrabold text-primary md:text-xl">{t('mw.level', { n: path.level })} · {t(`mw.rank.${path.rank}`)}</p>
-            <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-surface md:mt-2 md:h-3.5">
+            <p data-testid="kid-rank" className="text-sm font-extrabold leading-5 text-primary">{t('mw.level', { n: path.level })} · {t(`mw.rank.${path.rank}`)}</p>
+            <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-primary-soft">
               <div data-testid="kid-bar" className="h-full w-full rounded-full bg-primary [transition:transform_0.7s_var(--ease-drawer)] motion-reduce:transition-none" style={{ transform: `translateX(${(path.next ? Math.round(((path.pictures - path.from) / (path.next.need - path.from)) * 100) : 100) - 100}%)` }} />
             </div>
-            <p className="mt-1 truncate text-xs font-bold text-heading md:text-sm">{path.next ? t('mw.levelNext', { level: path.level + 1, n: path.pictures, need: path.next.need }) : t('mw.rankTop')}</p>
+            <p className="mt-1 truncate text-xs font-bold text-heading">{path.next ? t('mw.levelNext', { level: path.level + 1, n: path.pictures, need: path.next.need }) : t('mw.rankTop')}</p>
           </>
         )}
       </div>
@@ -253,13 +237,58 @@ function KidHero({ kid, st }: { kid: Kid; st?: Analytics }) {
   )
 }
 
+type KidWork = Pick<Work, 'id' | 'kind' | 'hero_of_work_id'> & { image_url: string; post_id: number | null }
+
+/** Все готовые работы ребёнка. Показанная семье открывается окном поста, там её можно скрыть; остальные просто крупно. */
+function KidWorks({ kid }: { kid: Kid }) {
+  const { t } = useTranslation()
+  const fetchWorks = useCallback(() => api<KidWork[]>(`/api/parent/children/${kid.id}/works`), [kid.id])
+  const [list, reload] = useLoad(fetchWorks)
+  const [post, setPost] = useState<number | null>(null)
+  const [zoom, setZoom] = useState<string | null>(null)
+  useEffect(() => {
+    if (!zoom) return
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setZoom(null)
+    document.addEventListener('keydown', esc)
+    return () => document.removeEventListener('keydown', esc)
+  }, [zoom])
+  if (!list) return null
+  const works = withoutHeroSources(list as unknown as Work[]) as unknown as KidWork[]
+  if (!works.length) {
+    return (
+      <div data-testid="kid-works-empty" className="flex items-center gap-4 py-6">
+        <img src="/art/robot-wave.webp" alt="" className="h-24 w-24 shrink-0 object-contain" />
+        <p className="text-lg font-extrabold text-heading">{t('cab.kid.noWorks', { nick: kid.nick, interpolation: { escapeValue: false } })}</p>
+      </div>
+    )
+  }
+  return (
+    <>
+      <div data-testid="kid-works" className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
+        {works.map((w) => (
+          <button key={w.id} type="button" data-testid="kid-work" aria-label={t('review.zoom')} onClick={() => (w.post_id ? setPost(w.post_id) : setZoom(w.image_url))} className="feed-card group relative block aspect-square overflow-hidden rounded-[22px] bg-primary-soft shadow-card">
+            <img src={`${w.image_url}?thumb=1`} alt="" loading="lazy" decoding="async" onLoad={(e) => e.currentTarget.classList.add('feed-img-on')} className="feed-img h-full w-full object-cover group-hover:scale-105" />
+            {w.post_id && <span data-testid="kid-work-family" className="absolute left-2 top-2 rounded-full bg-success-soft px-2 py-0.5 text-xs font-extrabold text-success shadow-card">{t('mw.inFamily')}</span>}
+          </button>
+        ))}
+      </div>
+      {post !== null && <PostModal postId={post} isChild={false} onClose={() => setPost(null)} onChanged={reload} />}
+      {zoom && (
+        <button type="button" data-testid="kid-work-zoom" aria-label={t('review.close')} onClick={() => setZoom(null)} className="modal-bg fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm">
+          <img src={zoom} alt="" className="modal-in max-h-full max-w-full rounded-2xl object-contain shadow-pop" />
+        </button>
+      )}
+    </>
+  )
+}
+
 function KidBadges({ st }: { st: Analytics }) {
   const { t } = useTranslation()
   const { earned } = rankProgress(st.pictures_total, st.achieved)
   return (
-    <div data-testid="kid-badges" className="flex flex-wrap gap-1.5 md:gap-2">
+    <div data-testid="kid-badges" className="grid grid-cols-6 justify-items-center gap-1.5 lg:grid-cols-3 lg:gap-3">
       {BADGES.map((id) => (
-        <img key={id} src={`/art/badges/${id}.webp`} alt={t(`mw.badge.${id}.name`)} title={t(`mw.badge.${id}.name`)} data-testid={`badge-${id}`} data-earned={earned[id]} className={`h-10 w-10 object-contain md:h-14 md:w-14 ${earned[id] ? '' : 'opacity-60 grayscale'}`} />
+        <img key={id} src={`/art/badges/${id}.webp`} alt={t(`mw.badge.${id}.name`)} title={t(`mw.badge.${id}.name`)} data-testid={`badge-${id}`} data-earned={earned[id]} className={`aspect-square w-full max-w-[72px] object-contain ${earned[id] ? '' : 'opacity-60 grayscale'}`} />
       ))}
     </div>
   )
@@ -288,6 +317,12 @@ export default function ParentCabinet() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids])
+  useEffect(() => {
+    if (!qr) return
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setQr(null)
+    document.addEventListener('keydown', esc)
+    return () => document.removeEventListener('keydown', esc)
+  }, [qr])
   useEffect(() => {
     window.addEventListener(REVIEW_EVENT, reloadQueue)
     return () => window.removeEventListener(REVIEW_EVENT, reloadQueue)
@@ -320,89 +355,95 @@ export default function ParentCabinet() {
       <CabinetHeader role="parent" />
       <main className="overflow-x-clip px-4 py-4 md:px-8">
         <ReviewQueue urgentOnly />
-        <section data-testid="kids">
-          {kids && kids.length === 0 && (
-            <div className="flex flex-wrap items-center gap-4">
-              <h1 data-testid="page-title" className="text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">{t('cab.myKids')}</h1>
-              <KidRing kids={[]} sel={null} counts={counts} onPick={switchKid} onAdd={() => setAdding(true)} />
-              <p className="w-full text-muted">{t('parent.noChildren')}</p>
-            </div>
-          )}
-          {sel && (
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,520px)] lg:gap-8">
-              <section data-testid="kid-panel" className="relative flex min-w-0 flex-col justify-center gap-3 overflow-hidden rounded-[28px] bg-primary-soft p-4 shadow-card md:gap-5 md:p-6 md:pr-[116px] lg:min-h-[580px]">
-                {/* От баннера только облака: робот справа лёг бы под текст и кружки детей */}
-                <img src="/art/level-banner.webp" alt="" className="pointer-events-none absolute inset-y-0 left-0 h-full w-[170%] max-w-none object-cover object-left" />
-                <KidHero kid={sel} st={st} />
-                {st && <div style={vt('kid-badges')} className="kid-swap relative"><KidBadges st={st} /></div>}
-                <div style={vt('kid-meta')} className="kid-swap relative flex flex-wrap items-center gap-x-5 gap-y-2">
-                  {sel.coins != null && (
-                    <p className="flex items-center gap-2 text-lg font-extrabold text-heading md:text-xl">
-                      <img src="/art/coin.webp" alt="" className="h-7 w-7" />
-                      <span data-testid="kid-coins">{sel.coins} {t('pl.word', { count: sel.coins })}</span>
-                    </p>
-                  )}
-                  <button type="button" data-testid="more-toggle" aria-expanded={more} onClick={() => setMore(!more)} className={link}>
-                    {t(more ? 'cab.kid.less' : 'cab.kid.more')}
-                  </button>
-                  <button type="button" data-testid={`qr-${sel.nick}`} onClick={() => void showQr(sel)} className={link}>
-                    {t('parent.qrButton')}
-                  </button>
-                </div>
-                {sel.locked && <p className="relative text-sm font-bold text-danger">{t('parent.locked')}</p>}
-                {qr?.id === sel.id && <div className="relative"><QrBox token={qr.token} nick={qr.nick} /></div>}
-                <KidRing kids={kids ?? []} sel={sel} counts={counts} onPick={switchKid} onAdd={() => setAdding(true)} />
-              </section>
-              {/* Колонка на месте и без работ: при смене ребёнка раскладка не прыгает */}
-              <div style={vt('kid-right')} className={`kid-swap min-w-0 ${waiting ? '' : 'hidden lg:flex'} flex-col items-center justify-center gap-3 text-center`}>
-                {waiting ? (
-                  <ReviewQueue stackOf={sel.nick} title={t('review.okTitle')} />
-                ) : (
-                  <>
-                    <img src="/art/robot-happy.webp" alt="" className="h-40 w-40 object-contain" />
-                    <p data-testid="kid-clear" className="text-xl font-extrabold text-heading">{t('review.empty')}</p>
-                  </>
+        {kids && kids.length === 0 && (
+          <section data-testid="kids" className="flex flex-col items-start gap-4">
+            <h1 data-testid="page-title" className="text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">{t('cab.myKids')}</h1>
+            <p className="text-muted">{t('parent.noChildren')}</p>
+            <div className="w-full max-w-[340px]"><KidList kids={[]} sel={null} counts={counts} onPick={switchKid} onAdd={() => setAdding(true)} /></div>
+          </section>
+        )}
+        {sel && (
+          <section data-testid="kids" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
+            <aside data-testid="kid-panel" className="flex min-w-0 flex-col gap-4 lg:order-2 lg:self-start lg:border-l lg:border-border lg:pl-8">
+              <KidHero kid={sel} st={st} />
+              {st && <div style={vt('kid-badges')} className="kid-swap"><KidBadges st={st} /></div>}
+              <div style={vt('kid-meta')} className="kid-swap flex flex-wrap items-center gap-x-4 gap-y-2">
+                {sel.coins != null && (
+                  <p className="flex w-full items-center gap-2 text-lg font-extrabold text-heading">
+                    <img src="/art/coin.webp" alt="" className="h-7 w-7" />
+                    <span data-testid="kid-coins">{sel.coins} {t('pl.word', { count: sel.coins })}</span>
+                  </p>
                 )}
+                <button type="button" data-testid="more-toggle" aria-expanded={more} onClick={() => setMore(!more)} className={link}>
+                  {t(more ? 'cab.kid.less' : 'cab.kid.more')}
+                </button>
+                <button type="button" data-testid={`qr-${sel.nick}`} onClick={() => void showQr(sel)} className={link}>
+                  {t('parent.qrButton')}
+                </button>
+              </div>
+              {sel.locked && <p className="text-sm font-bold text-danger">{t('parent.locked')}</p>}
+              {more && (
+                <div data-testid="kid-more" className="nav-in flex min-w-0 flex-col gap-3 rounded-2xl bg-primary-soft p-3">
+                  {st && !st.has_data ? (
+                    <p data-testid="week-empty" className="font-bold text-text">{t('cab.week.noData', { nick: sel.nick })}</p>
+                  ) : (
+                    <>
+                      <WeekChart readyAt={st?.ready_at ?? []} />
+                      <p data-testid="week-summary" className="flex flex-wrap gap-x-4 gap-y-0.5 text-sm font-bold text-text">
+                        <span data-testid="week-created">{t('cab.week.pictures')}: <b className="text-heading">{dash(st && weekBars(st.ready_at, new Date()).reduce((n, b) => n + b.count, 0))}</b></span>
+                        <span data-testid="week-published">{t('cab.week.shown')}: <b className="text-heading">{dash(st?.published)}</b></span>
+                        <span data-testid="week-held">{t('cab.week.held')}: <b className="text-heading">{dash(st?.held)}</b></span>
+                        <span>{t('cab.week.received')}: <b data-testid="week-received" className="text-heading">{dash(st?.coins_received)}</b></span>
+                        <span>{t('cab.week.spent')}: <b data-testid="week-spent" className="text-heading">{dash(st?.coins_spent)}</b></span>
+                        {st?.coins_earned_lessons != null && <span data-testid="kid-lessons">{t('cab.kid.lessons')}: <b className="text-primary">+{st.coins_earned_lessons}</b></span>}
+                      </p>
+                      {!!st?.coins_uncertain && <p data-testid="week-uncertain" className="text-sm font-bold text-text">{t('cab.week.uncertain', { count: st.coins_uncertain })}</p>}
+                    </>
+                  )}
+                </div>
+              )}
+              <div className="border-t border-border pt-3">
+                <KidList kids={kids ?? []} sel={sel} counts={counts} onPick={switchKid} onAdd={() => setAdding(true)} />
+              </div>
+            </aside>
+            <div className="flex min-w-0 flex-col gap-6 lg:order-1">
+              {waiting && (
+                <div style={vt('kid-right')} className="kid-swap">
+                  <ReviewQueue stackOf={sel.nick} title={t('review.okTitle')} />
+                </div>
+              )}
+              {/* Только когда точно пусто: очередь загрузилась и по ребёнку нет ничего, срочного тоже */}
+              {queue && !counts[sel.nick] && (
+                <div data-testid="kid-clear" style={vt('kid-right')} className="kid-swap flex items-center gap-3 rounded-[28px] bg-success-soft p-3 pr-5 md:gap-5 md:p-4 md:pr-8">
+                  <img src="/art/robot-happy.webp" alt="" className="h-20 w-20 shrink-0 object-contain md:h-28 md:w-28" />
+                  <div className="min-w-0">
+                    <h2 className="text-[28px] font-black leading-8 tracking-tight text-heading md:text-4xl md:leading-[44px]">{t('cab.kid.clearTitle')}</h2>
+                    <p className="mt-1 text-base font-semibold leading-6 text-text">{t('cab.kid.clearText', { nick: sel.nick, interpolation: { escapeValue: false } })}</p>
+                  </div>
+                </div>
+              )}
+              {more && <OpenLinks role="parent" />}
+              {/* Уведомление о замке или срочном нельзя прятать за «Подробнее» */}
+              <ParentNotes />
+              <div style={vt('kid-works')} className="kid-swap">
+                <h2 data-testid="kid-works-title" className="text-[28px] font-black leading-9 tracking-tight text-heading lg:text-4xl lg:leading-[44px]">{t('cab.kid.works', { nick: sel.nick, interpolation: { escapeValue: false } })}</h2>
+                <div className="mt-3"><KidWorks key={sel.id} kid={sel} /></div>
               </div>
             </div>
-          )}
-          {sel && more && (
-            <div data-testid="kid-more" className="mt-5 min-w-0">
-              {st && !st.has_data ? (
-                <p data-testid="week-empty" className="font-bold text-muted">{t('cab.week.noData', { nick: sel.nick })}</p>
-              ) : (
-                <p data-testid="week-summary" className="flex flex-wrap items-center gap-x-1.5 text-base font-extrabold leading-6 text-heading">
-                  <span data-testid="week-created">{t('cab.week.pictures')}: {dash(st && weekBars(st.ready_at, new Date()).reduce((n, b) => n + b.count, 0))} ·</span>
-                  <span data-testid="week-published">{t('cab.week.shown')}: {dash(st?.published)} ·</span>
-                  <span data-testid="week-held">{t('cab.week.held')}: {dash(st?.held)}</span>
-                </p>
-              )}
-              {st?.has_data && (
-                <>
-                  <p className="mt-3 text-sm font-bold text-muted">{t('cab.week.chart')}</p>
-                  <div className="mt-1 max-h-[180px] overflow-hidden"><WeekChart readyAt={st.ready_at} /></div>
-                  <p className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
-                    <span>{t('cab.week.received')}: <b data-testid="week-received" className="text-heading">{dash(st.coins_received)}</b></span>
-                    <span>{t('cab.week.spent')}: <b data-testid="week-spent" className="text-heading">{dash(st.coins_spent)}</b></span>
-                    {st.coins_earned_lessons != null && <span data-testid="kid-lessons">{t('cab.kid.lessons')}: <b className="text-primary">+{st.coins_earned_lessons}</b></span>}
-                  </p>
-                  {!!st.coins_uncertain && <p data-testid="week-uncertain" className="mt-1 text-sm font-bold text-muted">{t('cab.week.uncertain', { count: st.coins_uncertain })}</p>}
-                </>
-              )}
-              <OpenLinks role="parent" />
-            </div>
-          )}
-        </section>
-        {/* Уведомление о замке или срочном нельзя прятать за «Подробнее» */}
-        <ParentNotes />
-        {sel && (
-          <div style={vt('kid-works')} className="kid-swap mt-6">
-            <h2 data-testid="kid-works-title" className="mb-3 text-[28px] font-black leading-9 tracking-tight text-heading lg:text-4xl lg:leading-[44px]">{t('cab.kid.works', { nick: sel.nick, interpolation: { escapeValue: false } })}</h2>
-            <FeedView key={sel.nick} kinds={['family']} nick={sel.nick} />
-          </div>
+          </section>
         )}
       </main>
       {adding && <AddKidModal onClose={() => setAdding(false)} onAdded={load} />}
+      {qr && (
+        <div role="presentation" onClick={() => setQr(null)} className="modal-bg fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 backdrop-blur-sm">
+          <div role="dialog" aria-modal="true" data-testid="qr-modal" onClick={(e) => e.stopPropagation()} className="modal-in flex w-full max-w-sm flex-col gap-3 rounded-card bg-surface p-4 shadow-pop">
+            <QrBox token={qr.token} nick={qr.nick} />
+            <button type="button" data-testid="qr-close" onClick={() => setQr(null)} className="h-12 rounded-full border border-border bg-surface font-extrabold text-heading">
+              {t('review.close')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import i18n from '../../i18n'
-import { agoText, filterByClass, firstKid, nothingBlurred, parseUtc, reasonKey, reasonKeys, ringAfter, stackOrder, waitingByNick } from './review'
+import { agoText, effectKey, filterByClass, firstKid, nothingBlurred, parseUtc, reasonKey, reasonKeys, stackOrder, waitingByNick } from './review'
 
 describe('review', () => {
+  it('effectKey: размытая загрузка уже у ребёнка, задержанная ещё нет; у каждого ключа есть текст', () => {
+    expect(effectKey({ item_type: 'upload', reason_codes: ['blurred_face', 'blurred_written_word'] })).toBe('review.effect.blurred')
+    expect(effectKey({ item_type: 'upload', reason_codes: ['check_failed'] })).toBe('review.effect.upload')
+    expect(effectKey({ item_type: 'upload', reason_codes: ['drawn_face'] })).toBe('review.effect.drawn_face')
+    expect(effectKey({ item_type: 'upload', reason_codes: ['cleared_word'] })).toBe('review.effect.cleared_word')
+    expect(effectKey({ item_type: 'post', reason_codes: ['blurred_face'] })).toBe('review.effect.post')
+    for (const lang of ['ru', 'en', 'uz']) expect(i18n.exists('review.effect.blurred', { lng: lang, fallbackLng: [] })).toBe(true)
+  })
   it('waitingByNick считает всё, что ждёт, по детям', () => {
     expect(waitingByNick([{ nick: 'A' }, { nick: 'B' }, { nick: 'A' }])).toEqual({ A: 2, B: 1 })
   })
@@ -11,12 +19,6 @@ describe('review', () => {
     expect(firstKid(kids, { C: 1, B: 2 })?.nick).toBe('B')
     expect(firstKid(kids, {})?.nick).toBe('A')
     expect(firstKid([], { A: 1 })).toBeUndefined()
-  })
-  it('ringAfter: остальные дети по кругу от выбранного, без него самого', () => {
-    const kids = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }]
-    expect(ringAfter(kids, 2).map((k) => k.id)).toEqual([3, 4, 1])
-    expect(ringAfter(kids, 4).map((k) => k.id)).toEqual([1, 2, 3])
-    expect(ringAfter([{ id: 1 }], 1)).toEqual([])
   })
   it('stackOrder: пропуск уводит верхнюю вниз по кругу, ни одна работа не теряется', () => {
     expect(stackOrder([1, 2, 3], 0)).toEqual([1, 2, 3])

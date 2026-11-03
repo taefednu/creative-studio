@@ -273,7 +273,8 @@
     "storyIdea": "Bolaning gʻoyasi: «{{text}}»",
     "storyNoImage": "Rasm hali yoʻq",
     "zoom": "Kattaroq ochish",
-    "effect": {"cleared_word": "Harflar topilmadi, shuning uchun rasm xiralashtirilmagan. Ism yoki boshqa shaxsiy ma'lumot ko'rsangiz, rad eting.", "drawn_face": "Bu yuz chizilganga o'xshaydi, shuning uchun xiralashtirilmagan. Unda haqiqiy odam bo'lsa, rad eting.", "share": "Tasdiqlang, rasmni hamma ko‘radi: umumiy lentada va havola orqali. Bolaning laqabi va ismi ko‘rsatilmaydi.", "story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
+    "effect": {"cleared_word": "Harflar topilmadi, shuning uchun rasm xiralashtirilmagan. Ism yoki boshqa shaxsiy ma'lumot ko'rsangiz, rad eting.", "drawn_face": "Bu yuz chizilganga o'xshaydi, shuning uchun xiralashtirilmagan. Unda haqiqiy odam bo'lsa, rad eting.", "share": "Tasdiqlang, rasmni hamma ko‘radi: umumiy lentada va havola orqali. Bolaning laqabi va ismi ko‘rsatilmaydi.", "story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.",
+      "blurred": "Bola faqat xiralashtirilgan nusxani koʻrmoqda. Hamma shaxsiy narsa yashirilgan boʻlsa, tasdiqlang. Rad etsangiz, ish undan yoʻqoladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
     "title": "Ushlab turilganlar",
     "badge": "Ushlab turilgan: {{count}}",
     "okTitle": "Qaroringizni kutmoqda",
@@ -358,7 +359,7 @@
     "nav": "Asosiy menyu",
     "account": "Akkaunt",
     "myKids": "Bolalarim",
-    "kid": { "works": "{{nick}} ishlari", "more": "Batafsil", "less": "Yashirish",
+    "kid": { "clearTitle": "Signal yoʻq", "clearText": "Hammasi joyida: {{nick}} boʻyicha qaroringizni kutayotgan narsa yoʻq.", "noWorks": "{{nick}}da hali ishlar yoʻq.", "works": "{{nick}} ishlari", "more": "Batafsil", "less": "Yashirish",
       "ageClass": "{{age}} · {{name}} sinfi",
       "age": "{{age}} · sinfsiz",
       "lessons": "bu haftada Mentorium darslaridan tangalar",
@@ -367,11 +368,11 @@
       "addChild": "Bola qo‘shish",
       "closeForm": "Yopish"
     },
-    "links": {"title": "Ochiq havolalar", "note": "Bu ishlarni hamma ko‘radi: umumiy lentada va havola orqali."},
+    "links": {"title": "Ochiq havolalar", "note": "Bu ishlarni hamma ko‘radi: umumiy lentada va havola orqali.", "off": "Oʻchirilgan", "resume": "Yoqish"},
     "week": {
       "title": "{{nick}}: shu hafta",
       "perDay": "Kunlik rasmlar",
-      "pictures": "Rasmlar",
+      "pictures": "Haftalik ishlar",
       "shown": "Ko‘rsatilgan",
       "held": "Ushlab turilgan",
       "received": "Olingan tangalar",
@@ -382,7 +383,7 @@
       "uncertain_other": "{{count}} tanga tasdiqlanishini kutmoqda",
       "noData": "{{nick}} uchun 7 kun ichida hali rasm, post yoki tanga yo‘q.",
       "latest": "So‘nggi ishlar",
-      "chart": "So‘nggi 7 kun uchun kunlik rasmlar",
+      "chart": "So‘nggi 7 kun uchun kunlik ishlar",
       "pick": "Haftani ko‘rish uchun bolani tanlang."
     },
     "link": {

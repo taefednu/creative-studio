@@ -273,7 +273,8 @@
     "storyIdea": "The child's idea: “{{text}}”",
     "storyNoImage": "No picture yet",
     "zoom": "Open larger",
-    "effect": {"cleared_word": "No letters were found, so the drawing isn't blurred. Reject if you can see a name or other personal details.", "drawn_face": "This face looks drawn, so it isn't blurred. Reject if it shows a real person.", "share": "Approve and everyone can see the picture: in the public feed and by link. The child’s nickname and name are not shown.", "story": "Approve and the child will see the story; missing pages will be painted.", "prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
+    "effect": {"cleared_word": "No letters were found, so the drawing isn't blurred. Reject if you can see a name or other personal details.", "drawn_face": "This face looks drawn, so it isn't blurred. Reject if it shows a real person.", "share": "Approve and everyone can see the picture: in the public feed and by link. The child’s nickname and name are not shown.", "story": "Approve and the child will see the story; missing pages will be painted.", "prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.",
+      "blurred": "The child already sees only the blurred version. Approve if everything personal is hidden. Reject and the work disappears for them.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
     "title": "Held for review",
     "badge": "Held: {{count}}",
     "okTitle": "Waiting for your decision",
@@ -358,7 +359,7 @@
     "nav": "Main menu",
     "account": "Account",
     "myKids": "My kids",
-    "kid": { "works": "Works by {{nick}}", "more": "More", "less": "Hide",
+    "kid": { "clearTitle": "No signals", "clearText": "All good: nothing from {{nick}} is waiting for your decision.", "noWorks": "{{nick}} has no works yet.", "works": "Works by {{nick}}", "more": "More", "less": "Hide",
       "ageClass": "{{age}} · class {{name}}",
       "age": "{{age}} · no class",
       "lessons": "coins from Mentorium lessons this week",
@@ -367,11 +368,11 @@
       "addChild": "Add a child",
       "closeForm": "Close"
     },
-    "links": {"title": "Open links", "note": "These pictures are visible to everyone: in the public feed and by link."},
+    "links": {"title": "Open links", "note": "These pictures are visible to everyone: in the public feed and by link.", "off": "Turned off", "resume": "Turn on"},
     "week": {
       "title": "{{nick}} this week",
       "perDay": "Pictures per day",
-      "pictures": "Pictures",
+      "pictures": "Works this week",
       "shown": "Shared",
       "held": "Held",
       "received": "Coins received",
@@ -382,7 +383,7 @@
       "uncertain_other": "{{count}} coins are waiting for confirmation",
       "noData": "{{nick}} has no pictures, posts or coins in the last 7 days yet.",
       "latest": "Latest artworks",
-      "chart": "Pictures per day over the last 7 days",
+      "chart": "Works per day over the last 7 days",
       "pick": "Pick a child to see the week."
     },
     "link": {
