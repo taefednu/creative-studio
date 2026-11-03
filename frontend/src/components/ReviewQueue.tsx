@@ -25,11 +25,14 @@ export default function ReviewQueue({
   classFilter = null,
   single = false,
   onCount,
+  limit,
 }: {
   title?: string
   /** Узкая колонка: карточки одна под другой. */
   single?: boolean
   onCount?: (n: number) => void
+  /** Сколько обычных решений показать сразу; остальные по кнопке. Срочное не прячется никогда. */
+  limit?: number
   classFilter?: string | null
 }) {
   const { t } = useTranslation()
@@ -39,7 +42,11 @@ export default function ReviewQueue({
   const [busy, setBusy] = useState<number | null>(null)
   const [failed, setFailed] = useState(false)
   const [zoom, setZoom] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState(false)
   const count = items?.length
+  const urgent = items?.filter((x) => x.urgent) ?? []
+  const calm = items?.filter((x) => !x.urgent) ?? []
+  const shown = limit && !expanded ? [...urgent, ...calm.slice(0, limit)] : items ?? []
   useEffect(() => {
     if (count !== undefined) onCount?.(count)
   }, [count, onCount])
@@ -111,10 +118,15 @@ export default function ReviewQueue({
       )}
       {items && items.length > 0 && (
         <div data-testid="review-grid" className={`grid grid-cols-1 gap-3 ${single ? '' : 'md:grid-cols-2 xl:grid-cols-4'}`}>
-          {items.map((it) => (
+          {shown.map((it) => (
             <ReviewCard key={it.id} it={it} kind={kind(it)} where={where(it)} busy={busy === it.id} onOpen={() => setOpen(it)} onZoom={setZoom} onAct={(w) => void act(it, w)} />
           ))}
         </div>
+      )}
+      {limit && !expanded && calm.length > limit && (
+        <button type="button" data-testid="review-all" onClick={() => setExpanded(true)} className="flex h-12 items-center justify-center self-center rounded-full border border-border bg-surface px-6 font-extrabold text-heading">
+          {t('cab.allReview', { count: items?.length })}
+        </button>
       )}
       {zoom && (
         <button

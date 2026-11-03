@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
@@ -143,11 +144,29 @@ def teacher_me(t: Annotated[Teacher, Depends(current_teacher)]):
 # ---------- родитель: дети ----------
 
 
+Animal = Literal["fox", "bunny", "kitten", "panda", "lion", "dino", "owl", "cat"]
+# Как animalFor на фронте (features/avatar/animal.ts): без выбора у ребёнка остаётся прежний зверёк
+ANIMALS = ("fox", "bunny", "kitten", "panda", "lion", "dino", "owl", "cat")
+ANIMAL_WORDS = (("fox", "fox"), ("bunny", "bunny"), ("rabbit", "bunny"), ("kitten", "kitten"), ("kit", "kitten"), ("panda", "panda"), ("lion", "lion"), ("dino", "dino"), ("owl", "owl"), ("cat", "cat"))
+
+
+def animal_for(nick: str) -> str:
+    low = nick.lower()
+    found = [(low.index(w), a) for w, a in ANIMAL_WORDS if w in low]
+    if found:
+        return min(found, key=lambda x: x[0])[1]
+    h = 0
+    for ch in nick:
+        h = (h * 31 + ord(ch)) & 0xFFFFFFFF
+    return ANIMALS[h % len(ANIMALS)]
+
+
 class NewChild(BaseModel):
     nick: str
     age_group: Literal["5-8", "9-12"]
     lang: Literal["ru", "en", "uz"]
     pictures: Pictures
+    avatar: Animal | None = None
 
 
 @router.post("/parent/children", status_code=201)
@@ -167,6 +186,7 @@ def create_child(body: NewChild, p: Annotated[Parent, Depends(current_parent)], 
         age_group=body.age_group,
         lang=body.lang,
         parent_id=p.id,
+        avatar=body.avatar,
         picture_password_hash=hash_secret(picture_secret(body.pictures)),
     )
     db.add(child)
@@ -432,6 +452,25 @@ def join_class(body: JoinClass, c: Annotated[Child, Depends(current_child)], db:
     db.add(ClassMembership(child_id=c.id, class_id=room.id))
     db.commit()
     return {"class": {"id": room.id, "name": room.name}}
+
+
+class ChildAvatar(BaseModel):
+    avatar: Animal
+
+
+@router.post("/child/avatar")
+def set_avatar(body: ChildAvatar, c: Annotated[Child, Depends(current_child)], db: Db):
+    c.avatar = body.avatar
+    db.commit()
+    return {"avatar": c.avatar}
+
+
+@router.get("/avatars/{nick}", include_in_schema=False)
+def avatar_image(nick: str, db: Db):
+    """Картинка аватара по нику: один адрес для всех экранов. Незнакомый ник получает зверька так же, ответ не выдаёт, есть ли такой ребёнок."""
+    chosen = db.scalar(select(Child.avatar).where(Child.nick_norm == nick.strip().lower()))
+    animal = chosen or animal_for(nick)
+    return RedirectResponse(f"/art/avatars/{animal}.webp", status_code=302, headers={"Cache-Control": "private, max-age=300"})
 
 
 class ChildLang(BaseModel):

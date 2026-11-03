@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { Link, useOutletContext } from 'react-router-dom'
 import { api } from '../api'
 import type { ShellContext } from '../components/AppShell'
-import Avatar from '../components/Avatar'
+import Avatar, { bumpAvatar } from '../components/Avatar'
+import { ANIMALS } from '../features/avatar/animal'
 import ChipSelect from '../components/ChipSelect'
 import Icon from '../components/Icon'
 import NavIcon from '../components/NavIcon'
@@ -28,12 +29,19 @@ export default function MyWorks() {
   const [tasks, reloadTasks] = useLoad(loadAssignments)
   const [filter, setFilter] = useState<WorkFilter>('all')
   const open = tasks?.filter(isOpen) ?? []
-  const { nick } = useOutletContext<ShellContext>()
+  const { nick, reloadMe } = useOutletContext<ShellContext>()
   const [tplData] = useLoad(loadTemplates)
   const [stories] = useLoad(loadMyStories)
   const [style, setStyle] = useState<string | null>(null)
   const filtered = works ? filterWorks(withoutHeroSources(works), filter).filter((w) => !style || w.template_id === style) : []
   const [badge, setBadge] = useState<BadgeId | null>(null)
+  const [picking, setPicking] = useState(false)
+  async function chooseAvatar(a: string) {
+    await api('/api/child/avatar', 'POST', { avatar: a })
+    bumpAvatar()
+    setPicking(false)
+    reloadMe()
+  }
   const shown = galleryOrder(filtered)
   // Сказки в той же сетке; у них нет статуса показа и стиля, поэтому только во «Всех»
   const items = withStories(shown, filter === 'all' && !style ? (stories ?? []).filter((x) => x.status === 'ready') : [])
@@ -51,7 +59,9 @@ export default function MyWorks() {
             <img src="/art/level-banner.webp" alt="" className="absolute inset-y-0 right-0 h-full w-auto max-w-none [mask-image:linear-gradient(to_right,transparent,black_30%)]" />
             <div className="relative flex min-w-0 flex-1 items-center gap-3 md:items-start md:gap-6">
               <div className="relative shrink-0 rounded-full bg-primary p-1">
-                {nick && <Avatar nick={nick} className="h-[60px] w-[60px] md:h-[150px] md:w-[150px]" />}
+                <button type="button" data-testid="avatar-change" aria-expanded={picking} aria-label={t('mw.avatarPick')} title={t('mw.avatarPick')} onClick={() => setPicking((x) => !x)} className="block rounded-full">
+                  {nick && <Avatar nick={nick} className="h-[60px] w-[60px] md:h-[150px] md:w-[150px]" />}
+                </button>
                 <span data-testid="artist-level" className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface bg-primary text-sm font-black text-primary-fg md:bottom-1 md:right-1 md:h-11 md:w-11 md:border-4 md:text-xl">{path.level}</span>
               </div>
               <div className="min-w-0 flex-1 md:max-w-[520px]">
@@ -111,6 +121,18 @@ export default function MyWorks() {
           </div>
         )}
       </div>
+      {picking && (
+        <section data-testid="avatar-picker" className="nav-in mt-2 rounded-2xl bg-primary-soft p-3">
+          <p className="text-sm font-extrabold text-heading">{t('mw.avatarPick')}</p>
+          <div className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+            {ANIMALS.map((a) => (
+              <button key={a} type="button" data-testid={`avatar-${a}`} aria-label={`${t('mw.avatarPick')}: ${a}`} onClick={() => void chooseAvatar(a)} className="h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-surface transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transition-none md:h-16 md:w-16">
+                <img src={`/art/avatars/${a}.webp`} alt="" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       {badge && badge !== 'styles' && (
         <p data-testid="badge-note" className="nav-in mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-primary-soft px-4 py-2.5 text-sm font-bold text-heading">
           <span className="font-black">{t(`mw.badge.${badge}.name`)}</span>

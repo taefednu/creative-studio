@@ -8,6 +8,7 @@ import CabinetHeader from '../components/CabinetHeader'
 import ChipSelect from '../components/ChipSelect'
 import ErrorText, { errorKey } from '../components/ErrorText'
 import Icon from '../components/Icon'
+import NavIcon from '../components/NavIcon'
 import LinkCard from '../components/LinkCard'
 import PictureGrid from '../components/PictureGrid'
 import QrBox from '../components/QrBox'
@@ -15,6 +16,7 @@ import OpenLinks from '../components/OpenLinks'
 import ParentNotes from '../components/ParentNotes'
 import ReviewQueue from '../components/ReviewQueue'
 import WeekChart from '../components/WeekChart'
+import { ANIMALS } from '../features/avatar/animal'
 import { notifyCabinet } from '../features/review/review'
 import { weekBars } from '../features/review/week'
 import { levelOf } from '../features/works/works'
@@ -60,6 +62,7 @@ function AddKidModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =>
   const [age, setAge] = useState('5-8')
   const [lang, setLang] = useState('ru')
   const [pics, setPics] = useState<number[]>([])
+  const [animal, setAnimal] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -74,7 +77,7 @@ function AddKidModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =>
     setBusy(true)
     setErr(null)
     try {
-      await api('/api/parent/children', 'POST', { nick, age_group: age, lang, pictures: pics })
+      await api('/api/parent/children', 'POST', { nick, age_group: age, lang, pictures: pics, avatar: animal })
       onAdded()
       notifyCabinet()
       onClose()
@@ -94,6 +97,16 @@ function AddKidModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =>
           <button type="button" data-testid="add-kid-close" onClick={onClose} className="text-sm font-bold text-muted underline">
             {t('cab.kid.closeForm')}
           </button>
+        </div>
+        <div>
+          <span className={label}>{t('parent.avatar')}</span>
+          <div className="grid grid-cols-8 gap-1.5" data-testid="kid-avatars">
+            {ANIMALS.map((a) => (
+              <button key={a} type="button" data-testid={`kid-avatar-${a}`} aria-pressed={animal === a} aria-label={`${t('parent.avatar')}: ${a}`} onClick={() => setAnimal(a)} className={`aspect-square overflow-hidden rounded-full ${animal === a ? 'ring-4 ring-primary' : ''}`}>
+                <img src={`/art/avatars/${a}.webp`} alt="" className="h-full w-full object-cover" />
+              </button>
+            ))}
+          </div>
         </div>
         <div>
           <label htmlFor="kid-nick" className={label}>
@@ -197,7 +210,7 @@ export default function ParentCabinet() {
           {t('review.okTitle')}
         </h1>
         <div className={few ? 'lg:grid lg:grid-cols-[400px_minmax(0,1fr)] lg:items-start lg:gap-8' : ''}>
-        <ReviewQueue single={few} onCount={setWaiting} />
+        <ReviewQueue single={few} onCount={setWaiting} limit={window.matchMedia('(min-width: 768px)').matches ? 4 : 2} />
         <div className="min-w-0">
         <section data-testid="kids" className={`mt-8 ${few ? 'lg:mt-0' : ''}`}>
           <h2 className={h2}>{t('cab.myKids')}</h2>
@@ -253,10 +266,14 @@ export default function ParentCabinet() {
                   </p>
                 )}
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link to="/parent/feed" data-testid="family-feed-link" className="flex h-11 items-center rounded-full border border-border bg-surface px-5 text-sm font-extrabold text-heading">
+                  <Link to="/parent/feed" data-testid="family-feed-link" className="flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-sm font-extrabold text-primary-fg">
+                    <NavIcon name="feed" className="h-5 w-5" />
                     {t('feed.familyFeed')}
                   </Link>
-                  <button type="button" data-testid={`qr-${sel.nick}`} onClick={() => void showQr(sel)} className="flex h-11 items-center rounded-full border border-border bg-surface px-5 text-sm font-extrabold text-heading">
+                  <button type="button" data-testid={`qr-${sel.nick}`} onClick={() => void showQr(sel)} className="flex h-11 items-center gap-2 rounded-full border-2 border-primary bg-primary-soft px-5 text-sm font-extrabold text-primary">
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 20h2M20 14v2" />
+                    </svg>
                     {t('parent.qrButton')}
                   </button>
                 </div>

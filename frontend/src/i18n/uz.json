@@ -249,6 +249,7 @@
     }
   },
   "parent": {
+    "avatar": "Hayvonchani tanla (keyin almashtirsa bo‘ladi)",
     "title": "Ota-ona kabineti",
     "children": "Mening bolalarim",
     "noChildren": "Hozircha profil yo‘q. Birinchi bolani qo‘shing.",
@@ -490,6 +491,7 @@
     "sample": "Topshiriq rasmi"
   },
   "mw": {
+    "avatarPick": "O‘z hayvonchangni tanla",
     "gallery": "{{nick}} galereyasi",
     "rank": {"novice": "Yangi boshlovchi", "young": "Yosh rassom", "master": "Mo‘yqalam ustasi", "wizard": "Ranglar sehrgari", "great": "Buyuk rassom"}, "level": "{{n}}-daraja", "levelNext": "{{level}}-darajagacha: {{n}} / {{need}} ta rasm", "rankTop": "Eng yuqori unvon!", "badgeDone": "Olindi!", "badge": {"first": {"name": "Birinchi rasm", "how": "Birinchi rasmingni chiz."}, "alive": {"name": "Jonlangan rasm", "how": "Rasmingni jonlantir."}, "story": {"name": "Ertakchi", "how": "Qahramoning haqida ertak to‘qi."}, "shared": {"name": "Ko‘rgazmada", "how": "Ishingni oilang yoki sinfingga ko‘rsat."}, "styles": {"name": "Kollektsioner", "how": "Barcha uslublarda chiz."}, "ten": {"name": "O‘nta ish", "how": "10 ta rasm chiz."}},
     "albumLabel": "Uslublar albomi",
