@@ -28,7 +28,8 @@ Db = Annotated[Session, Depends(get_session)]
 ChildDep = Annotated[Child, Depends(current_child)]
 
 LIMIT = 20
-DECISION_TYPES = ("post", "comment", "prompt", "image", "upload", "story", "share")
+DECISION_TYPES = ("post", "comment", "prompt", "image", "upload", "story", "share", "nickname", "avatar")
+OWN_TEXT = {"nickname": "nick", "avatar": "avatar"}  # не работа: о них своё сообщение
 ALL = "*"  # «очистить все»: скрыто всё, что случилось до этого момента
 KEY_RE = r"^(\*|(task|decision|reaction|comment):\d{1,18})$"
 
@@ -67,11 +68,11 @@ def _decision_events(db: Session, c: Child) -> list[dict]:
     )
     return [
         {
-            "kind": "approved" if i.status == "approved" else "refused",
+            "kind": OWN_TEXT.get(i.item_type, "") + ("approved" if i.status == "approved" else "refused"),
             "key": f"decision:{i.id}",
             "at": i.decided_at,
             "image_url": _approved_thumb(db, i, c),
-            "link": "/my-works" if i.status == "approved" else "/create",
+            "link": "/my-works" if i.status == "approved" or i.item_type in OWN_TEXT else "/create",
         }
         for i in rows
     ]

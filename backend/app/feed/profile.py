@@ -1,0 +1,157 @@
+"""Профиль ребёнка: новый ник и своя картинка на аватарке.
+
+Ник: та же проверка, что при регистрации. Сбой проверки уходит взрослому, ребёнок ждёт его решения.
+Картинка: только своя готовая работа и только после «да» взрослого: аватарку видит весь класс, а работа
+в класс и так идёт через взрослого. Загрузка и герой из неё не подходят: в них может быть настоящий ребёнок.
+"""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
+from app.accounts import nickcheck
+from app.accounts.adults import child_with_adult, has_adult
+from app.accounts.deps import current_child
+from app.accounts.models import Child, ClassMembership
+from app.accounts.nickcheck import NICK_RE
+from app.db import get_session
+from app.feed.models import Post
+from app.moderation import HeldItem, hold, register
+from app.works.image.models import Work
+
+router = APIRouter(prefix="/api")
+Db = Annotated[Session, Depends(get_session)]
+ChildDep = Annotated[Child, Depends(current_child)]
+
+NOT_FOR_AVATAR = ("upload", "alive")
+
+
+def _hold_for_adult(db: Session, c: Child, item_type: str, target_id: int, codes: list[str], text: str | None = None, urgent: bool = False) -> None:
+    class_id = db.scalar(select(ClassMembership.class_id).where(ClassMembership.child_id == c.id))
+    hold(
+        db,
+        item_type=item_type,
+        target_id=target_id,
+        child_id=c.id,
+        reviewer="parent" if c.parent_id is not None else "teacher",
+        reason_codes=codes,
+        class_id=class_id if c.parent_id is None else None,
+        preview_text=text,
+        urgent=urgent,
+    )
+
+
+def avatar_allowed(db: Session, w: Work | None) -> bool:
+    """Отказ взрослого сильнее всего: скрытая или отклонённая работа на аватарке не живёт."""
+    if w is None or w.status != "ready" or not w.file_path or w.kind in NOT_FOR_AVATAR:
+        return False
+    return db.scalar(select(Post.id).where(Post.work_id == w.id, Post.status.in_(("rejected", "hidden"))).limit(1)) is None
+
+
+def _pending(db: Session, c: Child, item_type: str) -> HeldItem | None:
+    return db.scalar(select(HeldItem).where(HeldItem.child_id == c.id, HeldItem.item_type == item_type, HeldItem.status == "pending"))
+
+
+class NickBody(BaseModel):
+    nick: str
+
+
+@router.post("/child/nick")
+def change_nick(body: NickBody, c: ChildDep, db: Db) -> dict:
+    nick = body.nick.strip()
+    if not NICK_RE.match(nick):
+        raise HTTPException(422, "nick_format")
+    norm = nick.lower()
+    if nick == c.nick:
+        return {"status": "ok", "nick": c.nick}
+    if norm != c.nick_norm and db.scalar(select(Child.id).where(Child.nick_norm == norm)):
+        raise HTTPException(409, "nick_taken")
+    if _pending(db, c, "nickname"):
+        raise HTTPException(409, "nick_pending")
+    try:
+        d = nickcheck._check_text()(nick, "nickname", c.lang)
+    except Exception:  # noqa: BLE001 — fail closed: как сбой модели
+        d = None
+    if d is not None and d.action == "allow" and not d.model_error:
+        c.nick, c.nick_norm = nick, norm
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+            raise HTTPException(409, "nick_taken") from None
+        return {"status": "ok", "nick": nick}
+    if d is None or d.model_error:
+        if not has_adult(db, c):  # взрослого нет: решить некому, ник остаётся прежним
+            raise HTTPException(503, "nick_check_failed")
+        _hold_for_adult(db, c, "nickname", c.id, ["check_failed"], nick)
+        return {"status": "held", "nick": c.nick}
+    if (d.urgent or d.action == "support") and has_adult(db, c):
+        _hold_for_adult(db, c, "nickname", c.id, list(d.reason_codes), nick, urgent=True)
+    raise HTTPException(422, "nick_rejected")
+
+
+class AvatarWorkBody(BaseModel):
+    work_id: int
+
+
+@router.post("/child/avatar-work")
+def ask_avatar_work(body: AvatarWorkBody, c: Annotated[Child, Depends(child_with_adult)], db: Db) -> dict:
+    w = db.get(Work, body.work_id)
+    if w is None or w.child_id != c.id or not avatar_allowed(db, w):
+        raise HTTPException(404, "not_found")
+    if _pending(db, c, "avatar"):
+        raise HTTPException(409, "avatar_pending")
+    _hold_for_adult(db, c, "avatar", w.id, ["avatar_review"])
+    return {"status": "held"}
+
+
+@router.get("/child/profile")
+def profile(c: ChildDep, db: Db) -> dict:
+    """Что ждёт взрослого и какие работы можно поставить на аватарку."""
+    pending_nick = _pending(db, c, "nickname")
+    pending_avatar = _pending(db, c, "avatar")
+    works = db.scalars(
+        select(Work.id)
+        .where(Work.child_id == c.id, Work.status == "ready", Work.file_path.is_not(None), Work.kind.not_in(NOT_FOR_AVATAR))
+        .order_by(Work.id.desc())
+        .limit(12)
+    ).all()
+    return {
+        # Текст срочного не показываем: ребёнок уже получил отказ, в ожидании такой ник не висит
+        "nick_pending": pending_nick.preview_text if pending_nick and not pending_nick.urgent else None,
+        "avatar_pending": int(pending_avatar.target_id) if pending_avatar else None,
+        "avatar_work_id": c.avatar_work_id,
+        "works": [{"id": i, "image_url": f"/api/works/{i}/image?thumb=1"} for i in works],
+    }
+
+
+def _approve_nick(db: Session, item: HeldItem) -> None:
+    c = db.get(Child, item.child_id)
+    nick = item.preview_text or ""
+    if c is None or not NICK_RE.match(nick):
+        return
+    c.nick, c.nick_norm = nick, nick.lower()
+    try:
+        db.commit()
+    except IntegrityError:  # пока ждал взрослого, ник занял другой: остаётся прежний
+        db.rollback()
+
+
+def _approve_avatar(db: Session, item: HeldItem) -> None:
+    c = db.get(Child, item.child_id)
+    w = db.get(Work, int(item.target_id))
+    if c is not None and w is not None and w.child_id == c.id and avatar_allowed(db, w):
+        c.avatar_work_id = w.id
+        db.commit()
+
+
+def _nothing(db: Session, item: HeldItem) -> None:
+    """Отказ: остаётся прежний ник или аватарка, менять нечего."""
+
+
+register("nickname", _approve_nick, _nothing)
+register("avatar", _approve_avatar, _nothing)

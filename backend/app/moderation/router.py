@@ -28,7 +28,7 @@ from app.works.story.models import Story
 router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
 
-IMAGE_TYPES = ("image", "post", "submission", "upload", "share")  # у остальных видов своей картинки нет
+IMAGE_TYPES = ("image", "post", "submission", "upload", "share", "avatar")  # у остальных видов своей картинки нет
 
 
 def adult(
@@ -95,7 +95,7 @@ def _where(item: HeldItem) -> str:
 
 
 def _work_of(db: Session, item: HeldItem) -> Work | None:
-    if item.item_type in ("image", "upload"):
+    if item.item_type in ("image", "upload", "avatar"):
         return db.get(Work, int(item.target_id))
     if item.item_type == "post":
         p = db.get(Post, int(item.target_id))

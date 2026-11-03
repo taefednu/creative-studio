@@ -15,6 +15,7 @@ from app.accounts.security import COOKIE
 from app.db import get_session
 from app.feed import service
 from app.feed.models import REACTIONS, Comment, CommentSuggestion, Post, Reaction
+from app.feed.profile import avatar_allowed
 from app.feed.service import Viewer
 from app.moderation import hold
 from app.moderation.models import HeldItem
@@ -65,11 +66,14 @@ def _get_post(db: Session, v: Viewer, post_id: int) -> tuple[Post, str]:
 
 
 @router.get("/avatars/{nick}", include_in_schema=False)
-def avatar_image(nick: str, db: Db, v: Guest):
+def avatar_image(nick: str, request: Request, db: Db, v: Guest):
     """Картинка аватара по нику: один адрес для всех экранов. Гость получает зверька только по нику: иначе без входа
     можно проверять, есть ли ребёнок с таким ником. У вошедшего остаётся: выбранный зверёк виден своим и одноклассникам."""
-    chosen = None if v.role == "guest" else db.scalar(select(Child.avatar).where(Child.nick_norm == nick.strip().lower()))
-    animal = chosen or animal_for(nick)
+    who = None if v.role == "guest" else db.scalar(select(Child).where(Child.nick_norm == nick.strip().lower()))
+    w = db.get(Work, who.avatar_work_id) if who is not None and who.avatar_work_id else None
+    if w is not None and avatar_allowed(db, w):
+        return thumb_response(w.file_path, request)
+    animal = (who.avatar if who is not None else None) or animal_for(nick)
     return RedirectResponse(f"/art/avatars/{animal}.webp", status_code=302, headers={"Cache-Control": "private, max-age=300"})
 
 

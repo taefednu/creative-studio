@@ -459,7 +459,7 @@ class ChildAvatar(BaseModel):
 
 @router.post("/child/avatar")
 def set_avatar(body: ChildAvatar, c: Annotated[Child, Depends(current_child)], db: Db):
-    c.avatar = body.avatar
+    c.avatar, c.avatar_work_id = body.avatar, None
     db.commit()
     return {"avatar": c.avatar}
 
