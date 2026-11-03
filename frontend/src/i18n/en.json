@@ -150,6 +150,7 @@
     "prompt_injection": "Just describe the picture: who is there and what are they doing?"
   },
   "feed": {
+    "anon": "Young artist",
     "title": {
       "class": "Class feed",
       "family": "Family feed",
@@ -206,7 +207,7 @@
   },
   "share": {"title": "Look what I made!", "alt": "A picture checked by AI", "cta": "Make your own picture", "gone": "This link no longer works"},
   "publish": {
-    "toAll": "Everyone", "toAllNote": "An adult will look and allow it. Then the picture appears in the public feed and you get a link. Your name is not on the link page.", "askAdult": "Ask an adult",
+    "toAll": "Everyone", "toAllNote": "An adult will look and allow it. Then the picture appears in the public feed and you get a link. Your nickname won’t be there.", "askAdult": "Ask an adult",
     "share": {"waiting": "Waiting for an adult to allow showing it to everyone.", "refused": "An adult decided not to show this picture to everyone.", "live": "Link to the picture", "copy": "Copy", "copied": "Copied", "stop": "Turn off the link"},
     "button": "Share",
     "toClass": "To the class",
@@ -288,7 +289,7 @@
     "storyIdea": "The child's idea: “{{text}}”",
     "storyNoImage": "No picture yet",
     "zoom": "Open larger",
-    "effect": {"share": "Approve and everyone can see the picture: in the public feed and by link. The child’s name is not on the link page.", "story": "Approve and the child will see the story; missing pages will be painted.", "prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
+    "effect": {"share": "Approve and everyone can see the picture: in the public feed and by link. The child’s nickname and name are not shown.", "story": "Approve and the child will see the story; missing pages will be painted.", "prompt": "Approve and the picture will be drawn from this prompt.", "image": "Approve and the child will see the picture.", "post": "Approve and the work will appear in the feed.", "comment": "Approve and the comment will appear under the work.", "upload": "Approve and the child will see the drawing, with faces and personal details blurred.", "submission": "Approve and the work will count as handed in.", "other": "Approve and this will be allowed."},
     "title": "Held for review",
     "badge": "Held: {{count}}",
     "okTitle": "Waiting for your OK",
@@ -382,6 +383,7 @@
       "addChild": "Add a child",
       "closeForm": "Close"
     },
+    "links": {"title": "Open links", "note": "These pictures are visible to everyone: in the public feed and by link."},
     "week": {
       "title": "{{nick}} this week",
       "perDay": "Pictures per day",

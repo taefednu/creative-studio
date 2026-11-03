@@ -56,13 +56,16 @@ const RANKS = [
   { id: 'wizard', need: 25 },
   { id: 'great', need: 50 },
 ]
+export function levelOf(pictures: number) {
+  return RANKS.filter((r) => pictures >= r.need).length
+}
 export const BADGES = ['first', 'alive', 'story', 'shared', 'styles', 'ten'] as const
 export type BadgeId = (typeof BADGES)[number]
 
 /** Путь художника: только из настоящих работ ребёнка. Загруженные рисунки не считаем: нарисовал не он здесь. Монет и сравнения с другими нет. */
 export function artistProgress(works: Work[], storiesReady: number, stylesDone: number, stylesTotal: number) {
   const pictures = works.filter((w) => w.image_url && w.kind !== 'upload').length
-  const at = RANKS.filter((r) => pictures >= r.need).length - 1
+  const at = levelOf(pictures) - 1
   const earned: Record<BadgeId, boolean> = {
     first: pictures >= 1,
     alive: works.some((w) => w.kind === 'alive' && w.image_url),

@@ -84,8 +84,11 @@ def analytics(child_id: int, p: Annotated[Parent, Depends(current_parent)], db: 
     ).all()
     has_data = bool(created or published or held or entries)
     # Нет данных — null, а не нули: пустое состояние с объяснением рисует экран.
+    # За всё время, не за неделю: уровень как у ребёнка, загруженные рисунки не считаются
+    pictures_total = _count(db, Work, Work.child_id == child.id, Work.status == "ready", Work.kind != "upload")
     return {
         "child_id": child.id,
+        "pictures_total": pictures_total,
         "days": DAYS,
         "has_data": has_data,
         "created": created if has_data else None,

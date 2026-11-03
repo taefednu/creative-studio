@@ -150,6 +150,7 @@
     "prompt_injection": "Rasmni oddiygina tasvirla: u yerda kim va nima qilyapti?"
   },
   "feed": {
+    "anon": "Yosh rassom",
     "title": {
       "class": "Sinf lentasi",
       "family": "Oila lentasi",
@@ -206,7 +207,7 @@
   },
   "share": {"title": "Qara, nima yaratdim!", "alt": "AI tekshirgan rasm", "cta": "O‘z rasmingni yarat", "gone": "Bu havola endi ishlamaydi"},
   "publish": {
-    "toAll": "Hammaga", "toAllNote": "Kattalar ko‘rib, ruxsat beradi. Shunda rasm umumiy lentada chiqadi va senga havola beriladi. Havola sahifasida isming yo‘q.", "askAdult": "Kattalardan so‘rash",
+    "toAll": "Hammaga", "toAllNote": "Kattalar ko‘rib, ruxsat beradi. Shunda rasm umumiy lentada chiqadi va senga havola beriladi. U yerda laqabing bo‘lmaydi.", "askAdult": "Kattalardan so‘rash",
     "share": {"waiting": "Kattalar hammaga ko‘rsatishga ruxsat berishini kutamiz.", "refused": "Kattalar bu rasmni hammaga ko‘rsatmaslikka qaror qildi.", "live": "Rasmga havola", "copy": "Nusxalash", "copied": "Tayyor", "stop": "Havolani o‘chirish"},
     "button": "Ulashish",
     "toClass": "Sinfga",
@@ -288,7 +289,7 @@
     "storyIdea": "Bolaning gʻoyasi: «{{text}}»",
     "storyNoImage": "Rasm hali yoʻq",
     "zoom": "Kattaroq ochish",
-    "effect": {"share": "Tasdiqlang, rasmni hamma ko‘radi: umumiy lentada va havola orqali. Havola sahifasida bolaning ismi yo‘q.", "story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
+    "effect": {"share": "Tasdiqlang, rasmni hamma ko‘radi: umumiy lentada va havola orqali. Bolaning laqabi va ismi ko‘rsatilmaydi.", "story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
     "title": "Ushlab turilganlar",
     "badge": "Ushlab turilgan: {{count}}",
     "okTitle": "Sizning ruxsatingizni kutmoqda",
@@ -382,6 +383,7 @@
       "addChild": "Bola qo‘shish",
       "closeForm": "Yopish"
     },
+    "links": {"title": "Ochiq havolalar", "note": "Bu ishlarni hamma ko‘radi: umumiy lentada va havola orqali."},
     "week": {
       "title": "{{nick}}: shu hafta",
       "perDay": "Kunlik rasmlar",

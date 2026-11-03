@@ -210,7 +210,7 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
                 <FeedImage src={`${p.image_url}?thumb=1`} alt={captionOf(p, i18n.language) ?? ''} eager={row < 3} className="h-full w-full object-cover" />
               </span>
               <div className="px-3 py-2">
-                <p className="truncate text-sm font-extrabold text-heading">{p.nick}</p>
+                <p className="truncate text-sm font-extrabold text-heading">{p.nick || t('feed.anon')}</p>
                 {p.caption && <p className="text-sm text-text">{captionOf(p, i18n.language)}</p>}
                 <div className="mt-1 flex flex-wrap gap-x-3 text-sm font-bold text-heading">
                   {REACTIONS.map((r) => (
@@ -227,8 +227,8 @@ export default function FeedView({ kinds, classId, title, child, guest }: Props)
             type="button"
             data-testid="post-card"
               data-post-id={p.id}
-            aria-label={p.caption ? `${p.nick}: ${captionOf(p, i18n.language)}` : p.nick}
-            title={p.nick}
+            aria-label={p.caption ? `${p.nick}: ${captionOf(p, i18n.language)}` : p.nick || t('feed.anon')}
+            title={p.nick || t('feed.anon')}
             onClick={() => setOpen(p.id)}
             style={{ aspectRatio: cardRatio(shown.indexOf(p) + 1) }}
             className="feed-card group relative block w-full overflow-hidden rounded-card bg-primary-soft text-left shadow-card"

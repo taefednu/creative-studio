@@ -18,8 +18,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.accounts.adults import AdultChild
-from app.accounts.deps import current_child
-from app.accounts.models import Child
+from app.accounts.deps import current_child, current_parent
+from app.accounts.models import Child, Parent
 from app.db import get_session
 from app.feed.models import Post
 from app.feed.router import V, _origin_chain
@@ -135,6 +135,19 @@ def stop_share(work_id: int, db: Db, v: V):
     s.post_id = None
     db.commit()
     return _view(db, s)
+
+
+@router.get("/api/parent/shares")
+def parent_shares(p: Annotated[Parent, Depends(current_parent)], db: Db):
+    """Какие работы детей этого родителя сейчас открыты всем: чтобы было что выключить."""
+    rows = db.execute(
+        select(Share, Child.nick).join(Child, Child.id == Share.child_id).where(Child.parent_id == p.id, Share.status == "live")
+    ).all()
+    return [
+        {"work_id": s.work_id, "nick": nick, "path": f"/s/{s.token}", "image_url": f"/api/public/{s.token}/card.jpg"}
+        for s, nick in rows
+        if _live_work(db, s.token) is not None
+    ]
 
 
 # ---- решение взрослого ----

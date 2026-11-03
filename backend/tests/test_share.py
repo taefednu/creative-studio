@@ -94,7 +94,12 @@ def test_nothing_opens_until_adult_approves(world):
     card = guest.get(pub["image_url"])
     assert card.headers["content-type"] == "image/jpeg" and Image.open(io.BytesIO(card.content)).format == "JPEG"
     # и в общей ленте
-    assert len(guest.get("/api/feed/best").json()["items"]) == 1
+    # и в общей ленте, но ника там нет ни у гостя, ни у другого ребёнка; автор свой ник видит
+    items = guest.get("/api/feed/best").json()["items"]
+    assert len(items) == 1 and items[0]["nick"] == ""
+    assert "SecretNick" not in guest.get("/api/feed/best").text
+    assert guest.get(f"/api/posts/{items[0]['id']}").json()["nick"] == ""
+    assert kid.get("/api/feed/best").json()["items"][0]["nick"] == "SecretNick"
 
 
 def test_refusal_is_stronger_than_asking_again(world):
@@ -154,3 +159,22 @@ def test_upload_and_foreign_work_cannot_be_shared(world):
     assert stranger.post("/api/child/login", json={"nick": "OtherKid", "pictures": PICS}).status_code == 200
     assert stranger.post(f"/api/works/{other}/share").status_code == 404
     assert stranger.get(f"/api/works/{other}/share").status_code == 404
+
+
+def test_parent_sees_open_links_and_level_count(world):
+    parent, kid, cid, tmp = world
+    wid = make_work(cid, tmp)
+    make_work(cid, tmp, kind="upload", name="u")
+    assert parent.get("/api/parent/shares").json() == []
+    kid.post(f"/api/works/{wid}/share")
+    assert parent.get("/api/parent/shares").json() == []  # пока ждёт, открытой ссылки нет
+    parent.post(f"/api/review/items/{item_of(wid)}/approve")
+    rows = parent.get("/api/parent/shares").json()
+    assert [r["work_id"] for r in rows] == [wid] and rows[0]["nick"] == "SecretNick"
+    parent.delete(f"/api/works/{wid}/share")
+    assert parent.get("/api/parent/shares").json() == []
+    assert parent.get(f"/api/parent/children/{cid}/analytics").json()["pictures_total"] == 1  # загрузка не в счёт
+    other = TestClient(app)
+    other.post("/api/parent/register", json={"email": "q@x.io", "password": "correct-horse-1"})
+    kid.post(f"/api/works/{wid}/share")
+    assert other.get("/api/parent/shares").json() == []

@@ -7,13 +7,16 @@ import Avatar from '../components/Avatar'
 import CabinetHeader from '../components/CabinetHeader'
 import ChipSelect from '../components/ChipSelect'
 import ErrorText, { errorKey } from '../components/ErrorText'
+import Icon from '../components/Icon'
 import LinkCard from '../components/LinkCard'
 import PictureGrid from '../components/PictureGrid'
 import QrBox from '../components/QrBox'
+import ParentNotes from '../components/ParentNotes'
 import ReviewQueue from '../components/ReviewQueue'
 import WeekChart from '../components/WeekChart'
 import { notifyCabinet } from '../features/review/review'
 import { weekBars } from '../features/review/week'
+import { levelOf } from '../features/works/works'
 import { PASSWORD_LENGTH } from '../features/auth/pictures'
 import { useLoad } from '../useLoad'
 
@@ -28,6 +31,7 @@ type Kid = {
 }
 type Analytics = {
   has_data: boolean
+  pictures_total: number
   created: number | null
   ready_at: string[]
   published: number | null
@@ -38,9 +42,11 @@ type Analytics = {
   coins_spent: number | null
 }
 type FamilyPost = { id: number; nick: string; image_url: string }
+type OpenLink = { work_id: number; nick: string; path: string; image_url: string }
 
 const loadKids = () => api<Kid[]>('/api/parent/children')
 const loadFamily = () => api<{ items: FamilyPost[] }>('/api/feed/family?limit=40')
+const loadLinks = () => api<OpenLink[]>('/api/parent/shares')
 
 const input =
   'w-full rounded-2xl border border-border bg-surface px-4 py-2 font-bold text-heading outline-none focus:border-primary'
@@ -152,6 +158,7 @@ export default function ParentCabinet() {
   const { t } = useTranslation()
   const [kids, load] = useLoad(loadKids)
   const [family] = useLoad(loadFamily)
+  const [links, reloadLinks] = useLoad(loadLinks)
   const [qr, setQr] = useState<{ id: number; nick: string; token: string } | null>(null)
   const [pick, setPick] = useState<number | null>(null)
   const [stats, setStats] = useState<Record<number, Analytics>>({})
@@ -180,154 +187,127 @@ export default function ParentCabinet() {
     setQr({ id: k.id, nick: k.nick, token: r.token })
   }
 
-  const tile = (icon: string, name: string, value: number | null | undefined, testid: string) => (
-    <div className="flex min-w-0 flex-col gap-1 rounded-2xl border border-border bg-surface p-2 sm:flex-row sm:items-center sm:gap-3 sm:p-3" data-testid={testid}>
-      <img src={icon} alt="" className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10" />
-      <div className="min-w-0">
-        <p className="truncate text-xs text-muted sm:text-sm">{name}</p>
-        <p className="text-3xl font-extrabold text-heading">{dash(value)}</p>
-      </div>
-    </div>
-  )
+  async function stopLink(l: OpenLink) {
+    await api(`/api/works/${l.work_id}/share`, 'DELETE')
+    reloadLinks()
+  }
 
+  const h2 = 'text-2xl font-black tracking-tight text-heading md:text-3xl'
   return (
     <div className="min-h-screen bg-bg pb-24 lg:pb-6">
       <CabinetHeader role="parent" />
-      <main className="px-4 py-4 md:px-8">
-        <h1 data-testid="page-title" className="mb-3 w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-4xl lg:leading-10">
-          {t('cab.myKids')}
+      <main className="mx-auto max-w-[1400px] px-4 py-4 md:px-8">
+        <h1 data-testid="page-title" className="mb-3 text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">
+          {t('review.okTitle')}
         </h1>
-        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 xl:grid-cols-[494fr_593fr_500fr]">
-          <section className="grid grid-cols-[minmax(0,1fr)] gap-4 s520:grid-cols-[repeat(2,minmax(0,1fr))]" data-testid="kids">
-            {kids && kids.length === 0 && <p className="col-span-full text-muted">{t('parent.noChildren')}</p>}
+        <ReviewQueue />
+
+        <section data-testid="kids" className="mt-8">
+          <h2 className={h2}>{t('cab.myKids')}</h2>
+          {kids && kids.length === 0 && <p className="mt-2 text-muted">{t('parent.noChildren')}</p>}
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
             {kids?.map((k) => {
-              const lessons = stats[k.id]?.coins_earned_lessons
+              const total = stats[k.id]?.pictures_total
               return (
-                <div key={k.id} data-testid={`kid-${k.nick}`}>
-                  <div
-                    data-testid="kid-card"
-                    className={`flex h-full flex-col items-center gap-2 rounded-card border bg-surface p-4 shadow-card ${sel?.id === k.id ? 'border-primary' : 'border-border'}`}
-                  >
-                    <Avatar nick={k.nick} className="h-auto w-full max-w-[170px] aspect-square short:max-w-[84px]" />
-                    <p className="text-3xl font-extrabold text-heading short:text-xl">{k.nick}</p>
-                    <p className="text-center text-muted">
-                      {k.class_name ? t('cab.kid.ageClass', { age: k.age_group, name: k.class_name }) : t('cab.kid.age', { age: k.age_group })}
-                    </p>
-                    <p className="flex items-center gap-2 rounded-full bg-primary-soft px-6 py-1 text-3xl font-extrabold text-heading short:px-4 short:py-0 short:text-xl" data-testid="kid-coins">
-                      <img src="/art/coin.webp" alt="" className="h-10 w-10 short:h-7 short:w-7" />
-                      {k.coins ?? '—'}
-                    </p>
-                    {lessons != null && (
-                      <p className="flex w-full items-center justify-between gap-2 rounded-xl border border-dashed border-border px-3 py-2 text-xs text-muted" data-testid="kid-lessons">
-                        {t('cab.kid.lessons')}
-                        <b className="text-lg text-primary">+{lessons}</b>
-                      </p>
-                    )}
-                    {k.locked && <p className="text-sm font-bold text-danger">{t('parent.locked')}</p>}
-                    <div className="mt-auto flex w-full items-center gap-2">
-                      <button
-                        type="button"
-                        data-testid={`kid-open-${k.nick}`}
-                        onClick={() => setPick(k.id)}
-                        className="h-[55px] short:h-11 flex-1 rounded-full bg-primary px-3 text-lg short:text-base font-extrabold uppercase text-primary-fg"
-                      >
-                        {t('cab.kid.open')}
-                      </button>
-                      <button
-                        type="button"
-                        disabled
-                        data-testid={`add-coins-${k.nick}`}
-                        className="relative h-[55px] short:h-11 flex-1 rounded-full border border-border bg-surface px-2 text-sm font-bold text-heading opacity-70"
-                      >
-                        {t('cab.kid.addCoins')}
-                        <span className="absolute -top-2 right-1 rounded-full bg-primary-soft px-2 text-[10px] font-extrabold text-primary">{t('auth.soon')}</span>
-                      </button>
-                    </div>
-                    <button type="button" data-testid={`qr-${k.nick}`} onClick={() => void showQr(k)} className="text-sm font-bold text-primary underline">
-                      {t('parent.qrButton')}
-                    </button>
-                    {qr?.id === k.id && <QrBox token={qr.token} nick={qr.nick} />}
-                  </div>
-                </div>
+                <button
+                  key={k.id}
+                  type="button"
+                  data-testid={`kid-${k.nick}`}
+                  aria-pressed={sel?.id === k.id}
+                  onClick={() => setPick(k.id)}
+                  className={`flex h-[76px] shrink-0 items-center gap-3 rounded-full border-2 pl-2 pr-5 text-left ${sel?.id === k.id ? 'border-primary bg-primary-soft' : 'border-transparent bg-surface'}`}
+                >
+                  <Avatar nick={k.nick} className="h-[60px] w-[60px]" />
+                  <span className="min-w-0">
+                    <span className="block truncate text-lg font-black leading-6 text-heading">{k.nick}</span>
+                    <span className="flex items-center gap-1 text-sm font-bold text-muted">
+                      {total != null && <span data-testid="kid-level">{t('mw.level', { n: levelOf(total) })} ·</span>}
+                      <img src="/art/coin.webp" alt="" className="h-4 w-4" />
+                      <span data-testid="kid-coins">{k.coins ?? '—'}</span>
+                    </span>
+                  </span>
+                </button>
               )
             })}
             <button
               type="button"
               data-testid="add-child-tile"
+              aria-label={t('cab.kid.addChild')}
+              title={t('cab.kid.addChild')}
               onClick={() => setAdding(true)}
-              className="col-span-full flex h-[120px] short:h-14 short:flex-row short:gap-2 flex-col items-center justify-center gap-1 rounded-card border-2 border-dashed border-border bg-surface p-2 text-xl font-extrabold text-primary xl:h-[236px] short:!h-14 short:text-base"
+              className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary"
             >
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-4xl leading-none xl:h-16 xl:w-16 xl:text-5xl short:!h-8 short:!w-8 short:!text-2xl">+</span>
-              {t('cab.kid.addChild')}
+              <Icon name="plus" className="h-8 w-8" />
             </button>
-          </section>
-
-          <section className="flex flex-col gap-4">
-            <div data-testid="week" className={`${card} flex flex-col gap-3 p-5 short:gap-2 short:p-4`}>
-              {sel ? (
-                <>
-                  <h2 className="text-3xl font-extrabold text-heading short:text-2xl">{t('cab.week.title', { nick: sel.nick })}</h2>
-                  {st && !st.has_data ? (
-                    <p data-testid="week-empty" className="rounded-2xl bg-primary-soft p-4 text-heading">
-                      {t('cab.week.noData', { nick: sel.nick })}
+          </div>
+          {sel?.locked && <p className="mt-2 text-sm font-bold text-danger">{t('parent.locked')}</p>}
+          {sel && (
+            <div data-testid="week" className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10">
+              <div className="min-w-0">
+                {st && !st.has_data ? (
+                  <p data-testid="week-empty" className="font-bold text-muted">{t('cab.week.noData', { nick: sel.nick })}</p>
+                ) : (
+                  <>
+                    <p data-testid="week-summary" className="text-lg font-extrabold leading-7 text-heading">
+                      <span data-testid="week-created">{t('cab.week.pictures')}: {dash(st && weekBars(st.ready_at, new Date()).reduce((n, b) => n + b.count, 0))}</span>
+                      {' · '}
+                      <span data-testid="week-published">{t('cab.week.shown')}: {dash(st?.published)}</span>
+                      {' · '}
+                      <span data-testid="week-held">{t('cab.week.held')}: {dash(st?.held)}</span>
                     </p>
-                  ) : (
-                    <>
-                      <p className="text-sm font-bold uppercase text-primary">{t('cab.week.perDay')}</p>
-                      {st ? <WeekChart readyAt={st.ready_at} /> : <div className="h-[200px]" />}
-                      <div className="grid grid-cols-3 gap-2">
-                        {tile('/art/tab-create.webp', t('cab.week.pictures'), st && weekBars(st.ready_at, new Date()).reduce((n, b) => n + b.count, 0), 'week-created')}
-                        {tile('/art/tab-feed.webp', t('cab.week.shown'), st?.published, 'week-published')}
-                        {tile('/art/shield.webp', t('cab.week.held'), st?.held, 'week-held')}
-                      </div>
-                      <p className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
-                        <span>
-                          {t('cab.week.received')}: <b data-testid="week-received" className="text-heading">{dash(st?.coins_received)}</b>
-                        </span>
-                        <span>
-                          {t('cab.week.spent')}: <b data-testid="week-spent" className="text-heading">{dash(st?.coins_spent)}</b>
-                        </span>
-                      </p>
-                      {!!st?.coins_uncertain && (
-                        <p data-testid="week-uncertain" className="text-sm font-bold text-muted">
-                          {t('cab.week.uncertain', { count: st.coins_uncertain })}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </>
-              ) : (
-                <p className="text-muted">{t('cab.week.pick')}</p>
-              )}
-            </div>
-            {latest.length > 0 && (
-              <div data-testid="latest" className={`${card} flex flex-col gap-3 p-5`}>
-                <p className="text-sm font-bold uppercase text-primary">{t('cab.week.latest')}</p>
-                <Link to="/parent/feed" data-testid="latest-link" className="grid grid-cols-5 gap-2">
-                  {latest.map((p) => (
-                    <img key={p.id} src={p.image_url} alt="" className="aspect-[3/4] short:aspect-square w-full rounded-xl object-cover" />
-                  ))}
-                </Link>
-                <Link to="/parent/feed" data-testid="family-feed-link" className="self-start rounded-full bg-primary px-5 py-2 text-sm font-extrabold text-primary-fg">
-                  {t('feed.familyFeed')}
-                </Link>
+                    <p className="mt-1 text-sm font-bold text-muted">{t('cab.week.chart')}</p>
+                    <div className="mt-2 max-h-[180px] overflow-hidden">{st ? <WeekChart readyAt={st.ready_at} /> : <div className="h-[180px]" />}</div>
+                    <p className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
+                      <span>{t('cab.week.received')}: <b data-testid="week-received" className="text-heading">{dash(st?.coins_received)}</b></span>
+                      <span>{t('cab.week.spent')}: <b data-testid="week-spent" className="text-heading">{dash(st?.coins_spent)}</b></span>
+                      {st?.coins_earned_lessons != null && <span data-testid="kid-lessons">{t('cab.kid.lessons')}: <b className="text-primary">+{st.coins_earned_lessons}</b></span>}
+                    </p>
+                    {!!st?.coins_uncertain && <p data-testid="week-uncertain" className="mt-1 text-sm font-bold text-muted">{t('cab.week.uncertain', { count: st.coins_uncertain })}</p>}
+                  </>
+                )}
               </div>
-            )}
-            {latest.length === 0 && (
-              <Link to="/parent/feed" data-testid="family-feed-link" className="self-start rounded-full bg-primary px-5 py-2 text-sm font-extrabold text-primary-fg">
-                {t('feed.familyFeed')}
-              </Link>
-            )}
-          </section>
-
-          <section className="flex flex-col gap-4">
-            <div data-testid="ok-card" className={`${card} flex flex-col gap-3 p-5 big:min-h-[408px]`}>
-              <h2 className="text-3xl font-extrabold text-heading">{t('review.okTitle')}</h2>
-              <div className="min-h-0 overflow-y-auto"><ReviewQueue compact /></div>
+              <div className="min-w-0">
+                {latest.length > 0 && (
+                  <Link to="/parent/feed" data-testid="latest-link" className="grid grid-cols-3 gap-2">
+                    {latest.slice(0, 3).map((p) => (
+                      <img key={p.id} src={p.image_url} alt="" className="aspect-square w-full rounded-2xl object-cover" />
+                    ))}
+                  </Link>
+                )}
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <Link to="/parent/feed" data-testid="family-feed-link" className="flex h-11 items-center rounded-full border border-border bg-surface px-5 text-sm font-extrabold text-heading">
+                    {t('feed.familyFeed')}
+                  </Link>
+                  <button type="button" data-testid={`qr-${sel.nick}`} onClick={() => void showQr(sel)} className="flex h-11 items-center rounded-full border border-border bg-surface px-5 text-sm font-extrabold text-heading">
+                    {t('parent.qrButton')}
+                  </button>
+                </div>
+                {qr?.id === sel.id && <div className="mt-3"><QrBox token={qr.token} nick={qr.nick} /></div>}
+              </div>
             </div>
-            
+          )}
+        </section>
+
+        {!!links?.length && (
+          <section data-testid="open-links" className="mt-8">
+            <h2 className={h2}>{t('cab.links.title')}</h2>
+            <p className="mt-1 text-sm font-bold text-muted">{t('cab.links.note')}</p>
+            <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {links.map((l) => (
+                <li key={l.work_id} data-testid="open-link" className="flex items-center gap-3 rounded-2xl bg-surface p-2 pr-3 shadow-card">
+                  <a href={l.path} target="_blank" rel="noreferrer" className="shrink-0">
+                    <img src={l.image_url} alt="" className="h-16 w-16 rounded-xl object-cover" />
+                  </a>
+                  <span className="min-w-0 flex-1 truncate font-extrabold text-heading">{l.nick}</span>
+                  <button type="button" data-testid="open-link-stop" onClick={() => void stopLink(l)} className="h-10 shrink-0 rounded-full border border-border bg-surface px-4 text-sm font-extrabold text-heading">
+                    {t('publish.share.stop')}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </section>
-        </div>
+        )}
+        <ParentNotes />
       </main>
       {adding && <AddKidModal onClose={() => setAdding(false)} onAdded={load} />}
     </div>

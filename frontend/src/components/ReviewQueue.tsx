@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { agoText, filterByClass, notifyReview, reasonKeys } from '../features/review/review'
 import { loadStory } from '../features/story/story'
@@ -19,15 +18,13 @@ const btnSide =
 
 /**
  * «Задержано» (учитель) и «Ждёт вашего OK» (родитель): один компонент, фильтр по роли на сервере.
- * compact — узкая колонка кабинета родителя; classFilter — фильтр учителя по имени класса.
+ * classFilter — фильтр учителя по имени класса.
  */
 export default function ReviewQueue({
   title,
-  compact = false,
   classFilter = null,
 }: {
   title?: string
-  compact?: boolean
   classFilter?: string | null
 }) {
   const { t } = useTranslation()
@@ -96,28 +93,19 @@ export default function ReviewQueue({
         </p>
       )}
       {items && items.length === 0 && (
-        <div className={compact ? '' : 'flex items-center gap-4 rounded-card border border-border bg-surface p-4 shadow-card'}>
-          {!compact && <img src="/art/robot-happy.webp" alt="" className="h-24 w-24 shrink-0 object-contain" />}
-          <p data-testid="review-empty" className={compact ? 'text-muted' : 'text-lg font-extrabold text-heading'}>
+        <div className="flex items-center gap-4">
+          <img src="/art/robot-happy.webp" alt="" className="h-20 w-20 shrink-0 object-contain" />
+          <p data-testid="review-empty" className="text-lg font-extrabold text-heading">
             {t('review.empty')}
           </p>
         </div>
       )}
-      {compact
-        ? items?.slice(0, 2).map((it) => (
-            <CompactRow key={it.id} it={it} kind={kind(it)} busy={busy === it.id} onOpen={() => setOpen(it)} onAct={(w) => void act(it, w)} />
-          ))
-        : items && items.length > 0 && (
-            <div data-testid="review-grid" className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-              {items.map((it) => (
-                <ReviewCard key={it.id} it={it} kind={kind(it)} where={where(it)} busy={busy === it.id} onOpen={() => setOpen(it)} onZoom={setZoom} onAct={(w) => void act(it, w)} />
-              ))}
-            </div>
-          )}
-      {compact && items && items.length > 2 && (
-        <Link to="/parent/review" data-testid="review-all" className="self-start text-sm font-extrabold text-primary underline">
-          {t('cab.allReview', { count: items.length })}
-        </Link>
+      {items && items.length > 0 && (
+        <div data-testid="review-grid" className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {items.map((it) => (
+            <ReviewCard key={it.id} it={it} kind={kind(it)} where={where(it)} busy={busy === it.id} onOpen={() => setOpen(it)} onZoom={setZoom} onAct={(w) => void act(it, w)} />
+          ))}
+        </div>
       )}
       {zoom && (
         <button
@@ -136,53 +124,6 @@ export default function ReviewQueue({
 }
 
 type RowProps = { it: ReviewItem; kind: string; busy: boolean; onOpen: () => void; onAct: (w: 'approve' | 'reject') => void }
-
-/** Узкая колонка кабинета родителя. */
-function CompactRow({ it, kind, busy, onOpen, onAct }: RowProps) {
-  const { t } = useTranslation()
-  const size = 'h-20 w-24'
-  const preview = it.urgent ? (
-    <button type="button" data-testid="review-open" onClick={onOpen} className={`rounded-2xl border border-urgent-border bg-surface text-sm font-extrabold text-urgent ${size}`}>
-      {t('review.open')}
-    </button>
-  ) : it.original_url || it.image_url ? (
-    <img src={(it.original_url ?? it.image_url) as string} alt="" className={`rounded-2xl bg-primary-soft object-contain ${size}`} />
-  ) : (
-    <div className={`flex items-center rounded-2xl bg-primary-soft p-2 text-xs font-bold text-heading ${size}`}>
-      <span className="line-clamp-3 break-words">{it.preview_text}</span>
-    </div>
-  )
-  return (
-    <article
-      data-testid={it.urgent ? 'review-urgent' : 'review-item'}
-      className={`grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-card border p-3 shadow-card ${it.urgent ? 'border-urgent-border bg-urgent-soft' : 'border-border bg-surface'}`}
-    >
-      {preview}
-      <div className="flex min-w-0 flex-col gap-1">
-        <p className="flex flex-wrap items-baseline gap-x-2">
-          <span data-testid="review-nick" className="text-base font-extrabold text-heading">{it.nick}</span>
-          <span className="text-xs font-bold text-muted">{kind}</span>
-        </p>
-        {it.urgent ? (
-          <p data-testid="review-urgent-note" className="text-sm font-extrabold text-urgent">{t('review.urgentNote')}</p>
-        ) : (
-          <p className="flex flex-wrap gap-1">
-            {reasonKeys(it.reason_codes).map((k) => (
-              <span key={k} data-testid="review-reason" className="rounded-full bg-danger-soft px-2 py-0.5 text-xs font-bold text-danger">{t(k)}</span>
-            ))}
-          </p>
-        )}
-        <span className="text-xs text-muted">{agoText(it.created_at, t)}</span>
-      </div>
-      {!it.urgent && (
-        <div className="flex flex-col gap-2">
-          <button type="button" data-testid="review-approve" disabled={busy} className={btnApprove} onClick={() => onAct('approve')}>{t('review.approve')}</button>
-          <button type="button" data-testid="review-reject" disabled={busy} className={btnReject} onClick={() => onAct('reject')}>{t('review.reject')}</button>
-        </div>
-      )}
-    </article>
-  )
-}
 
 /**
  * Карточка решения: сверху то, о чём решаем, крупно и целиком; причина поверх него; ниже кто и где; внизу равные кнопки.

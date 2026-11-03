@@ -281,7 +281,8 @@ def _views(db: Session, v: Viewer, posts: list[Post]) -> list[dict]:
         out.append(
             {
                 "id": p.id,
-                "nick": nicks.get(p.child_id, ""),
+                # Работа, открытая всем по разрешению взрослого: ник знает только сам автор
+                "nick": "" if p.audience == "public" and not is_author else nicks.get(p.child_id, ""),
                 "caption": p.caption,
                 "caption_i18n": p.caption_i18n,
                 "image_url": f"/api/posts/{p.id}/image",

@@ -309,7 +309,7 @@ function PostBody({ postId, isChild, guest, onOpen, onClose, onChanged }: Props 
               </span>
             )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-2xl font-extrabold text-heading lg:text-[30px]">{post?.nick}</p>
+              <p className="truncate text-2xl font-extrabold text-heading lg:text-[30px]">{post && (post.nick || t('feed.anon'))}</p>
               <p className="text-sm text-muted lg:text-xl">{post ? t(`feed.audience.${post.audience}`) : ''}</p>
             </div>
           </div>
