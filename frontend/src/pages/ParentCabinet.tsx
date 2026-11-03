@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import { api } from '../api'
 import Avatar from '../components/Avatar'
 import CabinetHeader from '../components/CabinetHeader'
 import ChipSelect from '../components/ChipSelect'
 import ErrorText, { errorKey } from '../components/ErrorText'
+import FeedView, { BigHeads } from '../components/FeedView'
 import Icon from '../components/Icon'
 import LinkCard from '../components/LinkCard'
 import PictureGrid from '../components/PictureGrid'
@@ -43,10 +43,8 @@ type Analytics = {
   coins_uncertain: number
   coins_spent: number | null
 }
-type FamilyPost = { id: number; nick: string; image_url: string }
 
 const loadKids = () => api<Kid[]>('/api/parent/children')
-const loadFamily = () => api<{ items: FamilyPost[] }>('/api/feed/family?limit=40')
 
 const input =
   'w-full rounded-2xl border border-border bg-surface px-4 py-2 font-bold text-heading outline-none focus:border-primary'
@@ -168,11 +166,11 @@ function AddKidModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =>
 export default function ParentCabinet() {
   const { t } = useTranslation()
   const [kids, load] = useLoad(loadKids)
-  const [family] = useLoad(loadFamily)
   const [qr, setQr] = useState<{ id: number; nick: string; token: string } | null>(null)
   const [pick, setPick] = useState<number | null>(null)
   const [stats, setStats] = useState<Record<number, Analytics>>({})
   const [adding, setAdding] = useState(false)
+  const [more, setMore] = useState(false)
 
   const ids = kids?.map((k) => k.id).join(',') ?? ''
   useEffect(() => {
@@ -190,7 +188,6 @@ export default function ParentCabinet() {
 
   const sel = kids?.find((k) => k.id === pick) ?? kids?.[0] ?? null
   const st = sel ? stats[sel.id] : undefined
-  const latest = sel ? (family?.items ?? []).filter((p) => p.nick === sel.nick).slice(0, 6) : []
 
   async function showQr(k: Kid) {
     const r = await api<{ token: string }>(`/api/parent/children/${k.id}/qr`, 'POST')
@@ -202,63 +199,56 @@ export default function ParentCabinet() {
       <CabinetHeader role="parent" />
       <main className="px-4 py-4 md:px-8">
         <section data-testid="kids">
-          <h1 data-testid="page-title" className="text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">
-            {t('cab.myKids')}
-          </h1>
-          {kids && kids.length === 0 && <p className="mt-2 text-muted">{t('parent.noChildren')}</p>}
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
-            {kids?.map((k) => {
-              const total = stats[k.id]?.pictures_total
-              return (
-                <button
-                  key={k.id}
-                  type="button"
-                  data-testid={`kid-${k.nick}`}
-                  aria-pressed={sel?.id === k.id}
-                  onClick={() => setPick(k.id)}
-                  className={`flex h-[76px] shrink-0 items-center gap-3 rounded-full border-2 pl-2 pr-5 text-left ${sel?.id === k.id ? 'border-primary bg-primary-soft' : 'border-transparent bg-surface'}`}
-                >
-                  <Avatar nick={k.nick} className="h-[60px] w-[60px]" />
-                  <span className="min-w-0">
-                    <span className="block truncate text-lg font-black leading-6 text-heading">{k.nick}</span>
-                    <span className="flex items-center gap-1 text-sm font-bold text-muted">
-                      {total != null && <span data-testid="kid-level">{t('mw.level', { n: levelOf(total) })} ·</span>}
-                      <img src="/art/coin.webp" alt="" className="h-4 w-4" />
-                      <span data-testid="kid-coins">{k.coins ?? '—'}</span>
-                    </span>
-                  </span>
-                </button>
-              )
-            })}
+          <div className="flex min-h-10 items-center gap-3 md:min-h-14 md:gap-5">
+            {kids && kids.length > 0 ? (
+              <BigHeads
+                heads={kids.map((k) => ({
+                  id: `kid-${k.id}`,
+                  label: k.nick,
+                  active: sel?.id === k.id,
+                  onPick: () => {
+                    setPick(k.id)
+                    setMore(false)
+                  },
+                }))}
+              />
+            ) : (
+              <h1 data-testid="page-title" className="text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">{t('cab.myKids')}</h1>
+            )}
             <button
               type="button"
               data-testid="add-child-tile"
               aria-label={t('cab.kid.addChild')}
               title={t('cab.kid.addChild')}
               onClick={() => setAdding(true)}
-              className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-primary md:h-12 md:w-12"
             >
-              <Icon name="plus" className="h-8 w-8" />
+              <Icon name="plus" className="h-6 w-6" />
             </button>
           </div>
+          {kids && kids.length === 0 && <p className="mt-2 text-muted">{t('parent.noChildren')}</p>}
           {sel?.locked && <p className="mt-2 text-sm font-bold text-danger">{t('parent.locked')}</p>}
-          <div className="mt-6 empty:hidden">
-            <ReviewQueue hideEmpty title={t('review.okTitle')} limit={window.matchMedia('(min-width: 768px)').matches ? 4 : 2} />
-          </div>
           {sel && (
-            <div data-testid="week" className="mt-6 flex flex-col gap-3">
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <div data-testid="week" className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <Avatar nick={sel.nick} className="h-12 w-12 shrink-0" />
                 {st && !st.has_data ? (
                   <p data-testid="week-empty" className="font-bold text-muted">{t('cab.week.noData', { nick: sel.nick })}</p>
                 ) : (
-                  <p data-testid="week-summary" className="text-lg font-extrabold leading-7 text-heading">
-                    <span data-testid="week-created">{t('cab.week.pictures')}: {dash(st && weekBars(st.ready_at, new Date()).reduce((n, b) => n + b.count, 0))}</span>
-                    {' · '}
-                    <span data-testid="week-published">{t('cab.week.shown')}: {dash(st?.published)}</span>
-                    {' · '}
+                  <p data-testid="week-summary" className="flex flex-wrap items-center gap-x-1.5 text-base font-extrabold leading-6 text-heading">
+                    {st && <span data-testid="kid-level">{t('mw.level', { n: levelOf(st.pictures_total) })} ·</span>}
+                    <img src="/art/coin.webp" alt="" className="h-4 w-4" />
+                    <span data-testid="kid-coins">{sel.coins ?? '—'} ·</span>
+                    <span data-testid="week-created">{t('cab.week.pictures')}: {dash(st && weekBars(st.ready_at, new Date()).reduce((n, b) => n + b.count, 0))} ·</span>
+                    <span data-testid="week-published">{t('cab.week.shown')}: {dash(st?.published)} ·</span>
                     <span data-testid="week-held">{t('cab.week.held')}: {dash(st?.held)}</span>
                   </p>
                 )}
+              </div>
+              <div className="ml-auto flex flex-wrap items-center gap-2">
+                <button type="button" data-testid="more-toggle" aria-expanded={more} onClick={() => setMore(!more)} className="flex h-11 items-center rounded-full border border-border bg-surface px-5 text-sm font-extrabold text-heading">
+                  {t(more ? 'cab.kid.less' : 'cab.kid.more')}
+                </button>
                 <button type="button" data-testid={`qr-${sel.nick}`} onClick={() => void showQr(sel)} className="flex h-11 items-center gap-2 rounded-full border-2 border-primary bg-primary-soft px-5 text-sm font-extrabold text-primary">
                   <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 20h2M20 14v2" />
@@ -266,32 +256,33 @@ export default function ParentCabinet() {
                   {t('parent.qrButton')}
                 </button>
               </div>
-              {qr?.id === sel.id && <QrBox token={qr.token} nick={qr.nick} />}
-              {latest.length > 0 && (
-                <Link to="/parent" data-testid="latest-link" className="grid grid-cols-3 gap-2 md:grid-cols-6 md:gap-3">
-                  {latest.map((p) => (
-                    <img key={p.id} src={p.image_url} alt="" className="aspect-square w-full rounded-2xl object-cover" />
-                  ))}
-                </Link>
-              )}
-              {st?.has_data && (
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-muted">{t('cab.week.chart')}</p>
-                  <div className="mt-1 max-h-[180px] overflow-hidden"><WeekChart readyAt={st.ready_at} /></div>
-                  <p className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
-                    <span>{t('cab.week.received')}: <b data-testid="week-received" className="text-heading">{dash(st.coins_received)}</b></span>
-                    <span>{t('cab.week.spent')}: <b data-testid="week-spent" className="text-heading">{dash(st.coins_spent)}</b></span>
-                    {st.coins_earned_lessons != null && <span data-testid="kid-lessons">{t('cab.kid.lessons')}: <b className="text-primary">+{st.coins_earned_lessons}</b></span>}
-                  </p>
-                  {!!st.coins_uncertain && <p data-testid="week-uncertain" className="mt-1 text-sm font-bold text-muted">{t('cab.week.uncertain', { count: st.coins_uncertain })}</p>}
-                </div>
-              )}
             </div>
           )}
+          {sel && qr?.id === sel.id && <div className="mt-3"><QrBox token={qr.token} nick={qr.nick} /></div>}
+          <div className="mt-5 empty:hidden">
+            <ReviewQueue hideEmpty title={t('review.okTitle')} limit={window.matchMedia('(min-width: 768px)').matches ? 4 : 2} />
+          </div>
+          {more && st?.has_data && (
+            <div data-testid="kid-more" className="mt-5 min-w-0">
+              <p className="text-sm font-bold text-muted">{t('cab.week.chart')}</p>
+              <div className="mt-1 max-h-[180px] overflow-hidden"><WeekChart readyAt={st.ready_at} /></div>
+              <p className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted">
+                <span>{t('cab.week.received')}: <b data-testid="week-received" className="text-heading">{dash(st.coins_received)}</b></span>
+                <span>{t('cab.week.spent')}: <b data-testid="week-spent" className="text-heading">{dash(st.coins_spent)}</b></span>
+                {st.coins_earned_lessons != null && <span data-testid="kid-lessons">{t('cab.kid.lessons')}: <b className="text-primary">+{st.coins_earned_lessons}</b></span>}
+              </p>
+              {!!st.coins_uncertain && <p data-testid="week-uncertain" className="mt-1 text-sm font-bold text-muted">{t('cab.week.uncertain', { count: st.coins_uncertain })}</p>}
+            </div>
+          )}
+          {more && <OpenLinks role="parent" />}
         </section>
-
-        <OpenLinks role="parent" />
+        {/* Уведомление о замке или срочном нельзя прятать за «Подробнее» */}
         <ParentNotes />
+        {sel && (
+          <div className="mt-5">
+            <FeedView key={sel.nick} kinds={['family']} nick={sel.nick} />
+          </div>
+        )}
       </main>
       {adding && <AddKidModal onClose={() => setAdding(false)} onAdded={load} />}
     </div>

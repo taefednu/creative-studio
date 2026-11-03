@@ -83,6 +83,7 @@
     "not_published": "Bu post hali kattalarni kutmoqda.",
     "already_decided": "Bu allaqachon hal qilingan.",
     "assignment_rejected": "Topshiriq matni bolalar uchun mos kelmadi. Uni soddaroq va mehribonroq qilib qayta yozing.",
+    "cover_rejected": "Bu rasm bolalar uchun mos emas. Boshqasini tanlang.",
     "check_unavailable": "Tekshiruv hozir ishlamayapti, topshiriq saqlanmadi. Birozdan keyin qayta urinib ko‘ring.",
     "task_invalid": "Nomni tekshiring: u shart, 100 belgigacha. Tavsif 1000 belgigacha.",
     "task_not_found": "Bu topshiriq endi mavjud emas.",
@@ -370,7 +371,7 @@
     "nav": "Asosiy menyu",
     "account": "Akkaunt",
     "myKids": "Bolalarim",
-    "kid": {
+    "kid": { "more": "Batafsil", "less": "Yashirish",
       "ageClass": "{{age}} · {{name}} sinfi",
       "age": "{{age}} · sinfsiz",
       "lessons": "bu haftada Mentorium darslaridan tangalar",
@@ -506,9 +507,13 @@
     "filters": "Ishlar filtri"
   },
   "tt": {
+    "coverLabel": "Rasm",
+    "coverOwn": "O'zingizniki",
+    "notHanded": "Hali topshirmaganlar: {{count}}",
+    "close": "Topshiriqni yakunlash",
+    "closeSure": "Ha, yakunlash",
+    "closeHint": "Bolalar topshiriqni endi ko'rmaydi. Topshirilgan ishlar qoladi.",
     "newTask": "Yangi topshiriq",
-    "assigned": "Berilgan topshiriqlar",
-    "recent": "So‘nggi ishlar",
     "titleLabel": "Nomi",
     "descLabel": "Tavsif",
     "dueLabel": "Topshirish muddati",
@@ -518,8 +523,7 @@
     "week": "Bir haftadan keyin",
     "none": "Muddatsiz",
     "handedOf": "{{total}} tadan {{done}} tasi topshirdi",
-    "empty": "Hozircha topshiriq yo‘q: chapda birinchisini yarating.",
-    "recentEmpty": "Hozircha ishlar yo‘q.",
+    "empty": "Topshiriqlar hali yo'q. Birinchisini yarating.",
     "dueOn": "Muddat: {{date}}",
     "more": "+{{count}}"
   },

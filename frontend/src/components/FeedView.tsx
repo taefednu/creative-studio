@@ -17,6 +17,8 @@ type Props = {
   title?: string
   /** Учитель: шапка переключает классы вместо вкладок ленты. Пустой список: классы ещё грузятся. */
   classes?: FeedHead[]
+  /** Работы одного ребёнка внутри кабинета родителя: без своей шапки. */
+  nick?: string
   /** Лента ребёнка: фильтр по стилям и место под панель создания. */
   child?: { templates: TemplateInfo[]; onStyle: (id: string) => void }
   /** Витрина для гостя: та же сетка, но без комментариев и реакций. */
@@ -44,6 +46,31 @@ const GHOST_ROWS = 4
 
 const HEAD_CLS = 'whitespace-nowrap text-2xl font-black leading-10 tracking-tight md:text-5xl md:leading-[56px]'
 
+/** Заголовок экрана крупными словами: один — просто заголовок, несколько — переключатель. Лента и задания. */
+export function BigHeads({ heads, Title = 'h1' }: { heads: FeedHead[]; Title?: 'h1' | 'h2' }) {
+  if (heads.length === 1) return <Title data-testid="feed-title" className={`${HEAD_CLS} text-heading`}>{heads[0].label}</Title>
+  return (
+    <>
+      <Title data-testid="feed-title" className="sr-only">{heads.find((x) => x.active)?.label}</Title>
+      <div className="flex min-w-0 gap-3 overflow-x-auto [scrollbar-width:none] md:gap-8" role="tablist">
+        {heads.map((x) => (
+          <button
+            key={x.id}
+            type="button"
+            role="tab"
+            aria-selected={x.active}
+            data-testid={`feed-${x.id}`}
+            onClick={x.onPick}
+            className={`${HEAD_CLS} shrink-0 transition-colors ${x.active ? 'text-heading' : 'text-muted hover:text-heading'}`}
+          >
+            {x.label}
+          </button>
+        ))}
+      </div>
+    </>
+  )
+}
+
 /** Экран до ответа о ребёнке: те же места, что займёт лента, и заголовок той же высоты. */
 export function FeedSkeleton() {
   const count = useColumnCount()
@@ -66,7 +93,7 @@ export function FeedSkeleton() {
 }
 
 /** Лента (docs/design/feed.jpg): «кирпичная» сетка, клик по карточке — работа поверх. Новые страницы подгружаются при прокрутке. */
-export default function FeedView({ kinds, classId, title, classes, child, guest }: Props) {
+export default function FeedView({ kinds, classId, title, classes, nick, child, guest }: Props) {
   const { t, i18n } = useTranslation()
   const [kind, setKind] = useState<FeedKind>(kinds[0])
   const [page, setPage] = useState<{ key: string; items: Post[]; cursor: number | null } | null>(null)
@@ -85,7 +112,7 @@ export default function FeedView({ kinds, classId, title, classes, child, guest 
   }, [kind, classId, key])
 
   const loaded = page?.key === key
-  const items = loaded ? page.items : []
+  const items = (loaded ? page.items : []).filter((p) => !nick || p.nick === nick)
   const cursor = loaded ? page.cursor : null
   const shown = byStyle(items, style)
 
@@ -139,29 +166,8 @@ export default function FeedView({ kinds, classId, title, classes, child, guest 
 
   return (
     <div>
-      <div className="flex min-h-10 items-center gap-x-2 md:min-h-14 md:gap-x-3">
-        {heads.length === 1 ? (
-          <Title data-testid="feed-title" className={`${HEAD_CLS} text-heading`}>{heads[0].label}</Title>
-        ) : (
-          <>
-            <Title data-testid="feed-title" className="sr-only">{heads.find((x) => x.active)?.label}</Title>
-            <div className="flex min-w-0 gap-3 overflow-x-auto [scrollbar-width:none] md:gap-8" role="tablist">
-              {heads.map((x) => (
-                <button
-                  key={x.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={x.active}
-                  data-testid={`feed-${x.id}`}
-                  onClick={x.onPick}
-                  className={`${HEAD_CLS} shrink-0 transition-colors ${x.active ? 'text-heading' : 'text-muted hover:text-heading'}`}
-                >
-                  {x.label}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+      <div className={`flex min-h-10 items-center gap-x-2 md:min-h-14 md:gap-x-3 ${nick ? 'hidden' : ''}`}>
+        {!nick && <BigHeads heads={heads} Title={Title} />}
         {child && (
           <ChipSelect
             testid="style-filter"

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { dueIso, isOpen, outcome, shownTask, submitTarget, visibleSent } from './assignments'
+import { dueIso, isOpen, outcome, shownTask, submitTarget, visibleSent, notHanded } from './assignments'
 import type { Assignment } from './assignments'
 
 vi.stubEnv('TZ', 'Asia/Tashkent')
@@ -9,7 +9,7 @@ const a = (id: number, subs: Assignment['submissions'] = []): Assignment => ({
   id,
   title: 't',
   description: null,
-  due_at: null,
+  due_at: null, cover_url: null, cover_template: null,
   submissions: subs,
 })
 
@@ -67,5 +67,13 @@ describe('строка задания', () => {
     expect(shownTask(list, 3)?.id).toBe(3)
     expect(shownTask(list, 1)).toBeNull()
     expect(shownTask(null, null)).toBeNull()
+  })
+})
+
+describe('notHanded', () => {
+  it('сдачей считается только принятая работа, порядок класса сохраняется', () => {
+    const subs = [{ nick: 'Bo', status: 'accepted' }, { nick: 'Cy', status: 'held' }]
+    expect(notHanded(['Al', 'Bo', 'Cy'], subs)).toEqual(['Al', 'Cy'])
+    expect(notHanded([], subs)).toEqual([])
   })
 })

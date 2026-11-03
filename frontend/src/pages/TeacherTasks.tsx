@@ -1,21 +1,22 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { FormEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
 import Avatar from '../components/Avatar'
 import CabinetHeader from '../components/CabinetHeader'
 import ChipSelect from '../components/ChipSelect'
 import ErrorText, { errorKey } from '../components/ErrorText'
+import { BigHeads } from '../components/FeedView'
 import Icon from '../components/Icon'
-import { dueIso, showErrorCode, taskErrorCode } from '../features/assignments/assignments'
-import { dateLabel, duePresets, sampleFor } from '../features/assignments/calendar'
+import { dueIso, notHanded, showErrorCode, taskErrorCode } from '../features/assignments/assignments'
+import { dateLabel, duePresets } from '../features/assignments/calendar'
 import { LANGS } from '../i18n'
 import { parseUtc } from '../features/review/review'
 import { loadTemplates } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
 type Room = { id: number; name: string }
-type Task = { id: number; title: string; description: string; due_at: string | null; submissions: number }
+type Task = { id: number; title: string; description: string; due_at: string | null; cover_url: string | null; submissions: number }
 type Sub = { id: number; nick: string; status: 'accepted' | 'held'; shown_in_feed: boolean; image_url: string; comment: string | null }
 
 const loadRooms = () => api<Room[]>('/api/teacher/classes')
@@ -24,7 +25,7 @@ const field =
 const label = 'mb-1 mt-3 block text-base font-extrabold text-heading big:mb-2.5 big:mt-7 big:text-[22px]'
 const SHOWN = 4 // аватаров сдавших в строке задания; остальные — «+N»
 
-/** Задания учителя (#13): создать, список класса со сдачами и прогрессом, галерея сдач и «показать в ленте класса». */
+/** Задания учителя (#13): создать с картинкой, список класса; открытое задание раскрывается: сдачи, кто не сдал, завершить. */
 export default function TeacherTasks() {
   const { t, i18n } = useTranslation()
   const [rooms, reloadRooms, roomsFailed] = useLoad(loadRooms)
@@ -32,10 +33,12 @@ export default function TeacherTasks() {
   const [picked, setPicked] = useState<number | null>(null)
   const classId = picked ?? rooms?.[0]?.id ?? null
   const [tasks, setTasks] = useState<{ cls: number; items: Task[]; subs: Record<number, Sub[]> } | null>(null)
-  const [kids, setKids] = useState<{ cls: number; n: number } | null>(null)
+  const [kids, setKids] = useState<{ cls: number; nicks: string[] } | null>(null)
   const [tick, setTick] = useState(0)
   const [failed, setFailed] = useState(false)
-  const [open, setOpen] = useState<Task | null>(null)
+  const [open, setOpen] = useState<number | null>(null)
+  const [cover, setCover] = useState<string | null>(null) // стиль; null — своя картинка или первый стиль по умолчанию
+  const [ownCover, setOwnCover] = useState<string | null>(null) // data: URL своей картинки
   const [title, setTitle] = useState('')
   const [desc, setDesc] = useState('')
   const [due, setDue] = useState('')
@@ -62,17 +65,29 @@ export default function TeacherTasks() {
   useEffect(() => {
     if (classId === null) return
     let alive = true
-    api<unknown[]>(`/api/teacher/classes/${classId}/children`)
-      .then((k) => alive && setKids({ cls: classId, n: k.length }))
-      .catch(() => alive && setKids({ cls: classId, n: 0 }))
+    api<{ nick: string }[]>(`/api/teacher/classes/${classId}/children`)
+      .then((k) => alive && setKids({ cls: classId, nicks: k.map((x) => x.nick) }))
+      .catch(() => alive && setKids({ cls: classId, nicks: [] }))
     return () => {
       alive = false
     }
   }, [classId])
   const items = tasks?.cls === classId ? tasks.items : null
-  const total = kids?.cls === classId ? kids.n : 0
+  const nicks = kids?.cls === classId ? kids.nicks : []
+  const total = nicks.length
+  const styles = tpl?.templates ?? []
+  const style = cover ?? styles[0]?.id ?? null
   const presets = duePresets(new Date(), t) // при рендере: после полуночи «сегодня» уже другой день; выбранное хранит день
-  const recent = items && tasks ? items.flatMap((a) => tasks.subs[a.id] ?? []).sort((x, y) => y.id - x.id).slice(0, 4) : []
+  const reload = () => setTick((n) => n + 1)
+
+  function pickOwn(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setOwnCover(String(reader.result))
+    reader.readAsDataURL(file)
+  }
 
   async function create(e: FormEvent) {
     e.preventDefault()
@@ -85,13 +100,16 @@ export default function TeacherTasks() {
         title: title.trim(),
         description: desc.trim(),
         due_at: dueIso(due),
+        ...(ownCover ? { cover_image: ownCover.split(',')[1] } : { cover_template: style }),
         lang: LANGS.includes(i18n.language as never) ? i18n.language : 'ru', // язык задания = язык интерфейса учителя
       })
       setTitle('')
       setDesc('')
       setDue('')
+      setCover(null)
+      setOwnCover(null)
       setFormOpen(false)
-      setTick((n) => n + 1)
+      reload()
     } catch (x) {
       setErr(taskErrorCode(errorKey(x)))
     } finally {
@@ -104,28 +122,27 @@ export default function TeacherTasks() {
     <div className="min-h-screen bg-bg pb-24 lg:pb-6">
       <CabinetHeader role="teacher" />
       <main className="px-4 py-4 md:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
-          <h1 data-testid="page-title" className="w-fit text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">
-            {t('cab.tasks.title')}
-          </h1>
-          {classId !== null && (
-            <button type="button" data-testid="task-new" onClick={() => setFormOpen(true)} className="btn-press ml-auto flex h-12 items-center gap-2 rounded-2xl bg-primary px-5 font-extrabold text-primary-fg lg:order-last">
-              <Icon name="plus" className="h-5 w-5" />
-              {t('tt.newTask')}
-            </button>
-          )}
-          {rooms && rooms.length > 0 && (
-            <ChipSelect
-              testid="task-class"
-              label={t('cab.tasks.class')}
-              value={String(classId)}
-              onChange={(v) => {
-                setPicked(Number(v))
-                setOpen(null)
-              }}
-              options={rooms.map((r) => ({ value: String(r.id), label: r.name }))}
-              className="h-11 w-full lg:w-[213px]"
+        <div className="flex min-h-10 items-center gap-x-3 md:min-h-14">
+          {rooms && rooms.length > 0 ? (
+            <BigHeads
+              heads={rooms.map((r) => ({
+                id: String(r.id),
+                label: r.name,
+                active: r.id === classId,
+                onPick: () => {
+                  setPicked(r.id)
+                  setOpen(null)
+                },
+              }))}
             />
+          ) : (
+            <h1 data-testid="page-title" className="text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">{t('cab.tasks.title')}</h1>
+          )}
+          {classId !== null && (
+            <button type="button" data-testid="task-new" aria-label={t('tt.newTask')} onClick={() => setFormOpen(true)} className="ml-auto flex h-11 shrink-0 items-center gap-2 rounded-2xl bg-primary px-3 font-extrabold text-primary-fg sm:h-12 sm:px-5">
+              <Icon name="plus" className="h-5 w-5" />
+              <span className="hidden sm:inline">{t('tt.newTask')}</span>
+            </button>
           )}
         </div>
         {(roomsFailed || (failed && classId !== null)) && (
@@ -134,7 +151,7 @@ export default function TeacherTasks() {
             <button
               type="button"
               data-testid="tasks-retry"
-              onClick={() => (roomsFailed ? reloadRooms() : setTick((n) => n + 1))}
+              onClick={() => (roomsFailed ? reloadRooms() : reload())}
               className="h-10 rounded-full bg-primary px-6 font-extrabold text-primary-fg"
             >
               {t('create.retry')}
@@ -182,6 +199,30 @@ export default function TeacherTasks() {
                 placeholder={t('cab.tasks.descPh')}
                 className={`${field} h-[110px] short:h-20 resize-none py-3 big:h-[169px]`}
               />
+              <span className={label}>{t('tt.coverLabel')}</span>
+              <div data-testid="task-covers" className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+                <label data-testid="task-cover-own" className={`relative flex h-[72px] w-[72px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 bg-primary-soft text-center text-xs font-extrabold text-primary ${ownCover ? 'border-primary' : 'border-transparent'}`}>
+                  {ownCover ? <img src={ownCover} alt="" className="h-full w-full object-cover" /> : t('tt.coverOwn')}
+                  <input type="file" accept="image/png,image/jpeg,image/webp" data-testid="task-cover-file" onChange={pickOwn} className="sr-only" />
+                </label>
+                {styles.map((x) => (
+                  <button
+                    key={x.id}
+                    type="button"
+                    data-testid={`task-cover-${x.id}`}
+                    aria-label={t(`templates.${x.id}`)}
+                    title={t(`templates.${x.id}`)}
+                    aria-pressed={!ownCover && style === x.id}
+                    onClick={() => {
+                      setCover(x.id)
+                      setOwnCover(null)
+                    }}
+                    className={`h-[72px] w-[72px] shrink-0 overflow-hidden rounded-2xl border-2 ${!ownCover && style === x.id ? 'border-primary' : 'border-transparent'}`}
+                  >
+                    <img src={x.image_url} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
               <span className={label}>{t('tt.dueLabel')}</span>
               <ChipSelect
                 testid="task-due"
@@ -204,40 +245,21 @@ export default function TeacherTasks() {
               </div>
             )}
             <section data-testid="tasks-panel">
-              <h2 className="text-2xl font-black tracking-tight text-heading md:text-3xl">{t('tt.assigned')}</h2>
               {items && items.length === 0 && (
-                <p data-testid="tasks-none" className="mt-3 px-2 text-muted">
+                <p data-testid="tasks-none" className="mt-3 text-muted">
                   {t('tt.empty')}
                 </p>
               )}
-              <div className="mt-2 flex flex-col gap-3">
+              <div className="flex flex-col gap-3">
                 {items?.map((a) => (
-                  <AssignmentRow
-                    key={a.id}
-                    a={a}
-                    subs={tasks?.subs[a.id] ?? []}
-                    total={total}
-                    sample={sampleFor(a.id, tpl?.templates ?? [])}
-                    active={open?.id === a.id}
-                    onClick={() => setOpen(open?.id === a.id ? null : a)}
-                  />
+                  <div key={a.id}>
+                    <AssignmentRow a={a} subs={tasks?.subs[a.id] ?? []} total={total} active={open === a.id} onClick={() => setOpen(open === a.id ? null : a.id)} />
+                    {open === a.id && (
+                      <Opened task={a} subs={tasks?.subs[a.id] ?? []} nicks={nicks} onChanged={reload} onClosed={() => { setOpen(null); reload() }} />
+                    )}
+                  </div>
                 ))}
               </div>
-              {open ? (
-                <Submissions key={open.id} task={open} onShown={() => setTick((n) => n + 1)} />
-              ) : (
-                items &&
-                items.length > 0 && (
-                  <section className="mt-5" data-testid="recent">
-                    <h2 className="px-2 text-2xl font-extrabold text-heading big:text-[40px] big:leading-[48px]">{t('tt.recent')}</h2>
-                    {recent.length === 0 ? (
-                      <p className="mt-2 px-2 text-muted">{t('tt.recentEmpty')}</p>
-                    ) : (
-                      <Gallery subs={recent} onShown={() => setTick((n) => n + 1)} cols="grid-cols-2 lg:grid-cols-4" />
-                    )}
-                  </section>
-                )
-              )}
             </section>
           </div>
         )}
@@ -246,11 +268,10 @@ export default function TeacherTasks() {
   )
 }
 
-function AssignmentRow({ a, subs, total, sample, active, onClick }: { a: Task; subs: Sub[]; total: number; sample: string | null; active: boolean; onClick: () => void }) {
+function AssignmentRow({ a, subs, total, active, onClick }: { a: Task; subs: Sub[]; total: number; active: boolean; onClick: () => void }) {
   const { t } = useTranslation()
   const accepted = subs.filter((s) => s.status === 'accepted')
   const nicks = [...new Set(accepted.map((s) => s.nick))]
-  const thumb = accepted[0]?.image_url ?? sample
   const pct = total > 0 ? Math.min(100, Math.round((a.submissions / total) * 100)) : 0
   return (
     <button
@@ -258,10 +279,10 @@ function AssignmentRow({ a, subs, total, sample, active, onClick }: { a: Task; s
       data-testid="assignment-card"
       aria-pressed={active}
       onClick={onClick}
-      className={`grid grid-cols-[96px_1fr] items-center gap-x-3 gap-y-2 rounded-2xl border bg-surface p-2 text-left shadow-card md:grid-cols-[110px_1fr] lg:grid-cols-[120px_minmax(0,1fr)_minmax(150px,200px)_auto] big:grid-cols-[163px_minmax(0,1fr)_205px_auto] big:gap-x-5 ${active ? 'border-primary' : 'border-border'}`}
+      className={`grid w-full grid-cols-[96px_1fr] items-center gap-x-3 gap-y-2 rounded-2xl border bg-surface p-2 text-left shadow-card md:grid-cols-[110px_1fr] lg:grid-cols-[120px_minmax(0,1fr)_minmax(150px,200px)_auto] big:grid-cols-[163px_minmax(0,1fr)_205px_auto] big:gap-x-5 ${active ? 'border-primary' : 'border-border'}`}
     >
       <span className="aspect-[1.66] overflow-hidden rounded-xl bg-primary-soft">
-        {thumb && <img src={thumb} alt="" className="h-full w-full object-cover" />}
+        {a.cover_url && <img data-testid="assignment-cover" src={a.cover_url} alt="" className="h-full w-full object-cover" />}
       </span>
       <span className="flex min-w-0 flex-col items-start gap-1.5">
         <span className="text-lg font-extrabold leading-6 text-heading big:text-[26px] big:leading-8">{a.title}</span>
@@ -294,32 +315,61 @@ function AssignmentRow({ a, subs, total, sample, active, onClick }: { a: Task; s
   )
 }
 
-/** Галерея сдач одного задания: грузится при открытии, чтобы видеть свежее. */
-function Submissions({ task, onShown }: { task: Task; onShown: () => void }) {
+/** Раскрытое задание: текст, кто не сдал, работы, завершить. */
+function Opened({ task, subs, nicks, onChanged, onClosed }: { task: Task; subs: Sub[]; nicks: string[]; onChanged: () => void; onClosed: () => void }) {
   const { t } = useTranslation()
-  const [subs, setSubs] = useState<Sub[] | null>(null)
-  const load = useCallback(
-    () => api<Sub[]>(`/api/teacher/assignments/${task.id}/submissions`).then(setSubs).catch(() => setSubs([])),
-    [task.id],
-  )
-  useEffect(() => {
-    void load()
-  }, [load])
+  const [sure, setSure] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const missing = notHanded(nicks, subs)
+
+  async function close() {
+    try {
+      await api(`/api/teacher/assignments/${task.id}/close`, 'POST')
+      onClosed()
+    } catch (x) {
+      setErr(errorKey(x))
+    }
+  }
+
   return (
-    <section data-testid="submissions" className="mt-5">
-      <h2 className="px-2 text-2xl font-extrabold text-heading">{t('cab.tasks.subsTitle', { title: task.title })}</h2>
-      {subs && subs.length === 0 && (
-        <p data-testid="submissions-empty" className="mt-2 px-2 text-muted">
-          {t('cab.tasks.subsEmpty')}
-        </p>
+    <section data-testid="submissions" className="mt-3 flex flex-col gap-4 px-1 pb-3">
+      {task.description && <p className="max-w-[70ch] text-text">{task.description}</p>}
+      {missing.length > 0 && (
+        <div data-testid="not-handed">
+          <h3 className="text-sm font-extrabold text-muted">{t('tt.notHanded', { count: missing.length })}</h3>
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2">
+            {missing.map((n) => (
+              <span key={n} className="flex items-center gap-1.5 text-sm font-extrabold text-heading">
+                <Avatar nick={n} className="h-8 w-8" />
+                {n}
+              </span>
+            ))}
+          </div>
+        </div>
       )}
-      {subs && <Gallery subs={subs} onShown={onShown} reload={load} cols="grid-cols-2 md:grid-cols-3 lg:grid-cols-4" />}
+      {subs.length === 0 ? (
+        <p data-testid="submissions-empty" className="text-muted">{t('cab.tasks.subsEmpty')}</p>
+      ) : (
+        <Gallery subs={subs} onShown={onChanged} cols="grid-cols-2 md:grid-cols-3 lg:grid-cols-4" />
+      )}
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          data-testid="task-close"
+          onClick={() => (sure ? void close() : setSure(true))}
+          className={`h-11 rounded-full px-5 text-sm font-extrabold ${sure ? 'bg-danger-soft text-danger' : 'border border-border bg-surface text-heading'}`}
+        >
+          {t(sure ? 'tt.closeSure' : 'tt.close')}
+        </button>
+        {sure && <span className="text-sm text-muted">{t('tt.closeHint')}</span>}
+        <ErrorText code={err} />
+      </div>
     </section>
   )
 }
 
 /** Плитки сдач. Что на проверке — с пометкой; «в ленту» только принятое. */
-function Gallery({ subs, onShown, reload, cols }: { subs: Sub[]; onShown: () => void; reload?: () => Promise<void>; cols: string }) {
+function Gallery({ subs, onShown, cols }: { subs: Sub[]; onShown: () => void; cols: string }) {
   const { t } = useTranslation()
   const [err, setErr] = useState<{ id: number; code: string } | null>(null)
   const [note, setNote] = useState<number | null>(null)
@@ -333,7 +383,6 @@ function Gallery({ subs, onShown, reload, cols }: { subs: Sub[]; onShown: () => 
       setErr(null)
       // false — пост задержан проверкой и ещё никому не виден: говорим как есть
       setNote(r.shown_in_feed ? null : s.id)
-      await reload?.()
       onShown()
     } catch (x) {
       setErr({ id: s.id, code: showErrorCode(errorKey(x)) })
@@ -343,7 +392,7 @@ function Gallery({ subs, onShown, reload, cols }: { subs: Sub[]; onShown: () => 
   }
 
   return (
-    <div className={`mt-3 grid gap-3 ${cols}`}>
+    <div className={`grid gap-3 ${cols}`}>
       {subs.map((s) => (
         <figure key={s.id} data-testid="submission" className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-card">
           <img src={s.image_url} alt={s.nick} className="aspect-[1.66] w-full object-cover" loading="lazy" />

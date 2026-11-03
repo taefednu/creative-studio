@@ -83,6 +83,7 @@
     "not_published": "This post is still waiting for a grown-up.",
     "already_decided": "This is already decided.",
     "assignment_rejected": "The task text is not suitable for children. Please rewrite it simpler and kinder.",
+    "cover_rejected": "This picture isn't suitable for children. Choose another one.",
     "check_unavailable": "The check is unavailable right now, so the task was not saved. Please try again in a bit.",
     "task_invalid": "Check the title: it is required, up to 100 characters. The description is up to 1000.",
     "task_not_found": "This task is no longer available.",
@@ -370,7 +371,7 @@
     "nav": "Main menu",
     "account": "Account",
     "myKids": "My kids",
-    "kid": {
+    "kid": { "more": "More", "less": "Hide",
       "ageClass": "{{age}} · class {{name}}",
       "age": "{{age}} · no class",
       "lessons": "coins from Mentorium lessons this week",
@@ -506,9 +507,13 @@
     "filters": "Filter works"
   },
   "tt": {
+    "coverLabel": "Picture",
+    "coverOwn": "Your own",
+    "notHanded": "Not handed in yet: {{count}}",
+    "close": "Finish the task",
+    "closeSure": "Yes, finish",
+    "closeHint": "Children won't see the task any more. Handed-in work stays.",
     "newTask": "New task",
-    "assigned": "Assigned tasks",
-    "recent": "Recent artwork",
     "titleLabel": "Title",
     "descLabel": "Description",
     "dueLabel": "Due date",
@@ -518,8 +523,7 @@
     "week": "In a week",
     "none": "No due date",
     "handedOf": "Handed in {{done}} of {{total}}",
-    "empty": "No tasks yet: create the first one on the left.",
-    "recentEmpty": "No artwork yet.",
+    "empty": "No tasks yet. Create the first one.",
     "dueOn": "Due {{date}}",
     "more": "+{{count}}"
   },

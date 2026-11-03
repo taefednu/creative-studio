@@ -22,6 +22,8 @@ class Assignment(Base):
     due_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     status: Mapped[str] = mapped_column(String(10), default="published", index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=clock.now)
+    cover_template: Mapped[str | None] = mapped_column(String(40), nullable=True)  # стиль: и картинка, и стиль в «Создать»
+    cover_path: Mapped[str | None] = mapped_column(String(300), nullable=True)  # своя картинка учителя, прошла проверку
 
 
 class Submission(Base):

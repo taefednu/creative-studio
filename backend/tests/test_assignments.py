@@ -1,8 +1,12 @@
 """Тикет #13: задания учителя, сдача, галерея. Ловушки из traps.md и тикета."""
 
 # ruff: noqa: F401, F811, I001
+import base64
+
 import pytest
 from sqlalchemy import select
+
+from app.assignments import router as assignments_router
 
 from app import db
 from app.assignments.models import Assignment, Submission
@@ -11,6 +15,7 @@ from app.meta.client import ModelTimeout
 from app.moderation import HeldItem, decide
 
 from test_feed import D, World, _child, _login, _work, fake, fresh_db, w
+from test_upload import pic, upload_dir
 
 BAD_MODES = ["exc", "timeout", "hold", "refuse", "rewrite", "kinder", "unknown"]
 
@@ -309,3 +314,75 @@ def test_urgent_submission_not_rejected_after_both_adults_saw(w, fake):
     with db.new_session() as s:
         assert s.get(Submission, sid).status == "held"
     assert submit(w.a, aid, _work(w.a_id, w.tmp), "я хочу себя поранить").json()["support"] is True
+
+
+# ---------------- картинка задания и завершение ----------------
+
+
+def test_style_cover_reaches_the_class(w, fake):
+    r = make(w, cover_template="superhero")
+    assert r.json()["cover_url"] == "/templates/superhero.webp"
+    [a] = w.a.get("/api/child/assignments").json()
+    assert a["cover_url"] == "/templates/superhero.webp" and a["cover_template"] == "superhero"
+
+
+def test_unknown_style_refused(w, fake):
+    assert make(w, cover_template="../../etc").status_code == 422
+
+
+def _cover(monkeypatch, decision=None, exc=None):
+    seen = []
+
+    def f(data, lang):
+        seen.append(lang)
+        if exc:
+            raise exc
+        return decision
+
+    monkeypatch.setattr(assignments_router, "check_cover", f)
+    return seen
+
+
+def test_own_cover_checked_and_only_the_class_sees_it(w, fake, upload_dir, monkeypatch):
+    seen = _cover(monkeypatch, D("allow"))
+    r = make(w, cover_image=base64.b64encode(pic()).decode())
+    assert r.status_code == 201 and seen == ["ru"]
+    url = r.json()["cover_url"]
+    assert url == f"/api/assignments/{r.json()['id']}/cover"
+    assert w.a.get(url).status_code == 200 and w.teacher.get(url).status_code == 200
+    assert w.c.get(url).status_code == 404 and w.d.get(url).status_code == 404
+
+
+@pytest.mark.parametrize("decision", ["hold", "refuse", "support"])
+def test_own_cover_not_allowed_saves_nothing(w, fake, upload_dir, monkeypatch, decision):
+    _cover(monkeypatch, D(decision))
+    r = make(w, cover_image=base64.b64encode(pic()).decode())
+    assert r.status_code == 422 and r.json()["detail"] == "cover_rejected"
+    assert w.a.get("/api/child/assignments").json() == []
+
+
+def test_own_cover_check_failure_saves_nothing(w, fake, upload_dir, monkeypatch):
+    d = D("hold")
+    d.model_error = True
+    _cover(monkeypatch, d)
+    r = make(w, cover_image=base64.b64encode(pic()).decode())
+    assert r.status_code == 503 and w.a.get("/api/child/assignments").json() == []
+
+
+@pytest.mark.parametrize("raw", ["%%%", base64.b64encode(b"not an image").decode()])
+def test_own_cover_junk_refused(w, fake, upload_dir, monkeypatch, raw):
+    seen = _cover(monkeypatch, D("allow"))
+    assert make(w, cover_image=raw).status_code == 415 and seen == []
+
+
+def test_close_hides_task_keeps_work_only_own_teacher(w, fake):
+    aid = aid_of(w)
+    assert submit(w.a, aid, w.work).status_code == 200
+    assert w.teacher2.post(f"/api/teacher/assignments/{aid}/close").status_code == 404
+    assert w.a.post(f"/api/teacher/assignments/{aid}/close").status_code in (401, 403)
+    assert [x["id"] for x in w.a.get("/api/child/assignments").json()] == [aid]
+    assert w.teacher.post(f"/api/teacher/assignments/{aid}/close").json()["status"] == "closed"
+    assert w.a.get("/api/child/assignments").json() == []
+    assert w.teacher.get(f"/api/teacher/classes/{w.room['id']}/assignments").json() == []
+    assert submit(w.a, aid, w.work).status_code == 404
+    assert len(subs()) == 1

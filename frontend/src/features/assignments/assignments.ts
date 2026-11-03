@@ -9,7 +9,15 @@ export type Assignment = {
   title: string
   description: string | null
   due_at: string | null
+  cover_url: string | null
+  cover_template: string | null
   submissions: Submitted[]
+}
+
+/** Кто из класса ещё не сдал: сдачей считается только принятая, задержанная ещё не дошла до учителя. */
+export const notHanded = (nicks: string[], subs: { nick: string; status: string }[]) => {
+  const done = new Set(subs.filter((s) => s.status === 'accepted').map((s) => s.nick))
+  return nicks.filter((n) => !done.has(n))
 }
 
 export const loadAssignments = () => api<Assignment[]>('/api/child/assignments')

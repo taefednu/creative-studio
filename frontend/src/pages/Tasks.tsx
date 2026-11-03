@@ -5,9 +5,7 @@ import Icon from '../components/Icon'
 import type { ShellContext } from '../components/AppShell'
 import { isOpen, loadAssignments, visibleSent } from '../features/assignments/assignments'
 import type { Assignment } from '../features/assignments/assignments'
-import { sampleFor } from '../features/assignments/calendar'
 import { dueLabel } from '../features/assignments/due'
-import { loadTemplates } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
 /** Вкладка «Задания»: открытые и сданные задания класса. Показываем только то, что отдал сервер. */
@@ -15,7 +13,6 @@ export default function Tasks() {
   const { t } = useTranslation()
   const { cls, ready } = useOutletContext<ShellContext>()
   const [list, reload, failed] = useLoad(loadAssignments)
-  const [tpl] = useLoad(loadTemplates)
   if (!ready) return null
   const open = list?.filter(isOpen).length ?? 0
   return (
@@ -50,18 +47,18 @@ export default function Tasks() {
         </div>
       )}
       <div data-testid="tasks-grid" className="mt-4 grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {cls && list?.map((a) => <TaskCard key={a.id} a={a} sample={sampleFor(a.id, tpl?.templates ?? [])} />)}
+        {cls && list?.map((a) => <TaskCard key={a.id} a={a} />)}
       </div>
     </div>
   )
 }
 
-function TaskCard({ a, sample }: { a: Assignment; sample: string | null }) {
+function TaskCard({ a }: { a: Assignment }) {
   const { t } = useTranslation()
   const due = dueLabel(a.due_at)
   const sent = visibleSent(a) // срочная сдача здесь как будто её нет: ни «на проверке», ни «отправили учителю»
   const done = sent.some((s) => s.status === 'accepted')
-  const img = sent.length ? `/api/works/${sent[0].work_id}/image` : sample
+  const img = sent.length ? `/api/works/${sent[0].work_id}/image` : a.cover_url
   return (
     <article data-testid="task-card" className="flex flex-col rounded-card border border-border bg-surface p-3 shadow-card">
       <div className="aspect-[1.8] short:aspect-[2.4] overflow-hidden rounded-2xl bg-primary-soft">
@@ -99,7 +96,7 @@ function TaskCard({ a, sample }: { a: Assignment; sample: string | null }) {
       <div className="min-h-3 flex-1" />
       {isOpen(a) && (
         <Link
-          to={`/create?assignment=${a.id}`}
+          to={`/create?assignment=${a.id}${a.cover_template ? `&template=${a.cover_template}` : ''}`}
           data-testid="task-draw"
           className="mx-3 mb-1 flex h-[52px] items-center justify-center gap-3 rounded-full bg-primary text-lg font-extrabold uppercase text-primary-fg big:h-[75px] big:text-[28px]"
         >

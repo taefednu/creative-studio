@@ -6,6 +6,8 @@
 любой не-allow или сбой — «на проверку учителю».
 """
 
+import base64
+import binascii
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
@@ -22,11 +24,14 @@ from app.accounts.deps import current_child, current_teacher
 from app.accounts.models import Child, Teacher
 from app.accounts.security import COOKIE
 from app.assignments.models import Assignment, Submission
+from app.config import get_settings
 from app.db import get_session
 from app.feed import service
 from app.feed.models import Post
 from app.moderation import HeldItem, hold, register
 from app.works.image.models import Work
+from app.works.image.templates import TEMPLATES
+from app.works.upload.pipeline import UploadError, normalize, to_jpeg, to_webp
 
 router = APIRouter(prefix="/api")
 Db = Annotated[Session, Depends(get_session)]
@@ -49,6 +54,8 @@ class NewAssignment(BaseModel):
     description: str = Field(default="", max_length=1000)
     due_at: datetime | None = None
     lang: str = Field(default="ru", pattern="^(ru|en|uz)$")
+    cover_template: str | None = None
+    cover_image: str | None = Field(default=None, max_length=8_000_000)  # base64: лимиты файла проверяет normalize
 
 
 class NewSubmission(BaseModel):
@@ -78,6 +85,35 @@ def _due(a: Assignment) -> str | None:
     return a.due_at.isoformat() if a.due_at else None
 
 
+def _cover_url(a: Assignment) -> str | None:
+    if a.cover_path:
+        return f"/api/assignments/{a.id}/cover"
+    return f"/templates/{a.cover_template}.webp" if a.cover_template else None
+
+
+# Тонкая обёртка: тесты подменяют её поддельной моделью.
+def check_cover(data: bytes, lang: str):
+    from app.safety import check_image
+
+    return check_image(data, "upload", lang)
+
+
+def _checked_cover(raw: str, lang: str) -> bytes:
+    """Своя картинка учителя видна всему классу: сбой или не-allow, и задание не сохраняется."""
+    try:
+        im = normalize(base64.b64decode(raw, validate=True))
+    except binascii.Error:
+        raise HTTPException(415, "unsupported_type") from None
+    except UploadError as e:
+        raise HTTPException(e.status, e.code) from None
+    d = check_cover(to_jpeg(im), lang)
+    if getattr(d, "model_error", False):
+        raise HTTPException(503, "check_unavailable")
+    if d.action != "allow":
+        raise HTTPException(422, "cover_rejected")
+    return to_webp(im)
+
+
 # ---------------- учитель: задания ----------------
 
 
@@ -94,6 +130,7 @@ def _teacher_view(db: Session, a: Assignment) -> dict:
         "description": a.description,
         "due_at": _due(a),
         "status": a.status,
+        "cover_url": _cover_url(a),
         "submissions": n or 0,
         "created_at": a.created_at.isoformat(),
     }
@@ -105,16 +142,25 @@ def create_assignment(class_id: int, body: NewAssignment, t: TeacherDep, db: Db)
     title, desc = body.title.strip(), body.description.strip()
     if not title:
         raise HTTPException(422, "validation")
+    if body.cover_template is not None and body.cover_template not in {x.id for x in TEMPLATES}:
+        raise HTTPException(422, "validation")
     d = service.judge(f"{title}\n{desc}".strip(), "assignment", body.lang)
     if d is None or getattr(d, "model_error", False):
         raise HTTPException(503, "check_unavailable")  # сбой проверки: не сохраняем
     if d.action != "allow":
         raise HTTPException(422, "assignment_rejected")
+    cover = _checked_cover(body.cover_image, body.lang) if body.cover_image else None
     a = Assignment(
         class_id=class_id, teacher_id=t.id, title=title, description=desc,
-        due_at=_naive_utc(body.due_at), status="published",
+        due_at=_naive_utc(body.due_at), status="published", cover_template=None if cover else body.cover_template,
     )
     db.add(a)
+    db.flush()
+    if cover:
+        path = Path(get_settings().UPLOAD_DIR) / "covers" / f"{a.id}.webp"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(cover)
+        a.cover_path = str(path)
     db.commit()
     return _teacher_view(db, a)
 
@@ -122,8 +168,33 @@ def create_assignment(class_id: int, body: NewAssignment, t: TeacherDep, db: Db)
 @router.get("/teacher/classes/{class_id}/assignments")
 def teacher_assignments(class_id: int, t: TeacherDep, db: Db):
     _own_class(db, t, class_id)
-    rows = db.scalars(select(Assignment).where(Assignment.class_id == class_id).order_by(Assignment.id.desc()))
+    rows = db.scalars(
+        select(Assignment)
+        .where(Assignment.class_id == class_id, Assignment.status != "closed")
+        .order_by(Assignment.id.desc())
+    )
     return [_teacher_view(db, a) for a in rows]
+
+
+@router.post("/teacher/assignments/{assignment_id}/close")
+def close_assignment(assignment_id: int, t: TeacherDep, db: Db):
+    """Завершить: дети больше не видят и не могут сдать; сданные работы остаются."""
+    a = _own_assignment(db, t, assignment_id)
+    a.status = "closed"
+    db.commit()
+    return {"id": a.id, "status": a.status}
+
+
+@router.get("/assignments/{assignment_id}/cover")
+def assignment_cover(assignment_id: int, db: Db, v: V):
+    a = db.get(Assignment, assignment_id)
+    ok = a is not None and (
+        (v.role == "teacher" and service.teacher_owns(db, v.id, a.class_id))
+        or (v.role == "child" and service.class_of(db, v.id) == a.class_id)
+    )
+    if not ok or a is None or not a.cover_path or not Path(a.cover_path).is_file():
+        raise HTTPException(404, "not_found")
+    return FileResponse(a.cover_path, media_type="image/webp", headers={"Cache-Control": "private"})
 
 
 @router.get("/teacher/assignments/{assignment_id}/submissions")
@@ -250,6 +321,8 @@ def child_assignments(c: ChildDep, db: Db):
             "title": a.title,
             "description": a.description,
             "due_at": _due(a),
+            "cover_url": _cover_url(a),
+            "cover_template": a.cover_template,
             "submissions": mine.get(a.id, []),
         }
         for a in rows

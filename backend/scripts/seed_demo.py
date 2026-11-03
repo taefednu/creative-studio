@@ -272,10 +272,10 @@ def seed(images_dir: Path) -> dict:
         h.created_at = ago(hours=4 + 2 * teacher_items.index(h))
 
     # ---- задания ----
-    a1 = Assignment(class_id=room.id, teacher_id=teacher.id, title="Нарисуй героя сегодняшней сказки",
+    a1 = Assignment(class_id=room.id, teacher_id=teacher.id, title="Нарисуй героя сегодняшней сказки", cover_template="superhero",
                     description="Придумай героя из сказки, которую мы читали на уроке, и нарисуй его.",
                     due_at=now + timedelta(days=2), created_at=ago(days=1))
-    a2 = Assignment(class_id=room.id, teacher_id=teacher.id, title="Любимое время года",
+    a2 = Assignment(class_id=room.id, teacher_id=teacher.id, title="Любимое время года", cover_template="watercolor",
                     description="Нарисуй, как ты видишь своё любимое время года.", created_at=ago(hours=12))
     s.add_all([a1, a2])
     s.flush()
