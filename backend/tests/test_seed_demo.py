@@ -63,6 +63,10 @@ def test_seed_queues_feed_analytics(seeded):
 
     # проверяющий оригинал видит
     assert teacher.get(f"/api/review/items/{up}/image?version=original").status_code == 200
+    # Рисунок не должен показывать размытое лицо: так продукт больше не делает
+    [card] = [i for i in teacher.get("/api/review/queue").json() if i["id"] == up]
+    assert card["reason_codes"] == ["blurred_handwritten_name"]
+    assert teacher.get(card["blurred_url"]).content != teacher.get(card["original_url"]).content
 
     parent = _login("/api/parent/login", {"email": out["parent"]["email"], "password": pw})
     assert len(parent.get("/api/review/queue").json()) >= 2

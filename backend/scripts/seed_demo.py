@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from sqlalchemy import func, select, update
 
 from app import clock
@@ -69,6 +69,18 @@ def captions(ru: str | None, en: str | None, uz: str | None) -> dict:
 
 def image_captions(img: dict) -> dict:
     return captions(img["idea"], img["idea_en"], img["idea_uz"])
+
+
+def signed_picture(im: Image.Image) -> tuple[Image.Image, tuple[int, int, int, int]]:
+    """Рисунок с вымышленной подписью и её бокс: как настоящий случай размытия, без лиц. SAM не зовём."""
+    out = im.copy()
+    w, h = out.size
+    box = (w // 4, h * 3 // 4, w * 3 // 4, h * 7 // 8)
+    draw = ImageDraw.Draw(out)
+    draw.rectangle(box, fill="white")
+    draw.text(((box[0] + box[2]) // 2, (box[1] + box[3]) // 2), "Aziz, 4B", fill="black", anchor="mm",
+              font=ImageFont.load_default(size=h // 14))
+    return out, box
 
 
 def seed(images_dir: Path) -> dict:
@@ -234,18 +246,16 @@ def seed(images_dir: Path) -> dict:
                               reason_codes=["off_platform_contact"], preview_text=sky.child_text, commit=False))
     # загрузка PixelPanda: оригинал только в orig/, дети видят размытую file_path
     up = Work(child_id=by["PixelPanda"].id, kind="upload", template_id="upload", status="ready",
-              request_id=f"demo-{next(rid)}", reason_codes=["blurred_face"], created_at=ago(hours=5))
+              request_id=f"demo-{next(rid)}", reason_codes=["blurred_handwritten_name"], created_at=ago(hours=5))
     s.add(up)
     s.flush()
-    im = Image.open(imgs[0]["path"]).convert("RGB")
+    im, box = signed_picture(Image.open(imgs[0]["path"]).convert("RGB"))
     save_original(up.id, im)
-    w_, h_ = im.size
-    box = (w_ // 3, h_ // 4, w_ * 2 // 3, h_ // 2)  # ponytail: бокс-заглушка, синтетика без людей; SAM не зовём
     p = upload_path(up.id)
     p.write_bytes(to_webp(blur(im, [box], get_settings().BLUR_PAD)))
     up.file_path = str(p)
     teacher_items.append(hold(s, item_type="upload", target_id=up.id, child_id=up.child_id, reviewer="parent",
-                              reason_codes=["blurred_face"], commit=False))
+                              reason_codes=["blurred_handwritten_name"], commit=False))
     mw = work(by["MoonCat"], 9, ago(hours=7))
     mp = Post(work_id=mw.id, child_id=mw.child_id, audience="class", class_id=room.id, status="held",
               caption="Этот рисунок такой глупый, смешно на него смотреть", created_at=ago(hours=7))
