@@ -104,3 +104,20 @@ REAL_FACE_SCHEMA = {
         "additionalProperties": False,
     },
 }
+
+
+class ReadableText(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    readable_text: StrictBool
+
+
+READABLE_TEXT_SCHEMA = {
+    "name": "readable_text",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {"readable_text": {"type": "boolean"}},
+        "required": ["readable_text"],
+        "additionalProperties": False,
+    },
+}

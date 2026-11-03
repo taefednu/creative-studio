@@ -10,7 +10,7 @@ os.environ.setdefault("SESSION_SECRET", "test-secret-0123456789abcdef-0123456789
 
 from app.meta.client import MetaClient
 from app.safety import CATEGORIES, check_image, check_text
-from app.safety.check import only_drawn_faces
+from app.safety.check import no_readable_text, only_drawn_faces
 from app.safety.evals_adapter import predict
 from app.safety.prompts import text_messages
 
@@ -97,7 +97,7 @@ def _bad_payloads():
 @pytest.mark.parametrize("payload", _bad_payloads())
 @pytest.mark.parametrize("kind", ["prompt", "comment", "caption", "nickname", "assignment"])
 def test_invalid_response_holds(payload, kind):
-    d, _ = run(kind, payload)
+    d, _ = run(kind, payload, payload)  # сбой повторяется один раз
     assert d.action == "hold" and d.model_error and d.reason_codes == ["invalid_response"]
 
 
@@ -459,3 +459,51 @@ def test_only_explicit_answer_spares_a_face(answer, drawn):
 def test_model_failure_keeps_the_face_blurred(fake_client, fake_mode):
     c, _, _ = fake_client(fake_mode)
     assert only_drawn_faces(b"\xff\xd8jpg", client=c) is False
+
+
+@pytest.mark.parametrize(
+    "answer, empty",
+    [
+        ({"readable_text": False}, True),
+        ({"readable_text": True}, False),
+        ({"readable_text": "false"}, False),
+        ({"readable_text": False, "extra": 1}, False),
+        ({}, False),
+    ],
+)
+def test_only_explicit_answer_clears_a_word_box(answer, empty):
+    assert no_readable_text(b"\xff\xd8jpg", client=client_for(Script(answer))) is empty
+
+
+def test_word_check_failure_keeps_the_blur(fake_client, fake_mode):
+    c, _, _ = fake_client(fake_mode)
+    assert no_readable_text(b"\xff\xd8jpg", client=c) is False
+
+
+class Flaky(Script):
+    """Первый запрос падает, дальше очередь ответов."""
+
+    def handler(self, request):
+        self.requests.append(json.loads(request.content))
+        if len(self.requests) == 1:
+            return httpx.Response(400, json={"error": {"code": "x"}})
+        return httpx.Response(200, json=_chat(json.dumps(self.answers.pop(0))))
+
+
+def test_failed_check_retried_once_and_real_answer_used():
+    s = Flaky(verdicts())
+    assert check_image(b"\xff\xd8jpg", "upload", "ru", client=client_for(s)).action == "allow"
+    assert len(s.requests) == 2
+
+
+def test_two_failures_still_hold():
+    s = Flaky()
+    s.handler = lambda request: (s.requests.append(1), httpx.Response(400, json={"error": {"code": "x"}}))[1]
+    d = check_image(b"\xff\xd8jpg", "upload", "ru", client=client_for(s))
+    assert d.action == "hold" and d.model_error and len(s.requests) == 2
+
+
+def test_real_unsafe_answer_is_never_asked_again():
+    s = Script(resp(unsafe_content=0.9), verdicts())
+    d = check_image(b"\xff\xd8jpg", "upload", "ru", client=client_for(s))
+    assert d.action != "allow" and len(s.requests) == 1

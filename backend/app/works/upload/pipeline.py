@@ -26,6 +26,8 @@ from app.works.upload.sam import ENTITIES, Box, blur, parse_boxes
 log = logging.getLogger("app.works.upload")
 
 ALLOWED_FORMATS = ("PNG", "JPEG", "WEBP")
+WORD_CHECK_MAX = 6
+WORD_CROP_SIDE = 384  # мелкую вырезку увеличиваем: иначе модель не прочтёт
 _client_cache = None
 
 
@@ -48,6 +50,12 @@ def check_image(data: bytes, kind: str, lang: str):
 
 def only_drawn_faces(data: bytes) -> bool:
     from app.safety.check import only_drawn_faces as f
+
+    return f(data)
+
+
+def no_readable_text(data: bytes) -> bool:
+    from app.safety.check import no_readable_text as f
 
     return f(data)
 
@@ -147,6 +155,24 @@ def detect(jpeg: bytes, size: tuple[int, int]) -> dict[str, list[Box]]:
     return {code: boxes for (_, code), boxes in zip(ENTITIES, results, strict=True)}
 
 
+def real_words(im: Image.Image, boxes: list[Box]) -> list[Box]:
+    """Поиск слов принимает закорючки и траву за надпись. Модель смотрит на вырезку; убираем только то, где она
+    прямо ответила «букв нет». Боксов много: один вопрос про всю картинку, есть буквы — размываем всё найденное."""
+    if not boxes:
+        return boxes
+    if len(boxes) > WORD_CHECK_MAX:
+        return [] if no_readable_text(to_jpeg(im)) else boxes
+
+    def crop(b: Box) -> bytes:
+        part = im.crop(b)
+        part = ImageOps.contain(part, (WORD_CROP_SIDE, WORD_CROP_SIDE)) if max(part.size) < WORD_CROP_SIDE else part
+        return to_jpeg(part)
+
+    with ThreadPoolExecutor(len(boxes)) as pool:
+        empty = list(pool.map(lambda b: no_readable_text(crop(b)), boxes))
+    return [b for b, e in zip(boxes, empty, strict=True) if not e]
+
+
 def _log_sam_failure(e: Exception) -> None:
     status = getattr(e, "status", None)
     if isinstance(e, ModelError) and status == 404:
@@ -184,6 +210,9 @@ def _run(db: Session, work: Work, skip_check: bool) -> None:
         _hold(db, work, ["sam_failed"])
         return
 
+    # После одобрения взрослым не спрашиваем: ему обещано, что личное будет размыто
+    if not skip_check:
+        found["written_word"] = real_words(im, found["written_word"])
     # Рожица на рисунке не личные данные, а размытие лишает героя сходства. Модель может ошибиться, поэтому
     # взрослый видит и такую работу, а в ленту класса она идёт через учителя. После одобрения взрослого
     # не спрашиваем: ему обещано, что лица будут размыты

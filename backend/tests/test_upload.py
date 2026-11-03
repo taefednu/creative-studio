@@ -65,6 +65,7 @@ def sam(monkeypatch):
     f = FakeSam()
     monkeypatch.setattr(pipeline, "sam_call", f)
     monkeypatch.setattr(pipeline, "only_drawn_faces", lambda data: False)
+    monkeypatch.setattr(pipeline, "no_readable_text", lambda data: False)
     return f
 
 
@@ -278,6 +279,47 @@ def test_face_stays_blurred_after_adult_approved_the_original(w, sam, chk, monke
     wk = work(wid)
     assert asked == [] and wk.reason_codes == ["blurred_face"]
     assert Path(wk.file_path).read_bytes() != pipeline.to_webp(Image.open(pipeline.original_path(wid)))
+
+
+def test_scribble_taken_for_a_word_stays_sharp_and_goes_to_nobody(w, sam, chk, monkeypatch):
+    monkeypatch.setattr(pipeline, "no_readable_text", lambda data: True)
+    wid = good(w, sam, chk, found=("written_word",))
+    wk = work(wid)
+    assert wk.status == "ready" and wk.reason_codes in (None, []) and items() == []
+    assert Path(wk.file_path).read_bytes() == pipeline.to_webp(Image.open(pipeline.original_path(wid)))
+
+
+def test_real_word_blurred_and_adult_sees_it(w, sam, chk):
+    wid = good(w, sam, chk, found=("written_word",))
+    assert work(wid).reason_codes == ["blurred_written_word"] and len(items()) == 1
+    wk = work(wid)
+    assert Path(wk.file_path).read_bytes() != pipeline.to_webp(Image.open(pipeline.original_path(wid)))
+
+
+def test_real_words_keeps_only_what_model_did_not_clear(monkeypatch):
+    im = Image.new("RGB", (300, 300), "white")
+    boxes = [(0, 0, 10, 10), (20, 20, 200, 200)]
+    answers = iter([True, False])
+    monkeypatch.setattr(pipeline, "no_readable_text", lambda data: next(answers))
+    with_one = pipeline.real_words(im, boxes)
+    assert len(with_one) == 1 and with_one[0] in boxes
+
+
+def test_real_words_many_boxes_one_question_about_the_whole_picture(monkeypatch):
+    asked = []
+    im = Image.new("RGB", (300, 300), "white")
+    boxes = [(0, 0, 10, 10)] * (pipeline.WORD_CHECK_MAX + 1)
+    monkeypatch.setattr(pipeline, "no_readable_text", lambda data: asked.append(1) or True)
+    assert pipeline.real_words(im, boxes) == [] and len(asked) == 1
+    monkeypatch.setattr(pipeline, "no_readable_text", lambda data: False)
+    assert pipeline.real_words(im, boxes) == boxes
+
+
+def test_word_stays_blurred_after_adult_approved(w, sam, chk, monkeypatch):
+    monkeypatch.setattr(pipeline, "no_readable_text", lambda data: True)
+    wid = good(w, sam, chk, found=("written_word",))
+    pipeline.run(wid, True)
+    assert work(wid).reason_codes == ["blurred_written_word"]
 
 
 def test_real_face_question_only_when_sam_found_a_face(w, sam, chk, monkeypatch):
