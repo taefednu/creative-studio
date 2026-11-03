@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Query, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.accounts.adults import AdultChild
 from app.accounts.models import Child
+from app.accounts.router import animal_for
 from app.accounts.security import COOKIE
 from app.db import get_session
 from app.feed import service
@@ -61,6 +62,15 @@ def _get_post(db: Session, v: Viewer, post_id: int) -> tuple[Post, str]:
     if p is None or role is None:
         raise HTTPException(404, "not_found")
     return p, role
+
+
+@router.get("/avatars/{nick}", include_in_schema=False)
+def avatar_image(nick: str, db: Db, v: Guest):
+    """Картинка аватара по нику: один адрес для всех экранов. Гость получает зверька только по нику: иначе без входа
+    можно проверять, есть ли ребёнок с таким ником. У вошедшего остаётся: выбранный зверёк виден своим и одноклассникам."""
+    chosen = None if v.role == "guest" else db.scalar(select(Child.avatar).where(Child.nick_norm == nick.strip().lower()))
+    animal = chosen or animal_for(nick)
+    return RedirectResponse(f"/art/avatars/{animal}.webp", status_code=302, headers={"Cache-Control": "private, max-age=300"})
 
 
 # ---------------- публикация ----------------

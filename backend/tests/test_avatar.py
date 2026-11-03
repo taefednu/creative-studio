@@ -51,6 +51,8 @@ def test_choice_at_creation_and_child_can_change_it():
         assert kid.post("/api/child/login", json={"nick": "StarFox", "pictures": PICS}).status_code == 200
         assert kid.post("/api/child/avatar", json={"avatar": "owl"}).status_code == 200
         assert where(kid, "starfox") == "/art/avatars/owl.webp"
+        # без входа выбранный зверёк не виден: по нему нельзя проверить, есть ли такой ребёнок
+        assert where(TestClient(app), "StarFox") == f"/art/avatars/{animal_for('StarFox')}.webp"
         assert kid.post("/api/child/avatar", json={"avatar": "../../evil"}).status_code == 422
         assert TestClient(app).post("/api/child/avatar", json={"avatar": "owl"}).status_code == 401
 

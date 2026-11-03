@@ -4,7 +4,6 @@ from datetime import timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response
-from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
@@ -463,14 +462,6 @@ def set_avatar(body: ChildAvatar, c: Annotated[Child, Depends(current_child)], d
     c.avatar = body.avatar
     db.commit()
     return {"avatar": c.avatar}
-
-
-@router.get("/avatars/{nick}", include_in_schema=False)
-def avatar_image(nick: str, db: Db):
-    """Картинка аватара по нику: один адрес для всех экранов. Незнакомый ник получает зверька так же, ответ не выдаёт, есть ли такой ребёнок."""
-    chosen = db.scalar(select(Child.avatar).where(Child.nick_norm == nick.strip().lower()))
-    animal = chosen or animal_for(nick)
-    return RedirectResponse(f"/art/avatars/{animal}.webp", status_code=302, headers={"Cache-Control": "private, max-age=300"})
 
 
 class ChildLang(BaseModel):
