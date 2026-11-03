@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../api'
 import { useSession } from '../features/auth/session'
 import { useLoad } from '../useLoad'
@@ -10,7 +10,6 @@ import { HEADER_CLS, NAV_CLS } from './headerStyles'
 import LangSwitch from './LangSwitch'
 import Logo from './Logo'
 import Avatar from './Avatar'
-import SiteFooter from './SiteFooter'
 import TabPill from './TabPill'
 
 const TABS = [
@@ -44,7 +43,6 @@ export default function AppShell() {
   const { t } = useTranslation()
   const { refresh } = useSession()
   const navigate = useNavigate()
-  const home = useLocation().pathname === '/' // подвал только на главной: остальные экраны собраны под одно окно
   const [me, load] = useLoad(loadMe)
   const [code, setCode] = useState('')
   const [err, setErr] = useState<string | null>(null)
@@ -107,7 +105,7 @@ export default function AppShell() {
   }
 
   return (
-    <div className={`min-h-dvh bg-bg ${home ? '' : 'pb-24 lg:pb-4'}`}>
+    <div className="min-h-dvh bg-bg pb-24 lg:pb-4">
       <header
         data-testid="shell-header"
         className={HEADER_CLS}
@@ -249,7 +247,6 @@ export default function AppShell() {
         )}
         <Outlet context={ctx} />
       </main>
-      {home && <SiteFooter />}
     </div>
   )
 }
