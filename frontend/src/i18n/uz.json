@@ -35,6 +35,7 @@
     "mentorium": "Mentorium orqali kirish"
     },
   "errors": {
+    "nick_demo": "Demo akkaunt umumiy, uning nikini o'zgartirib bo'lmaydi. O'z akkaunting bilan kir.",
     "nick_pending": "Yangi nik allaqachon kattalarni kutyapti.",
     "nick_check_failed": "Hozir nikni tekshirib bo'lmayapti. Keyinroq urinib ko'r.",
     "avatar_pending": "Bitta rasm allaqachon kattalarni kutyapti.",

@@ -38,8 +38,9 @@ export default function NotifBell() {
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
   const [readOf, setReadOf] = useState<typeof data>(null) // какой ответ сервера уже отмечен прочитанным
-  const [gone, setGone] = useState<string[]>([]) // убрано тут же, не дожидаясь сервера
-  const [all, setAll] = useState(false)
+  // Убрано тут же, не дожидаясь сервера. Строка с тем же ключом, но новым временем: это новое событие, оно видно
+  const [gone, setGone] = useState<string[]>([])
+  const [allOf, setAllOf] = useState<typeof data>(null) // какой ответ сервера очищен целиком
   const [leaving, setLeaving] = useState<string | null>(null)
   const box = useRef<HTMLDivElement>(null)
 
@@ -61,18 +62,21 @@ export default function NotifBell() {
     if (!open && data && readOf === data) reload()
   }, [open, data, readOf, reload])
 
-  function clear(keys: string[]) {
+  function clear(keys: string[], at: string) {
     const everything = keys[0] === '*'
-    if (everything) setAll(true)
+    const mark = `${keys[0]}@${at}`
+    if (everything) setAllOf(data)
     else {
       setLeaving(keys[0]) // строка уезжает, потом исчезает
-      window.setTimeout(() => setGone((g) => [...g, ...keys]), 140)
+      window.setTimeout(() => setGone((g) => [...g, mark]), 140)
     }
-    void api('/api/child/notifications/clear', 'POST', { keys })
-      .catch(() => {})
-      .then(() => {
-        reload()
-        if (everything) setAll(false)
+    api('/api/child/notifications/clear', 'POST', { keys, before: at })
+      .then(reload)
+      .catch(() => {
+        // сервер не запомнил: строка возвращается
+        setAllOf(null)
+        setLeaving(null)
+        setGone((g) => g.filter((x) => x !== mark))
       })
   }
 
@@ -84,7 +88,8 @@ export default function NotifBell() {
     setOpen(!open)
   }
 
-  const items = all ? [] : (data?.items ?? []).filter((n) => !n.keys.every((k) => gone.includes(k)))
+  const all = !!data && allOf === data
+  const items = all ? [] : (data?.items ?? []).filter((n) => !gone.includes(`${n.keys[0]}@${n.at}`))
   // Отметки в открытом списке видны, пока он открыт; счётчик гаснет сразу
   const unread = (data && readOf === data) || all ? 0 : items.filter((n) => n.unread).length
   return (
@@ -111,7 +116,7 @@ export default function NotifBell() {
           <div className="flex items-center justify-between gap-2 px-3 pb-1 pt-2">
             <h2 className="min-w-0 text-lg font-black tracking-tight text-heading">{t('notes.title')}</h2>
             {items.length > 1 && (
-              <button type="button" data-testid="bell-clear-all" onClick={() => clear(['*'])} className="shrink-0 rounded-full px-3 py-1 text-sm font-extrabold text-muted hover:bg-primary-soft hover:text-heading">
+              <button type="button" data-testid="bell-clear-all" onClick={() => clear(['*'], items[0].at)} className="shrink-0 rounded-full px-3 py-1 text-sm font-extrabold text-muted hover:bg-primary-soft hover:text-heading">
                 {t('notes.clearAll')}
               </button>
             )}
@@ -136,7 +141,7 @@ export default function NotifBell() {
                     <span className="block text-xs font-bold text-muted">{agoText(n.at, t)}</span>
                   </span>
                 </Link>
-                <button type="button" data-testid="note-clear" aria-label={t('notes.clear')} onClick={() => clear(n.keys)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface hover:text-heading">
+                <button type="button" data-testid="note-clear" aria-label={t('notes.clear')} onClick={() => clear(n.keys, n.at)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface hover:text-heading">
                   <Icon name="close" className="h-4 w-4" />
                 </button>
               </div>

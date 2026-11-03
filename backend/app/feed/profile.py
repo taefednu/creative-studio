@@ -19,7 +19,9 @@ from app.accounts.adults import child_with_adult, has_adult
 from app.accounts.deps import current_child
 from app.accounts.models import Child, ClassMembership
 from app.accounts.nickcheck import NICK_RE
+from app.config import get_settings
 from app.db import get_session
+from app.demo import DEMO_KIDS
 from app.feed.models import Post
 from app.moderation import HeldItem, hold, register
 from app.works.image.models import Work
@@ -52,7 +54,12 @@ def avatar_allowed(db: Session, w: Work | None) -> bool:
 
 
 def _pending(db: Session, c: Child, item_type: str) -> HeldItem | None:
-    return db.scalar(select(HeldItem).where(HeldItem.child_id == c.id, HeldItem.item_type == item_type, HeldItem.status == "pending"))
+    # Срочное не ждёт решения и ребёнку не показывается: новый ник оно не держит
+    return db.scalar(
+        select(HeldItem).where(
+            HeldItem.child_id == c.id, HeldItem.item_type == item_type, HeldItem.status == "pending", HeldItem.urgent.is_(False)
+        )
+    )
 
 
 class NickBody(BaseModel):
@@ -61,6 +68,9 @@ class NickBody(BaseModel):
 
 @router.post("/child/nick")
 def change_nick(body: NickBody, c: ChildDep, db: Db) -> dict:
+    # Демо-вход ищет общих детей по нику: смена у одного посетителя закрыла бы вход всем
+    if get_settings().DEMO_LOGIN and c.nick in DEMO_KIDS.values():
+        raise HTTPException(403, "nick_demo")
     nick = body.nick.strip()
     if not NICK_RE.match(nick):
         raise HTTPException(422, "nick_format")
@@ -113,39 +123,37 @@ def profile(c: ChildDep, db: Db) -> dict:
     """Что ждёт взрослого и какие работы можно поставить на аватарку."""
     pending_nick = _pending(db, c, "nickname")
     pending_avatar = _pending(db, c, "avatar")
-    works = db.scalars(
-        select(Work.id)
-        .where(Work.child_id == c.id, Work.status == "ready", Work.file_path.is_not(None), Work.kind == "image", Work.remix_of_post_id.is_(None))
-        .order_by(Work.id.desc())
-        .limit(12)
-    ).all()
+    works = [
+        w
+        for w in db.scalars(select(Work).where(Work.child_id == c.id).order_by(Work.id.desc()).limit(60))
+        if avatar_allowed(db, w)
+    ][:12]
     return {
         # Текст срочного не показываем: ребёнок уже получил отказ, в ожидании такой ник не висит
         "nick_pending": pending_nick.preview_text if pending_nick and not pending_nick.urgent else None,
         "avatar_pending": int(pending_avatar.target_id) if pending_avatar else None,
         "avatar_work_id": c.avatar_work_id,
-        "works": [{"id": i, "image_url": f"/api/works/{i}/image?thumb=1"} for i in works],
+        "works": [{"id": w.id, "image_url": f"/api/works/{w.id}/image?thumb=1"} for w in works],
     }
 
 
 def _approve_nick(db: Session, item: HeldItem) -> None:
     c = db.get(Child, item.child_id)
     nick = item.preview_text or ""
-    if c is None or not NICK_RE.match(nick):
+    taken = db.scalar(select(Child.id).where(Child.nick_norm == nick.lower(), Child.id != item.child_id))
+    if c is None or not NICK_RE.match(nick) or taken:
+        item.status = "rejected"  # пока ждал взрослого, ник заняли: остаётся прежний, ребёнку приходит отказ
         return
     c.nick, c.nick_norm = nick, nick.lower()
-    try:
-        db.commit()
-    except IntegrityError:  # пока ждал взрослого, ник занял другой: остаётся прежний
-        db.rollback()
 
 
 def _approve_avatar(db: Session, item: HeldItem) -> None:
     c = db.get(Child, item.child_id)
     w = db.get(Work, int(item.target_id))
-    if c is not None and w is not None and w.child_id == c.id and avatar_allowed(db, w):
-        c.avatar_work_id = w.id
-        db.commit()
+    if c is None or w is None or w.child_id != c.id or not avatar_allowed(db, w):
+        item.status = "rejected"  # пока ждал взрослого, работу отклонили: ребёнку приходит отказ
+        return
+    c.avatar_work_id = w.id
 
 
 def _nothing(db: Session, item: HeldItem) -> None:

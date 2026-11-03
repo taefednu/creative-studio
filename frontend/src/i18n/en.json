@@ -35,6 +35,7 @@
     "mentorium": "Sign in with Mentorium"
     },
   "errors": {
+    "nick_demo": "This demo account is shared, so its nickname can't be changed. Sign in with your own account.",
     "nick_pending": "Your new nickname is already waiting for a grown-up.",
     "nick_check_failed": "We can't check the nickname right now. Try again later.",
     "avatar_pending": "One picture is already waiting for a grown-up.",

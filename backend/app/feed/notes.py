@@ -143,13 +143,16 @@ def notifications(c: ChildDep, db: Db) -> dict:
 class ClearBody(BaseModel):
     # Ключи только известного вида: иначе ребёнок мог бы забить таблицу чем угодно
     keys: Annotated[list[Annotated[str, StringConstraints(pattern=KEY_RE)]], Field(min_length=1, max_length=200)]
+    before: datetime | None = None  # самое новое из показанного: случившееся позже ребёнок ещё не видел
 
 
 @router.post("/child/notifications/clear")
 def clear_notifications(body: ClearBody, c: ChildDep, db: Db) -> dict:
     keys = set(body.keys)
-    db.execute(delete(NoteCleared).where(NoteCleared.child_id == c.id, NoteCleared.key.in_(keys)))
-    db.add_all(NoteCleared(child_id=c.id, key=k, cleared_at=clock.now()) for k in keys)
+    now = clock.now()
+    upto = min(body.before.replace(tzinfo=None), now) if body.before else now
+    db.execute(delete(NoteCleared).where(NoteCleared.child_id == c.id, NoteCleared.key.in_(keys), NoteCleared.cleared_at <= upto))
+    db.add_all(NoteCleared(child_id=c.id, key=k, cleared_at=upto) for k in keys)
     db.commit()
     return {"ok": True}
 

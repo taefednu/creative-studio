@@ -153,3 +153,13 @@ def test_clear_rejects_junk_and_outsiders(w, fake):
     assert clear(w.a, "<script>").status_code == 422
     assert clear(w.a).status_code == 422
     assert clear(w.teacher, "*").status_code in (401, 403)
+
+
+def test_clear_all_keeps_what_child_has_not_seen_yet(w, fake):
+    _decide(w, "rejected")
+    shown = notes(w.a)["items"][0]["at"]
+    _decide(w, "approved")  # случилось, пока список был открыт
+    r = w.a.post("/api/child/notifications/clear", json={"keys": ["*"], "before": shown})
+    assert r.status_code == 200
+    assert kinds(w.a) == ["approved"]
+

@@ -210,3 +210,53 @@ def test_approved_then_work_became_ineligible_falls_back(w, fake):
         s.get(Work, w.work).status = "refused"
         s.commit()
     assert avatar_of(w.b, nick).status_code == 302
+
+
+def test_taken_while_waiting_gives_refusal_not_stuck_card(w, fake, monkeypatch):
+    before = me(w)[0]
+    verdict(monkeypatch, failed())
+    w.a.post("/api/child/nick", json={"nick": "Waiter"})
+    verdict(monkeypatch, allow())
+    assert w.b.post("/api/child/nick", json={"nick": "Waiter"}).status_code == 200  # занял другой
+    it = held(w, "nickname")
+    assert w.parent.post(f"/api/review/items/{it.id}/approve").status_code == 200
+    assert held(w, "nickname") is None and me(w)[0] == before
+    assert "nickrefused" in [i["kind"] for i in w.a.get("/api/child/notifications").json()["items"]]
+    assert w.a.post("/api/child/nick", json={"nick": "Other"}).status_code == 200  # не заперт
+
+
+def test_avatar_refused_while_waiting_is_told_as_refusal(w, fake):
+    w.a.post("/api/child/avatar-work", json={"work_id": w.work})
+    it = held(w, "avatar")
+    with db.new_session() as s:
+        s.add(Post(work_id=w.work, work_kind="image", child_id=w.a_id, audience="class", status="rejected"))
+        s.commit()
+    assert w.parent.post(f"/api/review/items/{it.id}/approve").status_code == 200
+    assert me(w)[1] is None
+    assert "avatarrefused" in [i["kind"] for i in w.a.get("/api/child/notifications").json()["items"]]
+    assert w.work not in [x["id"] for x in w.a.get("/api/child/profile").json()["works"]]
+
+
+def test_urgent_nick_does_not_lock_changes(w, fake, monkeypatch):
+    d = D("support", urgent=True)
+    d.model_error = False
+    verdict(monkeypatch, d)
+    assert w.a.post("/api/child/nick", json={"nick": "Dark"}).status_code == 422
+    verdict(monkeypatch, allow())
+    assert w.a.post("/api/child/nick", json={"nick": "Bright"}).status_code == 200
+
+
+def test_shared_demo_kid_keeps_nick_others_can_change(w, fake, monkeypatch):
+    from app.config import get_settings
+
+    verdict(monkeypatch, allow())
+    monkeypatch.setenv("DEMO_LOGIN", "true")
+    get_settings.cache_clear()
+    with db.new_session() as s:
+        k = s.get(Child, w.a_id)
+        k.nick, k.nick_norm = "Bunny", "bunny"
+        s.commit()
+    r = w.a.post("/api/child/nick", json={"nick": "Stolen"})
+    assert r.status_code == 403 and r.json()["detail"] == "nick_demo"
+    assert w.b.post("/api/child/nick", json={"nick": "Fine"}).status_code == 200
+
