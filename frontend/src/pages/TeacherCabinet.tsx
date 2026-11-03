@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
+import OpenLinks from '../components/OpenLinks'
 import CabinetHeader from '../components/CabinetHeader'
 import ChipSelect from '../components/ChipSelect'
 import ReviewQueue from '../components/ReviewQueue'
@@ -21,7 +22,7 @@ export default function TeacherCabinet() {
       <CabinetHeader role="teacher" />
       <main className="px-4 py-4 md:px-8">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h1 data-testid="page-title" className="w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-4xl lg:leading-10">
+          <h1 data-testid="page-title" className="w-fit text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">
             {t('review.title')}
           </h1>
           {rooms && rooms.length > 1 && (
@@ -45,6 +46,7 @@ export default function TeacherCabinet() {
           </div>
         )}
         <ReviewQueue classFilter={cls} />
+        <OpenLinks role="teacher" />
       </main>
     </div>
   )

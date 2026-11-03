@@ -11,6 +11,7 @@ import Icon from '../components/Icon'
 import LinkCard from '../components/LinkCard'
 import PictureGrid from '../components/PictureGrid'
 import QrBox from '../components/QrBox'
+import OpenLinks from '../components/OpenLinks'
 import ParentNotes from '../components/ParentNotes'
 import ReviewQueue from '../components/ReviewQueue'
 import WeekChart from '../components/WeekChart'
@@ -42,11 +43,9 @@ type Analytics = {
   coins_spent: number | null
 }
 type FamilyPost = { id: number; nick: string; image_url: string }
-type OpenLink = { work_id: number; nick: string; path: string; image_url: string }
 
 const loadKids = () => api<Kid[]>('/api/parent/children')
 const loadFamily = () => api<{ items: FamilyPost[] }>('/api/feed/family?limit=40')
-const loadLinks = () => api<OpenLink[]>('/api/parent/shares')
 
 const input =
   'w-full rounded-2xl border border-border bg-surface px-4 py-2 font-bold text-heading outline-none focus:border-primary'
@@ -158,7 +157,6 @@ export default function ParentCabinet() {
   const { t } = useTranslation()
   const [kids, load] = useLoad(loadKids)
   const [family] = useLoad(loadFamily)
-  const [links, reloadLinks] = useLoad(loadLinks)
   const [qr, setQr] = useState<{ id: number; nick: string; token: string } | null>(null)
   const [pick, setPick] = useState<number | null>(null)
   const [stats, setStats] = useState<Record<number, Analytics>>({})
@@ -188,11 +186,6 @@ export default function ParentCabinet() {
   async function showQr(k: Kid) {
     const r = await api<{ token: string }>(`/api/parent/children/${k.id}/qr`, 'POST')
     setQr({ id: k.id, nick: k.nick, token: r.token })
-  }
-
-  async function stopLink(l: OpenLink) {
-    await api(`/api/works/${l.work_id}/share`, 'DELETE')
-    reloadLinks()
   }
 
   const h2 = 'text-2xl font-black tracking-tight text-heading md:text-3xl'
@@ -292,25 +285,7 @@ export default function ParentCabinet() {
           )}
         </section>
 
-        {!!links?.length && (
-          <section data-testid="open-links" className="mt-8">
-            <h2 className={h2}>{t('cab.links.title')}</h2>
-            <p className="mt-1 text-sm font-bold text-muted">{t('cab.links.note')}</p>
-            <ul className="mt-3 grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),1fr))] gap-3">
-              {links.map((l) => (
-                <li key={l.work_id} data-testid="open-link" className="flex items-center gap-3 rounded-2xl bg-surface p-2 pr-3 shadow-card">
-                  <a href={l.path} target="_blank" rel="noreferrer" className="shrink-0">
-                    <img src={l.image_url} alt="" className="h-16 w-16 rounded-xl object-cover" />
-                  </a>
-                  <span className="min-w-0 flex-1 truncate font-extrabold text-heading">{l.nick}</span>
-                  <button type="button" data-testid="open-link-stop" onClick={() => void stopLink(l)} className="h-10 shrink-0 rounded-full border border-border bg-surface px-4 text-sm font-extrabold text-heading">
-                    {t('publish.share.stop')}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        <OpenLinks role="parent" />
         <ParentNotes />
         </div>
         </div>

@@ -18,8 +18,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.accounts.adults import AdultChild
-from app.accounts.deps import current_child, current_parent
-from app.accounts.models import Child, Parent
+from app.accounts.deps import current_child, current_parent, current_teacher
+from app.accounts.models import Child, ClassMembership, Classroom, Parent, Teacher
 from app.db import get_session
 from app.feed.models import Post
 from app.feed.router import V, _origin_chain
@@ -120,8 +120,6 @@ def stop_share(work_id: int, db: Db, v: V):
     is_parent = v.role == "parent" and v.id == author.parent_id
     is_teacher = False
     if v.role == "teacher":
-        from app.accounts.models import Classroom
-
         cid = class_of(db, author.id)
         room = db.get(Classroom, cid) if cid is not None else None
         is_teacher = room is not None and room.teacher_id == v.id
@@ -137,17 +135,34 @@ def stop_share(work_id: int, db: Db, v: V):
     return _view(db, s)
 
 
+def _links(db: Session, rows) -> list[dict]:
+    return [
+        {"work_id": s.work_id, "nick": nick, "path": f"/s/{s.token}", "image_url": f"/api/public/{s.token}/card.jpg"}
+        for s, nick in rows
+        if _live_work(db, s.token) is not None
+    ]
+
+
 @router.get("/api/parent/shares")
 def parent_shares(p: Annotated[Parent, Depends(current_parent)], db: Db):
     """Какие работы детей этого родителя сейчас открыты всем: чтобы было что выключить."""
     rows = db.execute(
         select(Share, Child.nick).join(Child, Child.id == Share.child_id).where(Child.parent_id == p.id, Share.status == "live")
     ).all()
-    return [
-        {"work_id": s.work_id, "nick": nick, "path": f"/s/{s.token}", "image_url": f"/api/public/{s.token}/card.jpg"}
-        for s, nick in rows
-        if _live_work(db, s.token) is not None
-    ]
+    return _links(db, rows)
+
+
+@router.get("/api/teacher/shares")
+def teacher_shares(t: Annotated[Teacher, Depends(current_teacher)], db: Db):
+    """То же для учителя: работы детей его классов."""
+    rows = db.execute(
+        select(Share, Child.nick)
+        .join(Child, Child.id == Share.child_id)
+        .join(ClassMembership, ClassMembership.child_id == Child.id)
+        .join(Classroom, Classroom.id == ClassMembership.class_id)
+        .where(Classroom.teacher_id == t.id, Share.status == "live")
+    ).all()
+    return _links(db, rows)
 
 
 # ---- решение взрослого ----

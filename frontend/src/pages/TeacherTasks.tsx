@@ -41,6 +41,7 @@ export default function TeacherTasks() {
   const [due, setDue] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
   const lock = useRef(false)
 
   useEffect(() => {
@@ -89,6 +90,7 @@ export default function TeacherTasks() {
       setTitle('')
       setDesc('')
       setDue('')
+      setFormOpen(false)
       setTick((n) => n + 1)
     } catch (x) {
       setErr(taskErrorCode(errorKey(x)))
@@ -103,9 +105,15 @@ export default function TeacherTasks() {
       <CabinetHeader role="teacher" />
       <main className="px-4 py-4 md:px-8">
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-3">
-          <h1 data-testid="page-title" className="w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-4xl lg:leading-10">
+          <h1 data-testid="page-title" className="w-fit text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">
             {t('cab.tasks.title')}
           </h1>
+          {classId !== null && (
+            <button type="button" data-testid="task-new" onClick={() => setFormOpen(true)} className="btn-press ml-auto flex h-12 items-center gap-2 rounded-2xl bg-primary px-5 font-extrabold text-primary-fg lg:order-last">
+              <Icon name="plus" className="h-5 w-5" />
+              {t('tt.newTask')}
+            </button>
+          )}
           {rooms && rooms.length > 0 && (
             <ChipSelect
               testid="task-class"
@@ -139,13 +147,21 @@ export default function TeacherTasks() {
           </p>
         )}
         {classId !== null && (
-          <div className="mt-3 grid items-start gap-4 lg:grid-cols-[minmax(300px,1fr)_2fr] big:grid-cols-[521px_1fr]">
+          <div className="mt-3">
+            {formOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-scrim p-3" onPointerDown={(e) => e.target === e.currentTarget && !busy && setFormOpen(false)}>
             <form
               onSubmit={(e) => void create(e)}
               data-testid="task-form"
-              className="rounded-card border border-border bg-surface p-4 shadow-card big:p-6 lg:sticky lg:top-20"
+              role="dialog"
+              aria-modal="true"
+              aria-label={t('tt.newTask')}
+              className="modal-in relative my-auto w-full max-w-[520px] rounded-[28px] bg-surface p-5 shadow-pop"
             >
-              <h2 className="text-2xl font-extrabold text-heading big:text-[40px] big:leading-[48px]">{t('tt.newTask')}</h2>
+              <button type="button" data-testid="task-form-close" aria-label={t('mw.close')} disabled={busy} onClick={() => setFormOpen(false)} className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full text-muted hover:bg-primary-soft">
+                <Icon name="close" />
+              </button>
+              <h2 className="pr-10 text-2xl font-black tracking-tight text-heading">{t('tt.newTask')}</h2>
               <label htmlFor="task-title" className={label}>{t('tt.titleLabel')}</label>
               <input
                 id="task-title"
@@ -185,8 +201,10 @@ export default function TeacherTasks() {
               </button>
               <ErrorText code={err} />
             </form>
-            <section data-testid="tasks-panel" className="rounded-card border border-border bg-surface p-3 shadow-card big:p-[14px]">
-              <h2 className="px-2 text-2xl font-extrabold text-heading big:text-[40px] big:leading-[48px]">{t('tt.assigned')}</h2>
+              </div>
+            )}
+            <section data-testid="tasks-panel">
+              <h2 className="text-2xl font-black tracking-tight text-heading md:text-3xl">{t('tt.assigned')}</h2>
               {items && items.length === 0 && (
                 <p data-testid="tasks-none" className="mt-3 px-2 text-muted">
                   {t('tt.empty')}

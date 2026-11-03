@@ -104,7 +104,7 @@ export default function TeacherClasses() {
       <CabinetHeader role="teacher" />
       <main className="px-4 py-4 md:px-8">
         <div className="flex items-center justify-between gap-3 big:mt-6">
-          <h1 data-testid="page-title" className="w-fit text-[30px] font-extrabold leading-9 text-heading lg:text-4xl lg:leading-10">
+          <h1 data-testid="page-title" className="w-fit text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">
             {t('cab.tabs.classes')}
           </h1>
           <button

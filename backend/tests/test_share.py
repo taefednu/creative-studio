@@ -178,3 +178,23 @@ def test_parent_sees_open_links_and_level_count(world):
     other.post("/api/parent/register", json={"email": "q@x.io", "password": "correct-horse-1"})
     kid.post(f"/api/works/{wid}/share")
     assert other.get("/api/parent/shares").json() == []
+
+
+def test_teacher_sees_and_stops_links_of_own_class_only(world):
+    parent, kid, cid, tmp = world
+    teacher = TestClient(app)
+    assert teacher.post("/api/teacher/register", json={"email": "t@x.io", "password": "correct-horse-1"}).status_code < 300
+    room = teacher.post("/api/teacher/classes", json={"name": "4A"}).json()
+    assert kid.post("/api/child/join-class", json={"code": room["code"]}).status_code == 200
+    wid = make_work(cid, tmp)
+    kid.post(f"/api/works/{wid}/share")
+    parent.post(f"/api/review/items/{item_of(wid)}/approve")
+    stranger = TestClient(app)
+    stranger.post("/api/teacher/register", json={"email": "s@x.io", "password": "correct-horse-1"})
+    assert stranger.get("/api/teacher/shares").json() == []
+    assert stranger.delete(f"/api/works/{wid}/share").status_code == 404
+    assert [r["work_id"] for r in teacher.get("/api/teacher/shares").json()] == [wid]
+    token = token_of(wid)
+    assert teacher.delete(f"/api/works/{wid}/share").json()["status"] == "refused"
+    assert TestClient(app).get(f"/s/{token}").status_code == 404
+    assert teacher.get("/api/teacher/shares").json() == []
