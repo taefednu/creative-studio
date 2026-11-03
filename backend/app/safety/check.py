@@ -122,7 +122,7 @@ def only_drawn_faces(image_bytes: bytes, *, client: MetaClient | None = None) ->
     """True только на явный ответ «настоящих лиц нет». Сбой или мусор — False: лицо размоется."""
     try:
         c = client or _default_client()
-        raw = c.chat_json(real_face_messages(_data_url(image_bytes)), REAL_FACE_SCHEMA, _thresholds()[1])
+        raw = c.chat_json(real_face_messages(_data_url(image_bytes)), REAL_FACE_SCHEMA, _trust_seconds())
         return not RealFace.model_validate_json(raw).real_face
     except Exception:  # noqa: BLE001
         log.warning("real_face check failed: face stays blurred")
@@ -133,7 +133,7 @@ def no_readable_text(image_bytes: bytes, *, client: MetaClient | None = None) ->
     """True только на явный ответ «букв и цифр нет». Сбой или мусор — False: надпись размоется."""
     try:
         c = client or _default_client()
-        raw = c.chat_json(readable_text_messages(_data_url(image_bytes)), READABLE_TEXT_SCHEMA, _thresholds()[1])
+        raw = c.chat_json(readable_text_messages(_data_url(image_bytes)), READABLE_TEXT_SCHEMA, _trust_seconds())
         return not ReadableText.model_validate_json(raw).readable_text
     except Exception:  # noqa: BLE001
         log.warning("readable_text check failed: box stays blurred")

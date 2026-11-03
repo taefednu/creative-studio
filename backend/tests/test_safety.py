@@ -543,3 +543,19 @@ def test_late_rewrite_goes_to_adult(monkeypatch):
     d, _ = run("prompt", resp(rewrite="кот в космосе", unsafe_content=0.9), resp())
     assert d.action == "hold" and d.model_error
 
+
+def test_blur_is_never_lifted_by_a_late_answer():
+    # «лицо нарисовано» и «букв нет» снимают размытие: на них ждём только SAFETY_TIMEOUT, сбой оставляет размытым
+    from app.config import get_settings
+
+    seen = []
+
+    class C:
+        def chat_json(self, messages, schema, timeout):
+            seen.append(timeout)
+            raise TimeoutError
+
+    assert only_drawn_faces(b"\xff\xd8jpg", client=C()) is False
+    assert no_readable_text(b"\xff\xd8jpg", client=C()) is False
+    assert seen == [get_settings().SAFETY_TIMEOUT] * 2
+
