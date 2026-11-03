@@ -118,7 +118,8 @@ export default function AppShell() {
           data-testid="main-nav"
           className={NAV_CLS}
         >
-          {TABS.map((tab) => (
+          {/* Задания даёт учитель класса: у ребёнка без класса вкладке нечего показать */}
+          {TABS.filter((tab) => tab.key !== 'tasks' || me?.class).map((tab) => (
             <TabPill
               key={tab.key}
               to={tab.to}

@@ -296,33 +296,6 @@ body {
     filter: blur(6px);
   }
 }
-.gen-fill {
-  animation: gen-fill 0.7s var(--ease-out) both;
-}
-@keyframes gen-fill {
-  from {
-    opacity: 0;
-  }
-}
-.gen-painter {
-  transform-box: fill-box;
-  transform-origin: 30% 80%;
-  animation: gen-robot 0.9s ease-in-out infinite alternate;
-}
-.gen-lens {
-  animation: gen-lens 3.2s var(--ease-in-out) infinite alternate;
-}
-@keyframes gen-lens {
-  0% {
-    transform: translate(-90%, -70%);
-  }
-  50% {
-    transform: translate(80%, -10%);
-  }
-  100% {
-    transform: translate(-40%, 80%);
-  }
-}
 .gen-badge {
   animation: gen-badge 0.32s var(--ease-pop) 0.6s backwards;
 }
@@ -375,6 +348,15 @@ body {
 .drawing-stage[data-phase='glow'] .drawing-photo,
 .drawing-stage[data-phase='reveal'] .drawing-photo {
   filter: blur(26px) saturate(1.6) brightness(1.1);
+}
+.drawing-cloud {
+  opacity: 0;
+  filter: blur(26px) saturate(1.6) brightness(1.1);
+  transition: opacity 2s var(--ease-in-out);
+}
+.drawing-stage[data-phase='glow'] .drawing-cloud,
+.drawing-stage[data-phase='reveal'] .drawing-cloud {
+  opacity: 1;
 }
 .drawing-light {
   background: linear-gradient(115deg, transparent 35%, color-mix(in oklch, var(--color-surface) 70%, transparent) 50%, transparent 65%);
@@ -461,9 +443,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .gen-title,
   .gen-word-in,
-  .gen-fill,
-  .gen-painter,
-  .gen-lens,
   .gen-badge,
   .upload-preview,
   .drawing-aura,

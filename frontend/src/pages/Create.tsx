@@ -328,7 +328,7 @@ function WorkView({
     void bringAlive(`auto-alive-${workId}`)
   }, [auto, workId, bringAlive])
   // Готовая картинка сначала проступает на том же месте, где только что светился рисунок
-  const reveal = work.kind === 'alive' && s === 'ready' && !!work.image_url && !!drawing
+  const reveal = s === 'ready' && !!work.image_url && (work.kind === 'alive' ? !!drawing : work.kind !== 'upload' && sawDrawing)
   const [revealed, setRevealed] = useState(false)
   useEffect(() => {
     if (!reveal || revealed) return
@@ -399,7 +399,7 @@ function WorkView({
   }
 
   if (auto) return <DrawingStage src={drawing ?? null} phase="glow" title={t('gen.alive')} />
-  if (reveal && !revealed) return <DrawingStage src={drawing ?? null} result={work.image_url} phase="reveal" title={t('create.aliveTitle')} />
+  if (reveal && !revealed) return <DrawingStage src={drawing ?? tpl?.image_url ?? null} cloud={!drawing} result={work.image_url} phase="reveal" title={t(work.kind === 'alive' ? 'create.aliveTitle' : 'create.readyTitle')} />
   if (drawing && (s === 'checking' || s === 'generating')) {
     const looking = work.kind === 'upload'
     return <DrawingStage src={drawing} phase={looking ? 'look' : 'glow'} title={t(looking ? 'gen.readUpload' : work.drawn ? 'gen.verify' : 'gen.alive')} />
