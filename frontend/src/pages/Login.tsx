@@ -18,10 +18,10 @@ const ROLES: { role: Role; icon: string }[] = [
 ]
 
 const input =
-  'w-full rounded-2xl border border-border bg-surface px-4 py-0 h-12 text-2xl short:h-11 font-bold text-heading outline-none focus:border-primary'
+  'w-full rounded-2xl border border-border bg-surface px-4 py-0 h-12 text-lg short:h-11 font-bold text-heading outline-none focus:border-primary'
 const label = 'mb-1 block text-xs font-extrabold uppercase text-primary'
 const primaryBtn =
-  'w-full rounded-full bg-primary px-6 h-[52px] lg:h-14 text-2xl short:h-12 short:text-xl font-extrabold uppercase text-primary-fg disabled:opacity-50'
+  'btn-press w-full rounded-[14px] bg-primary px-6 h-[52px] lg:h-14 text-xl short:h-12 short:text-lg font-extrabold text-primary-fg shadow-press disabled:opacity-50 disabled:shadow-none'
 
 function ChildForm({ onDone }: { onDone: (r: Role) => void }) {
   const { t } = useTranslation()
@@ -74,7 +74,7 @@ function ChildForm({ onDone }: { onDone: (r: Role) => void }) {
       >
         {t('auth.childLogin')}
       </button>
-      <p className="text-center text-base font-bold leading-5 text-primary underline">{t('auth.qrHelp')}</p>
+      <p className="text-center text-sm font-bold leading-5 text-primary underline">{t('auth.qrHelp')}</p>
     </form>
   )
 }
@@ -263,7 +263,7 @@ function DemoButtons() {
     window.location.assign(role === 'child' ? '/create' : `/${role}`)
   }
   return (
-    <div data-testid="demo-login" className="flex flex-wrap items-center justify-center gap-1.5 rounded-full bg-primary-soft p-1 text-sm font-extrabold text-primary">
+    <div data-testid="demo-login" className="flex flex-wrap items-center gap-1.5 rounded-2xl bg-primary-soft p-1 text-sm font-extrabold text-primary">
       <span className="px-2">{t('demo.try')}</span>
       {(['child', 'parent', 'teacher'] as const).map((r) => (
         <button key={r} type="button" data-testid={`demo-${r}`} onClick={() => void go(r)} className="rounded-full bg-surface px-3 py-1.5 text-heading shadow-card">
@@ -289,16 +289,26 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-bg bg-cover bg-center" style={{ backgroundImage: 'url(/art/login-bg.webp)' }}>
-      <header data-testid="login-header" className="flex h-[60px] items-center justify-between border-b border-border bg-surface px-3 lg:h-16 lg:px-8">
-        <Logo />
-        <div className="hidden lg:block"><DemoButtons /></div>
-        <LangSwitch />
-      </header>
-      <div className="flex justify-center px-3 pt-3 lg:hidden"><DemoButtons /></div>
-      <main className="mx-auto w-full max-w-[719px] px-3 pb-10 pt-3 lg:flex lg:max-w-[600px] lg:flex-1 lg:flex-col lg:justify-center lg:py-2">
-        <div data-testid="login-card" className="rounded-card border border-border bg-surface p-3 shadow-card md:p-[29px] short:p-4">
-          <div className="mb-3 grid grid-cols-3 gap-2 md:gap-3" role="tablist">
+    <div className="flex min-h-dvh flex-col bg-bg lg:h-dvh lg:flex-row">
+      <section className="flex min-w-0 flex-col lg:w-1/2 lg:overflow-y-auto">
+        <header data-testid="login-header" className="flex h-[60px] shrink-0 items-center justify-between px-4 lg:h-[72px] lg:px-8">
+          <Link to="/" aria-label={t('showcase.fromLogin')}>
+            <Logo />
+          </Link>
+          <LangSwitch />
+        </header>
+        <div className="relative h-[132px] shrink-0 overflow-hidden lg:hidden">
+          <img src="/art/login-art.webp" alt="" className="h-full w-full object-cover object-[50%_34%]" />
+        </div>
+        <main className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center px-4 pb-6 pt-4 lg:px-0 lg:pb-4 lg:pt-0">
+          <div className="mb-3 empty:hidden">
+            <DemoButtons />
+          </div>
+          <h1 data-testid="login-title" className="mb-3 text-[32px] font-black leading-none tracking-tight text-heading lg:text-[40px] short:mb-2 short:text-[34px]">
+            {t('auth.who')}
+          </h1>
+          <div data-testid="login-card">
+          <div className="mb-3 grid grid-cols-3 gap-2" role="tablist">
             {ROLES.map((r) => (
               <button
                 key={r.role}
@@ -310,18 +320,18 @@ export default function Login() {
                   setRole(r.role)
                   setPlatform(false)
                 }}
-                className={`relative flex flex-col items-center gap-1 rounded-2xl border-2 px-1 py-2 text-sm font-extrabold text-heading md:h-[176px] md:justify-center md:text-2xl short:h-[84px] short:text-base ${
+                className={`relative flex h-[76px] flex-col items-center justify-center gap-0.5 rounded-2xl border-2 px-1 text-sm font-extrabold text-heading transition-colors duration-150 short:h-[68px] ${
                   role === r.role ? 'border-primary bg-primary-soft' : 'border-border bg-surface'
                 }`}
               >
                 {role === r.role && (
-                  <span data-testid={`role-check-${r.role}`} className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-fg">
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <span data-testid={`role-check-${r.role}`} className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-fg">
+                    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M5 12l5 5 9-10" />
                     </svg>
                   </span>
                 )}
-                <img src={r.icon} alt="" className="h-16 w-16 object-contain md:h-[110px] md:w-[110px] short:h-11 short:w-11" />
+                <img src={r.icon} alt="" className="h-9 w-9 object-contain short:h-8 short:w-8" />
                 {t(`auth.roles.${r.role}`)}
               </button>
             ))}
@@ -343,9 +353,9 @@ export default function Login() {
             data-testid="mentorium-login"
             aria-expanded={platform}
             onClick={() => setPlatform((v) => !v)}
-            className="flex min-h-[52px] short:min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-3 py-1 text-base md:text-xl font-extrabold text-heading"
+            className="flex min-h-12 short:min-h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-border bg-surface px-3 py-1 text-base font-extrabold text-heading"
           >
-            <img src="/mentorium-logo.png" alt="" className="h-6 w-auto md:h-8" />
+            <img src="/mentorium-logo.png" alt="" className="h-6 w-auto" />
             {t('auth.mentorium')}
           </button>
           {platform && <PlatformForm onDone={(r) => void done(r)} onClose={() => setPlatform(false)} />}
@@ -354,11 +364,15 @@ export default function Login() {
             {t('auth.coinsLine')}
           </p>
           <p className="text-center text-base font-bold text-primary underline short:hidden">{t('auth.classHint')}</p>
-        </div>
-        <Link to="/" data-testid="to-showcase" className="mt-3 block text-center text-base font-bold text-primary underline short:hidden">
-          {t('showcase.fromLogin')}
-        </Link>
-      </main>
+          </div>
+          <Link to="/" data-testid="to-showcase" className="mt-2 block text-center text-base font-bold text-primary underline short:hidden">
+            {t('showcase.fromLogin')}
+          </Link>
+        </main>
+      </section>
+      <aside aria-hidden="true" className="relative hidden overflow-hidden lg:block lg:w-1/2">
+        <img src="/art/login-art.webp" alt="" className="login-art absolute inset-0 h-full w-full object-cover" />
+      </aside>
     </div>
   )
 }

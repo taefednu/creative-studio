@@ -22,20 +22,66 @@ body {
   font-family: 'Nunito', system-ui, sans-serif;
 }
 
-/* Единый вид основных кнопок и вкладок (menus.jpg): градиент, мягкая тень, ховер, фокус, нажатие.
-   Берёт любую кнопку или ссылку с bg-primary, поэтому новые экраны подхватывают его сами. */
+/* Единая система кнопок: плоский цвет и твёрдый низ, при нажатии кнопка вдавливается на его высоту.
+   Берёт любую кнопку или ссылку по её фону, поэтому новые экраны подхватывают его сами. */
 @layer components {
-  button.bg-primary,
+  button.bg-primary:not([role='switch']),
   a.bg-primary {
-    background-image: var(--gradient-primary);
-    box-shadow: var(--shadow-primary);
+    --ledge: var(--color-primary-press);
   }
-  button.bg-primary:disabled {
+  button.bg-surface.border,
+  a.bg-surface.border,
+  button.bg-surface.border-2 {
+    --ledge: var(--color-border);
+  }
+  button.bg-primary-soft.border-2,
+  button.bg-primary-soft.border {
+    --ledge: var(--color-primary-light);
+  }
+  button.bg-success-soft {
+    --ledge: var(--color-success-ledge);
+  }
+  button.bg-danger-soft {
+    --ledge: var(--color-danger-ledge);
+  }
+  button.bg-urgent,
+  a.bg-urgent {
+    --ledge: var(--color-urgent-ledge);
+  }
+  button.bg-primary:not([role='switch']),
+  a.bg-primary,
+  button.bg-surface.border,
+  a.bg-surface.border,
+  button.bg-surface.border-2,
+  button.bg-primary-soft.border-2,
+  button.bg-primary-soft.border,
+  button.bg-success-soft,
+  button.bg-danger-soft,
+  button.bg-urgent,
+  a.bg-urgent {
+    box-shadow: 0 var(--ledge-h, 4px) 0 var(--ledge);
+  }
+  button.bg-primary:not([role='switch']):not(:disabled):active,
+  a.bg-primary:active,
+  button.bg-surface.border:not(:disabled):active,
+  a.bg-surface.border:active,
+  button.bg-surface.border-2:not(:disabled):active,
+  button.bg-primary-soft.border-2:not(:disabled):active,
+  button.bg-primary-soft.border:not(:disabled):active,
+  button.bg-success-soft:not(:disabled):active,
+  button.bg-danger-soft:not(:disabled):active,
+  button.bg-urgent:not(:disabled):active,
+  a.bg-urgent:active {
+    scale: 1;
+    translate: 0 var(--ledge-h, 4px);
+    box-shadow: 0 0 0 var(--ledge);
+  }
+  button:disabled {
     box-shadow: none;
   }
   button,
   a {
-    transition: filter 0.15s, scale 0.12s, border-color 0.15s, box-shadow 0.15s;
+    transition: filter 0.15s, scale 0.12s, translate 0.1s, border-color 0.15s, box-shadow 0.1s;
   }
   button.bg-primary:not(:disabled):hover,
   a.bg-primary:hover {
@@ -441,14 +487,18 @@ body {
     scale: 1.7;
   }
 }
-/* Кнопка с твёрдым низом вдавливается на его высоту */
+/* Главная кнопка экрана: низ толще, как у стрелки */
 .btn-press {
-  transition: translate 0.1s var(--ease-out), box-shadow 0.1s var(--ease-out), filter 0.15s;
+  --ledge-h: 5px;
 }
-.btn-press:active {
-  scale: 1;
-  translate: 0 5px;
-  box-shadow: none;
+.login-art {
+  animation: login-art 1.2s var(--ease-out) both;
+}
+@keyframes login-art {
+  from {
+    opacity: 0;
+    scale: 1.04;
+  }
 }
 .nav-in {
   animation: nav-in 0.2s var(--ease-out);
@@ -514,6 +564,7 @@ body {
   .film-word,
   .film-arrow,
   .film-arrow::after,
+  .login-art,
   .nav-in {
     animation: none;
   }

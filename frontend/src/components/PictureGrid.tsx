@@ -8,12 +8,12 @@ export default function PictureGrid({ value, onChange }: Props) {
   const { t } = useTranslation()
   return (
     <div>
-      <div className="mb-2 flex items-center justify-center gap-2 lg:h-[66px] lg:gap-3 short:h-10" data-testid="pic-slots" aria-live="polite">
+      <div className="mb-2 flex h-10 items-center justify-center gap-2" data-testid="pic-slots" aria-live="polite">
         {Array.from({ length: PASSWORD_LENGTH }, (_, i) => (
           <span
             key={i}
             data-filled={i < value.length}
-            className="flex h-10 flex-1 items-center justify-center rounded-2xl border-2 border-dashed border-border lg:h-full lg:max-w-[155px]"
+            className="flex h-10 flex-1 items-center justify-center rounded-2xl border-2 border-dashed border-border"
           >
             <span className={`h-4 w-4 rounded-full ${i < value.length ? 'bg-primary' : 'bg-primary-soft'}`} />
           </span>

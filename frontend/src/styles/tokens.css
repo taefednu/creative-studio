@@ -32,6 +32,9 @@
   --shadow-press: 0 5px 0 var(--color-primary-press);
   --color-skeleton: #dbd6ea;
   --color-skeleton-shine: rgba(255, 255, 255, 0.85);
+  --color-success-ledge: #a9dcbd;
+  --color-danger-ledge: #f2bcb6;
+  --color-urgent-ledge: #6e3500;
   --color-scrim: rgba(31, 42, 92, 0.55);
   --radius-card: 20px;
   --gradient-primary: linear-gradient(180deg, var(--color-primary-light), var(--color-primary));
