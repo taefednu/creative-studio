@@ -290,7 +290,7 @@
     "storyIdea": "Bolaning gʻoyasi: «{{text}}»",
     "storyNoImage": "Rasm hali yoʻq",
     "zoom": "Kattaroq ochish",
-    "effect": {"share": "Tasdiqlang, rasmni hamma ko‘radi: umumiy lentada va havola orqali. Bolaning laqabi va ismi ko‘rsatilmaydi.", "story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
+    "effect": {"drawn_face": "Bu yuz chizilganga o'xshaydi, shuning uchun xiralashtirilmagan. Unda haqiqiy odam bo'lsa, rad eting.", "share": "Tasdiqlang, rasmni hamma ko‘radi: umumiy lentada va havola orqali. Bolaning laqabi va ismi ko‘rsatilmaydi.", "story": "Tasdiqlang, bola ertakni koʻradi; yetishmagan sahifalar chiziladi.", "prompt": "Tasdiqlang, shu soʻrov boʻyicha rasm chiziladi.", "image": "Tasdiqlang, bola rasmni koʻradi.", "post": "Tasdiqlang, ish lentada paydo boʻladi.", "comment": "Tasdiqlang, izoh ish ostida paydo boʻladi.", "upload": "Tasdiqlang, bola rasmni koʻradi: yuzlar va shaxsiy maʼlumotlar xiralashtiriladi.", "submission": "Tasdiqlang, ish topshirilgan deb qabul qilinadi.", "other": "Tasdiqlang, bunga ruxsat beriladi."},
     "title": "Ushlab turilganlar",
     "badge": "Ushlab turilgan: {{count}}",
     "okTitle": "Sizning ruxsatingizni kutmoqda",
@@ -333,6 +333,7 @@
       "blurred_house_number": "Uy raqami xiralashtirildi",
       "blurred_handwritten_name": "Qo‘lda yozilgan ism xiralashtirildi",
       "blurred_written_word": "Yozuv xiralashtirildi",
+      "drawn_face": "Chizilgan yuz",
       "sam_failed": "Xiralashtirish ishlamadi",
       "remix_source_gone": "Asl rasm endi yo‘q",
       "unknown": "Tekshirish kerak"

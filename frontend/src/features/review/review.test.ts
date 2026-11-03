@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import i18n from '../../i18n'
-import { agoText, filterByClass, parseUtc, reasonKey, reasonKeys } from './review'
+import { agoText, filterByClass, onlyDrawnFace, parseUtc, reasonKey, reasonKeys } from './review'
 
 describe('review', () => {
   it('unknown reason code becomes the generic text, never a raw key', () => {
@@ -10,9 +10,15 @@ describe('review', () => {
     expect(reasonKeys(['low_confidence', 'bullying'])).toEqual(['review.reasons.bullying'])
   })
   it('upload blur and SAM codes have their own text', () => {
-    for (const c of ['blurred_face', 'blurred_house_number', 'sam_failed', 'blurred_written_word']) {
+    for (const c of ['blurred_face', 'blurred_house_number', 'sam_failed', 'blurred_written_word', 'drawn_face']) {
       expect(reasonKey(c)).toBe(`review.reasons.${c}`)
     }
+  })
+  it('one picture only when nothing was blurred', () => {
+    expect(onlyDrawnFace(['drawn_face'])).toBe(true)
+    expect(onlyDrawnFace(['drawn_face', 'blurred_written_word'])).toBe(false)
+    expect(onlyDrawnFace(['blurred_face'])).toBe(false)
+    expect(onlyDrawnFace([])).toBe(false)
   })
   it('class filter keeps only the chosen class, null keeps all', () => {
     const a = [{ class_name: '4B' }, { class_name: '5A' }, { class_name: null }]

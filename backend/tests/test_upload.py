@@ -252,20 +252,32 @@ def test_all_four_entities_reasons(w, sam, chk):
     assert work(wid).reason_codes == [f"blurred_{c}" for _, c in ENTITIES]
 
 
-def test_drawn_face_stays_sharp_and_goes_to_nobody(w, sam, chk, monkeypatch):
+def test_drawn_face_stays_sharp_but_the_adult_still_sees_it(w, sam, chk, monkeypatch):
     monkeypatch.setattr(pipeline, "only_drawn_faces", lambda data: True)
     wid = good(w, sam, chk)
     wk = work(wid)
-    assert wk.status == "ready" and wk.reason_codes in (None, [])
-    assert items() == []
+    assert wk.status == "ready" and wk.reason_codes == ["drawn_face"]
+    assert [(i.status, i.reason_codes) for i in items()] == [("pending", ["drawn_face"])]
     assert Path(wk.file_path).read_bytes() == pipeline.to_webp(Image.open(pipeline.original_path(wid)))
 
 
 def test_drawn_face_does_not_spare_the_written_name(w, sam, chk, monkeypatch):
     monkeypatch.setattr(pipeline, "only_drawn_faces", lambda data: True)
     wid = good(w, sam, chk, found=("face", "written_word"))
-    assert work(wid).reason_codes == ["blurred_written_word"]
-    assert items()[0].reason_codes == ["blurred_written_word"]
+    assert work(wid).reason_codes == ["drawn_face", "blurred_written_word"]
+    wk = work(wid)
+    assert Path(wk.file_path).read_bytes() != pipeline.to_webp(Image.open(pipeline.original_path(wid)))
+
+
+def test_face_stays_blurred_after_adult_approved_the_original(w, sam, chk, monkeypatch):
+    asked = []
+    monkeypatch.setattr(pipeline, "only_drawn_faces", lambda data: asked.append(1) or True)
+    wid = good(w, sam, chk)
+    asked.clear()
+    pipeline.run(wid, True)
+    wk = work(wid)
+    assert asked == [] and wk.reason_codes == ["blurred_face"]
+    assert Path(wk.file_path).read_bytes() != pipeline.to_webp(Image.open(pipeline.original_path(wid)))
 
 
 def test_real_face_question_only_when_sam_found_a_face(w, sam, chk, monkeypatch):
@@ -486,6 +498,17 @@ def test_class_post_of_blurred_upload_waits_for_teacher(w, sam, chk):
     r = w.b.get(f"/api/posts/{pid}/image")
     assert r.status_code == 200 and r.content == Path(work(wid).file_path).read_bytes()
     assert r.content != orig
+
+
+def test_class_post_of_drawn_face_also_waits_for_teacher(w, sam, chk, monkeypatch):
+    # Модель могла принять настоящее лицо за рисунок: резкая картинка не идёт в класс мимо учителя
+    monkeypatch.setattr(pipeline, "only_drawn_faces", lambda data: True)
+    p = class_post(w, good(w, sam, chk))
+    assert p["status"] == "held"
+    assert w.b.get(f"/api/posts/{p['id']}").status_code == 404
+    assert w.b.get("/api/feed/class").json()["items"] == []
+    [it] = [i for i in w.teacher.get("/api/review/queue").json() if i["item_type"] == "post"]
+    assert it["reason_codes"] == ["drawn_face"]
 
 
 def test_clean_upload_and_family_post_publish_at_once(w, sam, chk):

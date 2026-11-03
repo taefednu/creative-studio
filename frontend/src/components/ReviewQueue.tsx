@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
-import { agoText, filterByClass, notifyReview, reasonKeys } from '../features/review/review'
+import { agoText, filterByClass, notifyReview, onlyDrawnFace, reasonKeys } from '../features/review/review'
 import { loadStory } from '../features/story/story'
 import type { Story } from '../features/story/story'
 import type { ReviewItem } from '../features/review/review'
@@ -185,7 +185,7 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
       <div className="relative flex h-44 bg-primary-soft">
         {it.original_url ? (
           <div data-testid="review-pair" className="flex h-full w-full gap-0.5">
-            {([['original', it.original_url, t('cab.upload.original')], ['blurred', it.blurred_url, t('cab.upload.blurred')]] as const).map(([k, url, cap]) => (
+            {([['original', it.original_url, t('cab.upload.original')], ...(onlyDrawnFace(it.reason_codes) ? [] : [['blurred', it.blurred_url, t('cab.upload.blurred')]])] as const).map(([k, url, cap]) => (
               <figure key={k} className="relative flex h-full min-w-0 flex-1 bg-surface">
                 {url ? picture(url, `review-${k}`) : (
                   <div data-testid={`review-${k}-none`} className="flex h-full w-full items-center justify-center p-2 text-center text-xs font-bold text-muted">{t('cab.upload.noBlur')}</div>
@@ -215,7 +215,7 @@ function ReviewCard({ it, kind, where, busy, onOpen, onZoom, onAct }: RowProps &
         </p>
         {it.image_url && it.preview_text && <p className="line-clamp-2 break-words text-sm text-text">«{it.preview_text}»</p>}
         {who}
-        <p data-testid="review-effect" className="mt-auto text-xs text-muted">{t(`review.effect.${EFFECTS.includes(it.item_type) ? it.item_type : 'other'}`)}</p>
+        <p data-testid="review-effect" className="mt-auto text-xs text-muted">{t(onlyDrawnFace(it.reason_codes) ? 'review.effect.drawn_face' : `review.effect.${EFFECTS.includes(it.item_type) ? it.item_type : 'other'}`)}</p>
         <div className="grid grid-cols-2 gap-2">
           <button type="button" data-testid="review-reject" disabled={busy} className={`${btnReject} h-11`} onClick={() => onAct('reject')}>{t('review.reject')}</button>
           <button type="button" data-testid="review-approve" disabled={busy} className={`${btnApprove} h-11`} onClick={() => onAct('approve')}>{t('review.approve')}</button>

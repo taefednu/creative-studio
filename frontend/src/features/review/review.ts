@@ -79,9 +79,15 @@ const KNOWN = [
   'blurred_house_number',
   'blurred_handwritten_name',
   'blurred_written_word',
+  'drawn_face',
   'sam_failed',
   'remix_source_gone',
 ]
+
+/** Лицо нарисовано и ничего не размыто: две одинаковые картинки рядом ничего не сравнивают. */
+export function onlyDrawnFace(codes: string[]): boolean {
+  return codes.length > 0 && codes.every((c) => c === 'drawn_face')
+}
 
 /** Неизвестный код — общий текст «нужна проверка», а не сырой ключ. */
 export function reasonKey(code: string): string {

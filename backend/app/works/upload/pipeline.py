@@ -184,18 +184,19 @@ def _run(db: Session, work: Work, skip_check: bool) -> None:
         _hold(db, work, ["sam_failed"])
         return
 
-    # Рожица на рисунке не личные данные, а размытие лишает героя сходства. Лицо на фото размывается всегда
-    if found["face"] and only_drawn_faces(jpeg):
-        found["face"] = []
-    boxes = [b for bs in found.values() for b in bs]
+    # Рожица на рисунке не личные данные, а размытие лишает героя сходства. Модель может ошибиться, поэтому
+    # взрослый видит и такую работу, а в ленту класса она идёт через учителя. После одобрения взрослого
+    # не спрашиваем: ему обещано, что лица будут размыты
+    drawn = not skip_check and bool(found["face"]) and only_drawn_faces(jpeg)
+    boxes = [b for c, bs in found.items() if not (drawn and c == "face") for b in bs]
     out = blur(im, boxes, s.BLUR_PAD) if boxes else im
     path = upload_path(work.id)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(to_webp(out))
     work.file_path = str(path)
-    if boxes:
-        # Детям доступна только размытая версия. Взрослый видит оригинал и размытую и может отклонить.
-        codes = [f"blurred_{c}" for c, bs in found.items() if bs]
+    codes = ["drawn_face" if drawn and c == "face" else f"blurred_{c}" for c, bs in found.items() if bs]
+    if codes:
+        # Детям доступна только эта версия. Взрослый видит оригинал рядом с ней и может отклонить.
         hold(
             db,
             item_type="upload",
