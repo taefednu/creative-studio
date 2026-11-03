@@ -107,6 +107,14 @@ def test_transcribe_returns_text_and_passes_language(asr):
     assert asr.calls[0][2] == ["Uzbek"]
 
 
+def test_screen_language_wins_over_registration_language(asr):
+    _, k = child_of(login("parent"))  # при регистрации узбекский
+    assert k.post("/api/voice/transcribe", files={"audio": ("a.wav", wav(), "audio/wav")}, data={"lang": "ru"}).status_code == 200
+    assert asr.calls[-1][2] == ["Russian"]
+    k.post("/api/voice/transcribe", files={"audio": ("a.wav", wav(), "audio/wav")}, data={"lang": "klingon"})
+    assert asr.calls[-1][2] == ["Uzbek"]  # чужое значение на модель не идёт
+
+
 def test_transcribe_child_only(asr):
     p = login("parent")
     t = login("teacher", "t@x.io")

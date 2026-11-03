@@ -28,8 +28,27 @@ export function encodeWav(samples: Float32Array, sampleRate: number): ArrayBuffe
   return buf
 }
 
-/** Любая запись браузера (webm/ogg/mp4) -> WAV 16 кГц mono: декод и пересчёт частоты через OfflineAudioContext. */
-export async function recordingToWav(blob: Blob): Promise<Blob> {
+const SPEECH_PEAK = 0.02 // тише этого во всей записи: ничего не сказано, на модель не отправляем
+const MARGIN_S = 0.25 // запас вокруг речи: первое слово не обрезается
+const MAX_GAIN = 4 // тихий голос поднимаем, но шум из полной тишины не делаем
+
+/** Речь без тишины по краям и с нормальной громкостью. null — речи нет. Короче запись — быстрее ответ модели. */
+export function speechOnly(samples: Float32Array, rate: number): Float32Array | null {
+  let peak = 0
+  for (const x of samples) peak = Math.max(peak, Math.abs(x))
+  if (peak < SPEECH_PEAK) return null
+  const edge = peak * 0.08
+  let from = 0
+  while (from < samples.length && Math.abs(samples[from]) < edge) from++
+  let to = samples.length - 1
+  while (to > from && Math.abs(samples[to]) < edge) to--
+  const margin = Math.round(MARGIN_S * rate)
+  const gain = Math.min(MAX_GAIN, 0.9 / peak)
+  return samples.slice(Math.max(0, from - margin), Math.min(samples.length, to + margin + 1)).map((x) => x * gain)
+}
+
+/** Любая запись браузера (webm/ogg/mp4) -> WAV 16 кГц mono: декод и пересчёт частоты через OfflineAudioContext. null — речи нет. */
+export async function recordingToWav(blob: Blob): Promise<Blob | null> {
   const ctx = new AudioContext()
   try {
     const src = await ctx.decodeAudioData(await blob.arrayBuffer())
@@ -40,7 +59,8 @@ export async function recordingToWav(blob: Blob): Promise<Blob> {
     node.start()
     const out = await off.startRendering()
     // таймер мог дотянуть чуть дольше 30 с: бэкенд не примет и на полсекунды больше
-    const pcm = out.getChannelData(0).slice(0, VOICE_MAX_SECONDS * VOICE_RATE)
+    const pcm = speechOnly(out.getChannelData(0).slice(0, VOICE_MAX_SECONDS * VOICE_RATE), VOICE_RATE)
+    if (!pcm) return null
     return new Blob([encodeWav(pcm, VOICE_RATE)], { type: 'audio/wav' })
   } finally {
     void ctx.close()

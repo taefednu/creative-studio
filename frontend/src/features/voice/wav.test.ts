@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { encodeWav } from './wav'
+import { encodeWav, speechOnly } from './wav'
 
 const text = (v: DataView, at: number, n: number) => String.fromCharCode(...Array.from({ length: n }, (_, i) => v.getUint8(at + i)))
 
@@ -30,5 +30,26 @@ describe('encodeWav', () => {
     expect(loud.getInt16(44, true)).toBe(32767)
     expect(loud.getInt16(46, true)).toBe(-32768)
     expect(loud.getInt16(48, true)).toBeGreaterThan(0)
+  })
+})
+
+describe('speechOnly', () => {
+  const rate = 16000
+  const sound = (s: number, amp: number) => Float32Array.from({ length: s * rate }, (_, i) => Math.sin(i / 8) * amp)
+  const join = (...p: Float32Array[]) => Float32Array.from(p.flatMap((x) => [...x]))
+
+  it('тишина и еле слышный шум: речи нет', () => {
+    expect(speechOnly(new Float32Array(rate), rate)).toBeNull()
+    expect(speechOnly(sound(1, 0.01), rate)).toBeNull()
+  })
+  it('срезает тишину по краям, но оставляет запас перед первым словом', () => {
+    const out = speechOnly(join(new Float32Array(2 * rate), sound(1, 0.5), new Float32Array(3 * rate)), rate)!
+    expect(out.length / rate).toBeGreaterThan(1.4)
+    expect(out.length / rate).toBeLessThan(1.6)
+  })
+  it('тихий голос поднимает, но не больше чем в 4 раза', () => {
+    const peak = (a: Float32Array) => a.reduce((m, x) => Math.max(m, Math.abs(x)), 0)
+    expect(peak(speechOnly(sound(1, 0.3), rate)!)).toBeCloseTo(0.9, 1)
+    expect(peak(speechOnly(sound(1, 0.05), rate)!)).toBeCloseTo(0.2, 1)
   })
 })

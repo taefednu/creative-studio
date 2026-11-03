@@ -121,7 +121,8 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
             onError={setErr}
             onText={(v) => {
               setErr(null)
-              setText(v.slice(0, 200))
+              // Договорил ещё кусок: уже написанное не пропадает
+              setText((was) => (was.trim() ? `${was.trim()} ${v}` : v).slice(0, 200))
             }}
           />
           {floating && <UploadPopup guest={guest} className={roundOn} assignmentId={assignmentId} price={price} />}

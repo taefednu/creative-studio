@@ -5,7 +5,7 @@ import io
 import wave
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.accounts.deps import current_child
@@ -56,15 +56,20 @@ def check_wav(data: bytes) -> float:
 
 @router.post("/voice/transcribe")
 def voice_transcribe(
-    c: Annotated[Child, Depends(current_child)], db: Db, audio: Annotated[UploadFile, File()]
+    c: Annotated[Child, Depends(current_child)],
+    db: Db,
+    audio: Annotated[UploadFile, File()],
+    lang: Annotated[str | None, Form()] = None,
 ):
     s = get_settings()
     data = audio.file.read(s.VOICE_MAX_BYTES + 1)
     check_wav(data)
+    # Язык экрана: ребёнок мог сменить его после регистрации, c.lang тогда мешал бы распознаванию
+    spoken = LANGS.get(lang or "") or LANGS.get(c.lang)
     # Соединение с БД отдаём до долгого вызова ASR: оно ему не нужно, пул не держим на секунды.
     db.close()
     try:
-        text = transcribe(data, s.VOICE_TIMEOUT, [LANGS[c.lang]] if c.lang in LANGS else [])
+        text = transcribe(data, s.VOICE_TIMEOUT, [spoken] if spoken else [])
     except ModelTimeout:
         raise HTTPException(504, "asr_timeout") from None
     except Exception:  # noqa: BLE001 — любой сбой ASR: понятный код, текст ребёнка не теряется
