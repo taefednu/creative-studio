@@ -59,18 +59,21 @@ body {
 }
 
 /* Перелив на месте того, что ещё грузится */
-.skeleton {
-  position: relative;
-  overflow: hidden;
-  background: var(--color-skeleton);
-}
-.skeleton::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(100deg, transparent 20%, var(--color-skeleton-shine) 50%, transparent 80%);
-  animation: skeleton 1.3s var(--ease-in-out) infinite;
+/* В слое компонентов: absolute и размеры из классов должны перебивать relative */
+@layer components {
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--color-skeleton);
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(100deg, transparent 20%, var(--color-skeleton-shine) 50%, transparent 80%);
+    animation: skeleton 1.3s var(--ease-in-out) infinite;
+  }
 }
 @keyframes skeleton {
   to {
