@@ -610,9 +610,6 @@ body {
 ::view-transition-new(.kid-swap) {
   animation: kid-swap-in 0.36s var(--ease-out) 0.1s both;
 }
-::view-transition-new(kid-badges) {
-  animation-delay: 0.15s;
-}
 ::view-transition-new(kid-meta) {
   animation-delay: 0.2s;
 }

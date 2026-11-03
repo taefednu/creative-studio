@@ -62,22 +62,24 @@ export function levelOf(pictures: number) {
 export const BADGES = ['first', 'alive', 'story', 'shared', 'styles', 'ten'] as const
 export type BadgeId = (typeof BADGES)[number]
 
-/** Уровень и награды по готовым фактам: один расчёт у ребёнка и у родителя. */
-export function rankProgress(pictures: number, facts: { alive: boolean; story: boolean; shared: boolean; styles: boolean }) {
+/** Уровень по числу картинок: один расчёт у ребёнка и у родителя. */
+export function rankOf(pictures: number) {
   const at = levelOf(pictures) - 1
-  const earned: Record<BadgeId, boolean> = { first: pictures >= 1, ...facts, ten: pictures >= 10 }
-  return { pictures, level: at + 1, rank: RANKS[at].id, next: RANKS[at + 1] ?? null, from: RANKS[at].need, earned }
+  return { pictures, level: at + 1, rank: RANKS[at].id, next: RANKS[at + 1] ?? null, from: RANKS[at].need }
 }
 
 /** Путь художника: только из настоящих работ ребёнка. Загруженные рисунки не считаем: нарисовал не он здесь. Монет и сравнения с другими нет. */
 export function artistProgress(works: Work[], storiesReady: number, stylesDone: number, stylesTotal: number) {
   const pictures = works.filter((w) => w.image_url && w.kind !== 'upload').length
-  return rankProgress(pictures, {
+  const earned: Record<BadgeId, boolean> = {
+    first: pictures >= 1,
     alive: works.some((w) => w.kind === 'alive' && !!w.image_url),
     story: storiesReady > 0,
     shared: works.some((w) => (w.shared ?? []).some((s) => s.status === 'published')),
     styles: stylesTotal > 0 && stylesDone >= stylesTotal,
-  })
+    ten: pictures >= 10,
+  }
+  return { ...rankOf(pictures), earned }
 }
 
 /** Галерея вместе со сказками: готовое по дате, от новых к старым; плитки без картинки остаются в конце. */

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { CSSProperties, FormEvent } from 'react'
+import type { CSSProperties, FormEvent, ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
@@ -20,7 +20,7 @@ import { ANIMALS } from '../features/avatar/animal'
 import { firstKid, notifyCabinet, REVIEW_EVENT, waitingByNick } from '../features/review/review'
 import type { ReviewItem } from '../features/review/review'
 import { weekBars } from '../features/review/week'
-import { BADGES, rankProgress, withoutHeroSources } from '../features/works/works'
+import { rankOf, withoutHeroSources } from '../features/works/works'
 import type { Work } from '../features/works/works'
 import { PASSWORD_LENGTH } from '../features/auth/pictures'
 import { useLoad } from '../useLoad'
@@ -37,7 +37,6 @@ type Kid = {
 type Analytics = {
   has_data: boolean
   pictures_total: number
-  achieved: { alive: boolean; story: boolean; shared: boolean; styles: boolean }
   created: number | null
   ready_at: string[]
   published: number | null
@@ -180,58 +179,53 @@ function KidFace({ kid, className }: { kid: Kid; className: string }) {
   )
 }
 
-/** Остальные дети: нажал, и он становится выбранным. На телефоне строкой, на компьютере списком; много детей листаются, «+» на виду. */
+/** Остальные дети кружками: на компьютере по 5 в ряд, два ряда, дальше листается внутри; на телефоне одной строкой. */
 function KidList({ kids, sel, counts, onPick, onAdd }: { kids: Kid[]; sel: Kid | null; counts: Record<string, number>; onPick: (k: Kid) => void; onAdd: () => void }) {
   const { t } = useTranslation()
   return (
-    <div data-testid="kid-list" className="flex items-center gap-2 lg:flex-col lg:items-stretch">
-      <div role="group" aria-label={t('cab.myKids')} className="flex min-w-0 flex-1 gap-1 overflow-auto p-1 [scrollbar-width:none] lg:max-h-[300px] lg:flex-col lg:gap-0 lg:divide-y lg:divide-border">
-        {kids.filter((k) => k.id !== sel?.id).map((k) => (
-          <button key={k.id} type="button" data-testid={`kid-${k.id}`} title={k.nick} onClick={() => onPick(k)} className="flex w-[72px] shrink-0 flex-col items-center gap-1 rounded-2xl transition-colors duration-150 lg:w-full lg:flex-row lg:gap-3 lg:px-1 lg:py-2 lg:text-left lg:hover:bg-primary-soft">
-            <span className="relative shrink-0">
-              <KidFace kid={k} className="h-14 w-14" />
-              {!!counts[k.nick] && (
-                <span data-testid={`kid-badge-${k.id}`} className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-danger px-1.5 text-xs font-extrabold text-primary-fg">
-                  {counts[k.nick]}
-                </span>
-              )}
-            </span>
-            <span className="w-full min-w-0 truncate text-center text-sm font-extrabold leading-5 text-heading lg:flex-1 lg:text-left lg:text-lg">{k.nick}</span>
-            <svg viewBox="0 0 24 24" className="hidden h-5 w-5 shrink-0 text-muted lg:block" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="m9 5 7 7-7 7" />
-            </svg>
-          </button>
-        ))}
-      </div>
-      <button type="button" data-testid="add-child-tile" onClick={onAdd} aria-label={t('cab.kid.addChild')} className="flex h-12 w-12 shrink-0 items-center justify-center gap-3 rounded-full bg-primary-soft font-extrabold text-primary transition-colors duration-150 hover:bg-primary-light lg:h-14 lg:w-full lg:justify-start lg:rounded-2xl lg:px-3">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface"><Icon name="plus" className="h-5 w-5" /></span>
-        <span className="hidden lg:inline">{t('cab.kid.addChild')}</span>
+    <div data-testid="kid-list" role="group" aria-label={t('cab.myKids')} className="-mx-1 flex gap-1 overflow-x-auto p-1 [scrollbar-width:none] lg:grid lg:max-h-[168px] lg:grid-cols-4 lg:gap-x-1 lg:gap-y-2 lg:overflow-y-auto lg:overflow-x-hidden lg:[scrollbar-width:thin] xl:grid-cols-5">
+      {kids.filter((k) => k.id !== sel?.id).map((k) => (
+        <button key={k.id} type="button" data-testid={`kid-${k.id}`} title={k.nick} onClick={() => onPick(k)} className="flex w-[72px] shrink-0 flex-col items-center gap-1 transition-transform duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.97] motion-reduce:transition-none lg:w-full">
+          <span className="relative">
+            <KidFace kid={k} className="h-14 w-14" />
+            {!!counts[k.nick] && (
+              <span data-testid={`kid-badge-${k.id}`} className="absolute -right-1 -top-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-danger px-1.5 text-xs font-extrabold text-primary-fg">
+                {counts[k.nick]}
+              </span>
+            )}
+          </span>
+          <span className="w-full truncate text-center text-xs font-extrabold leading-4 text-heading">{k.nick}</span>
+        </button>
+      ))}
+      <button type="button" data-testid="add-child-tile" onClick={onAdd} aria-label={t('cab.kid.addChild')} title={t('cab.kid.addChild')} className="flex w-[72px] shrink-0 flex-col items-center gap-1 transition-transform duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.97] motion-reduce:transition-none lg:w-full">
+        <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-soft text-primary"><Icon name="plus" className="h-6 w-6" /></span>
+        <span className="w-full truncate text-center text-xs font-extrabold leading-4 text-primary">{t('cab.kid.add')}</span>
       </button>
     </div>
   )
 }
 
-/** Выбранный ребёнок: те же уровень и награды, что он сам видит в «Моих работах». */
-function KidHero({ kid, st }: { kid: Kid; st?: Analytics }) {
+/** Выбранный ребёнок на двух колонках сетки: слева аватар на всю колонку, справа уровень, монеты и ссылки. */
+function KidHero({ kid, st, meta }: { kid: Kid; st?: Analytics; meta: ReactNode }) {
   const { t } = useTranslation()
-  const path = st ? rankProgress(st.pictures_total, st.achieved) : null
+  const path = st ? rankOf(st.pictures_total) : null
   return (
-    <div className="flex min-w-0 items-center gap-3 lg:gap-4">
-      <div className="relative shrink-0 rounded-full bg-primary p-0.5">
-        <KidFace kid={kid} className="h-20 w-20 lg:h-24 lg:w-24" />
-        {path && <span data-testid="kid-level" style={vt('kid-level')} className="kid-swap absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface bg-primary text-sm font-black text-primary-fg">{path.level}</span>}
+    <div className="grid grid-cols-2 gap-2 md:gap-3">
+      <div className="relative aspect-square rounded-full bg-primary p-1">
+        <KidFace kid={kid} className="h-full w-full" />
+        {path && <span data-testid="kid-level" style={vt('kid-level')} className="kid-swap absolute bottom-1 right-1 flex h-11 w-11 items-center justify-center rounded-full border-4 border-surface bg-primary text-xl font-black text-primary-fg">{path.level}</span>}
       </div>
-      <div style={vt('kid-text')} className="kid-swap min-w-0 flex-1">
-        <h1 data-testid="page-title" className="break-words text-[28px] font-black leading-8 tracking-tight text-heading lg:text-[32px] lg:leading-9">{kid.nick}</h1>
+      <div className="flex min-w-0 flex-col justify-center gap-3">
         {path && (
-          <>
-            <p data-testid="kid-rank" className="text-sm font-extrabold leading-5 text-primary">{t('mw.level', { n: path.level })} · {t(`mw.rank.${path.rank}`)}</p>
-            <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-primary-soft">
+          <div style={vt('kid-text')} className="kid-swap">
+            <p data-testid="kid-rank" className="text-base font-extrabold leading-5 text-primary">{t('mw.level', { n: path.level })}<br />{t(`mw.rank.${path.rank}`)}</p>
+            <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-primary-soft">
               <div data-testid="kid-bar" className="h-full w-full rounded-full bg-primary [transition:transform_0.7s_var(--ease-drawer)] motion-reduce:transition-none" style={{ transform: `translateX(${(path.next ? Math.round(((path.pictures - path.from) / (path.next.need - path.from)) * 100) : 100) - 100}%)` }} />
             </div>
-            <p className="mt-1 truncate text-xs font-bold text-heading">{path.next ? t('mw.levelNext', { level: path.level + 1, n: path.pictures, need: path.next.need }) : t('mw.rankTop')}</p>
-          </>
+            <p className="mt-1 text-xs font-bold leading-4 text-heading">{path.next ? t('mw.levelNext', { level: path.level + 1, n: path.pictures, need: path.next.need }) : t('mw.rankTop')}</p>
+          </div>
         )}
+        {meta}
       </div>
     </div>
   )
@@ -264,7 +258,7 @@ function KidWorks({ kid }: { kid: Kid }) {
   }
   return (
     <>
-      <div data-testid="kid-works" className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div data-testid="kid-works" className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3 lg:grid-cols-6 xl:grid-cols-7">
         {works.map((w) => (
           <button key={w.id} type="button" data-testid="kid-work" aria-label={t('review.zoom')} onClick={() => (w.post_id ? setPost(w.post_id) : setZoom(w.image_url))} className="feed-card group relative block aspect-square overflow-hidden rounded-[22px] bg-primary-soft shadow-card">
             <img src={`${w.image_url}?thumb=1`} alt="" loading="lazy" decoding="async" onLoad={(e) => e.currentTarget.classList.add('feed-img-on')} className="feed-img h-full w-full object-cover group-hover:scale-105" />
@@ -279,18 +273,6 @@ function KidWorks({ kid }: { kid: Kid }) {
         </button>
       )}
     </>
-  )
-}
-
-function KidBadges({ st }: { st: Analytics }) {
-  const { t } = useTranslation()
-  const { earned } = rankProgress(st.pictures_total, st.achieved)
-  return (
-    <div data-testid="kid-badges" className="grid grid-cols-6 justify-items-center gap-1.5 lg:grid-cols-3 lg:gap-3">
-      {BADGES.map((id) => (
-        <img key={id} src={`/art/badges/${id}.webp`} alt={t(`mw.badge.${id}.name`)} title={t(`mw.badge.${id}.name`)} data-testid={`badge-${id}`} data-earned={earned[id]} className={`aspect-square w-full max-w-[72px] object-contain ${earned[id] ? '' : 'opacity-60 grayscale'}`} />
-      ))}
-    </div>
   )
 }
 
@@ -363,50 +345,36 @@ export default function ParentCabinet() {
           </section>
         )}
         {sel && (
-          <section data-testid="kids" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
-            <aside data-testid="kid-panel" className="flex min-w-0 flex-col gap-4 lg:order-2 lg:self-start lg:border-l lg:border-border lg:pl-8">
-              <KidHero kid={sel} st={st} />
-              {st && <div style={vt('kid-badges')} className="kid-swap"><KidBadges st={st} /></div>}
-              <div style={vt('kid-meta')} className="kid-swap flex flex-wrap items-center gap-x-4 gap-y-2">
-                {sel.coins != null && (
-                  <p className="flex w-full items-center gap-2 text-lg font-extrabold text-heading">
-                    <img src="/art/coin.webp" alt="" className="h-7 w-7" />
-                    <span data-testid="kid-coins">{sel.coins} {t('pl.word', { count: sel.coins })}</span>
-                  </p>
-                )}
-                <button type="button" data-testid="more-toggle" aria-expanded={more} onClick={() => setMore(!more)} className={link}>
-                  {t(more ? 'cab.kid.less' : 'cab.kid.more')}
-                </button>
-                <button type="button" data-testid={`qr-${sel.nick}`} onClick={() => void showQr(sel)} className={link}>
-                  {t('parent.qrButton')}
-                </button>
-              </div>
-              {sel.locked && <p className="text-sm font-bold text-danger">{t('parent.locked')}</p>}
-              {more && (
-                <div data-testid="kid-more" className="nav-in flex min-w-0 flex-col gap-3 rounded-2xl bg-primary-soft p-3">
-                  {st && !st.has_data ? (
-                    <p data-testid="week-empty" className="font-bold text-text">{t('cab.week.noData', { nick: sel.nick })}</p>
-                  ) : (
-                    <>
-                      <WeekChart readyAt={st?.ready_at ?? []} />
-                      <p data-testid="week-summary" className="flex flex-wrap gap-x-4 gap-y-0.5 text-sm font-bold text-text">
-                        <span data-testid="week-created">{t('cab.week.pictures')}: <b className="text-heading">{dash(st && weekBars(st.ready_at, new Date()).reduce((n, b) => n + b.count, 0))}</b></span>
-                        <span data-testid="week-published">{t('cab.week.shown')}: <b className="text-heading">{dash(st?.published)}</b></span>
-                        <span data-testid="week-held">{t('cab.week.held')}: <b className="text-heading">{dash(st?.held)}</b></span>
-                        <span>{t('cab.week.received')}: <b data-testid="week-received" className="text-heading">{dash(st?.coins_received)}</b></span>
-                        <span>{t('cab.week.spent')}: <b data-testid="week-spent" className="text-heading">{dash(st?.coins_spent)}</b></span>
-                        {st?.coins_earned_lessons != null && <span data-testid="kid-lessons">{t('cab.kid.lessons')}: <b className="text-primary">+{st.coins_earned_lessons}</b></span>}
+          <section data-testid="kids" className="grid gap-6 lg:grid-cols-6 lg:gap-x-3 xl:grid-cols-7">
+            <aside data-testid="kid-panel" className="flex min-w-0 flex-col gap-4 lg:order-2 lg:col-span-2 lg:gap-3">
+              <h1 data-testid="page-title" style={vt('kid-name')} className="kid-swap break-words text-[28px] font-black leading-9 tracking-tight text-heading lg:text-4xl lg:leading-[44px]">{sel.nick}</h1>
+              <KidHero
+                kid={sel}
+                st={st}
+                meta={
+                  <div style={vt('kid-meta')} className="kid-swap flex flex-col items-start gap-1.5">
+                    {sel.coins != null && (
+                      <p className="flex items-center gap-2 text-lg font-extrabold text-heading">
+                        <img src="/art/coin.webp" alt="" className="h-7 w-7" />
+                        <span data-testid="kid-coins">{sel.coins} {t('pl.word', { count: sel.coins })}</span>
                       </p>
-                      {!!st?.coins_uncertain && <p data-testid="week-uncertain" className="text-sm font-bold text-text">{t('cab.week.uncertain', { count: st.coins_uncertain })}</p>}
-                    </>
-                  )}
-                </div>
-              )}
-              <div className="border-t border-border pt-3">
+                    )}
+                    <button type="button" data-testid="more-toggle" aria-expanded={more} onClick={() => setMore(!more)} className={link}>
+                      {t(more ? 'cab.kid.less' : 'cab.kid.more')}
+                    </button>
+                    <button type="button" data-testid={`qr-${sel.nick}`} onClick={() => void showQr(sel)} className={link}>
+                      {t('parent.qrButton')}
+                    </button>
+                  </div>
+                }
+              />
+              {sel.locked && <p className="text-sm font-bold text-danger">{t('parent.locked')}</p>}
+              {/* Низ списка вровень с низом блока решения: лишнее место между профилем и детьми, а не под ними */}
+              <div className="border-t border-border pt-3 lg:mt-auto">
                 <KidList kids={kids ?? []} sel={sel} counts={counts} onPick={switchKid} onAdd={() => setAdding(true)} />
               </div>
             </aside>
-            <div className="flex min-w-0 flex-col gap-6 lg:order-1">
+            <div className="flex min-w-0 flex-col lg:order-1 lg:col-span-4 xl:col-span-5">
               {waiting && (
                 <div style={vt('kid-right')} className="kid-swap">
                   <ReviewQueue stackOf={sel.nick} title={t('review.okTitle')} />
@@ -414,12 +382,52 @@ export default function ParentCabinet() {
               )}
               {/* Только когда точно пусто: очередь загрузилась и по ребёнку нет ничего, срочного тоже */}
               {queue && !counts[sel.nick] && (
-                <div data-testid="kid-clear" style={vt('kid-right')} className="kid-swap flex items-center gap-3 rounded-[28px] bg-success-soft p-3 pr-5 md:gap-5 md:p-4 md:pr-8">
-                  <img src="/art/robot-happy.webp" alt="" className="h-20 w-20 shrink-0 object-contain md:h-28 md:w-28" />
+                <div data-testid="kid-clear" style={vt('kid-right')} className="kid-swap flex flex-1 items-center gap-3 rounded-[28px] bg-success-soft p-3 pr-5 md:gap-5 md:p-4 md:pr-8 lg:gap-8 lg:p-8">
+                  <img src="/art/robot-happy.webp" alt="" className="h-20 w-20 shrink-0 object-contain md:h-28 md:w-28 lg:h-52 lg:w-52" />
                   <div className="min-w-0">
                     <h2 className="text-[28px] font-black leading-8 tracking-tight text-heading md:text-4xl md:leading-[44px]">{t('cab.kid.clearTitle')}</h2>
-                    <p className="mt-1 text-base font-semibold leading-6 text-text">{t('cab.kid.clearText', { nick: sel.nick, interpolation: { escapeValue: false } })}</p>
+                    <p className="mt-1 text-base font-semibold leading-6 text-text lg:text-lg">{t('cab.kid.clearText', { nick: sel.nick, interpolation: { escapeValue: false } })}</p>
                   </div>
+                </div>
+              )}
+              {/* Есть только срочное: оно над экраном, здесь не «всё хорошо» и не пустота */}
+              {queue && !!counts[sel.nick] && !waiting && (
+                <div data-testid="kid-urgent-note" className="flex flex-1 items-center gap-4 rounded-[28px] border border-urgent-border bg-urgent-soft p-4 lg:p-8">
+                  <p className="text-xl font-extrabold text-urgent">{t('cab.kid.urgentAbove')}</p>
+                </div>
+              )}
+            </div>
+            <div className="flex min-w-0 flex-col gap-6 lg:order-3 lg:col-span-6 xl:col-span-7">
+              {more && (
+                <div data-testid="kid-more" className="nav-in rounded-[28px] bg-primary-soft p-4 md:p-6">
+                  {st && !st.has_data ? (
+                    <p data-testid="week-empty" className="font-bold text-text">{t('cab.week.noData', { nick: sel.nick })}</p>
+                  ) : (
+                    <div className="grid items-center gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:gap-10">
+                      <div>
+                        <p className="mb-3 text-sm font-extrabold text-heading">{t('cab.week.chart')}</p>
+                        <WeekChart readyAt={st?.ready_at ?? []} />
+                      </div>
+                      <div>
+                        <dl data-testid="week-summary" className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3">
+                          {[
+                            ['week-created', 'cab.week.pictures', dash(st && weekBars(st.ready_at, new Date()).reduce((n, b) => n + b.count, 0))],
+                            ['week-published', 'cab.week.shown', dash(st?.published)],
+                            ['week-held', 'cab.week.held', dash(st?.held)],
+                            ['week-received', 'cab.week.received', dash(st?.coins_received)],
+                            ['week-spent', 'cab.week.spent', dash(st?.coins_spent)],
+                            ...(st?.coins_earned_lessons != null ? [['kid-lessons', 'cab.kid.lessons', `+${st.coins_earned_lessons}`]] : []),
+                          ].map(([id, key, value]) => (
+                            <div key={id} className="min-w-0">
+                              <dd data-testid={id} className="text-[32px] font-black leading-9 tracking-tight text-heading">{value}</dd>
+                              <dt className="mt-0.5 text-sm font-bold leading-5 text-text">{t(String(key))}</dt>
+                            </div>
+                          ))}
+                        </dl>
+                        {!!st?.coins_uncertain && <p data-testid="week-uncertain" className="mt-3 text-sm font-bold text-text">{t('cab.week.uncertain', { count: st.coins_uncertain })}</p>}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               {more && <OpenLinks role="parent" />}

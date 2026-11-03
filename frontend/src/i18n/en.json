@@ -359,7 +359,7 @@
     "nav": "Main menu",
     "account": "Account",
     "myKids": "My kids",
-    "kid": { "clearTitle": "No signals", "clearText": "All good: nothing from {{nick}} is waiting for your decision.", "noWorks": "{{nick}} has no works yet.", "works": "Works by {{nick}}", "more": "More", "less": "Hide",
+    "kid": { "add": "Add", "urgentAbove": "Please look at the urgent message above first.", "clearTitle": "No signals", "clearText": "All good: nothing from {{nick}} is waiting for your decision.", "noWorks": "{{nick}} has no works yet.", "works": "Works by {{nick}}", "more": "More", "less": "Hide",
       "ageClass": "{{age}} · class {{name}}",
       "age": "{{age}} · no class",
       "lessons": "coins from Mentorium lessons this week",
