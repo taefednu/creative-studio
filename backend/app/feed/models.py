@@ -47,6 +47,7 @@ class Reaction(Base):
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), index=True)
     child_id: Mapped[int] = mapped_column(ForeignKey("children.id"))
     kind: Mapped[str] = mapped_column(String(8))
+    created_at: Mapped[datetime | None] = mapped_column(DateTime, default=clock.now, nullable=True)  # для колокольчика
 
 
 class Comment(Base):

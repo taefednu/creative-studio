@@ -14,6 +14,7 @@ from app.db import init_db
 from app.demo import router as demo_router
 from app.demo import warm_thumbs
 from app.feed import models as _feed_models  # noqa: F401  (таблицы)
+from app.feed.notes import router as notes_router
 from app.feed.router import router as feed_router
 from app.moderation.router import router as moderation_router
 from app.parent.router import router as parent_router
@@ -45,6 +46,7 @@ app.include_router(accounts_router)
 app.include_router(image_router)
 app.include_router(upload_router)
 app.include_router(feed_router)
+app.include_router(notes_router)
 app.include_router(moderation_router)
 app.include_router(assignments_router)
 app.include_router(voice_router)

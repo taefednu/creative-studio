@@ -1,4 +1,5 @@
 {
+  "notes": {"title": "Bildirishnomalar", "empty": "Hozircha tinch. Rasmlaring haqidagi yangiliklar shu yerda chiqadi.", "task": "O'qituvchi yangi topshiriq berdi: {{title}}", "refused": "Kattalar bitta rasmingni ko'rsatishga ruxsat bermadi. Boshqasini chizamizmi?", "approved": "Kattalar ko'rib chiqdi va rasmingga ruxsat berdi!", "reaction": "Rasmingga munosabatlar: {{count}}", "comment": "Rasmingga yangi izohlar: {{count}}"},
   "home": {"hero": {"title": "Rasmingni jonlantir", "text": "Qog'ozga chiz va suratga ol. Qahramon jonlanadi, sun'iy intellekt esa u haqida ertak yozadi.", "cta": "Rasmni jonlantirish", "replay": "Yana bir bor", "down": "Bolalar nima chizayotganini ko'r"}},
   "footer": {"brand": "5–12 yoshli bolalar uchun xavfsiz ijodiy studiya. Sun'iy intellekt bola ko'radigan hamma narsani tekshiradi.", "city": "Toshkent, O'zbekiston", "cta": "Chizishni boshlash", "sections": "Bo'limlar", "parents": "Ota-onalarga", "teachers": "O'qituvchilarga", "about": "Mentorium haqida", "contacts": "Aloqa", "docs": "Hujjatlar", "privacy": "Maxfiylik siyosati", "consent": "Ma'lumotlarni qayta ishlashga rozilik", "cookies": "Cookie siyosati", "copyright": "© {{year}} «INTERNATIONAL CODING PLATFORM» MChJ. Barcha huquqlar himoyalangan.", "models": "Meta modellarida ishlaydi", "top": "Yuqoriga"},
   "seo": {"title": "Mentorium Creative Studio: bolalar uchun xavfsiz AI ijodi", "description": "5–12 yoshli bolalar uchun xavfsiz ijodiy studiya: AI rasmlar va ertaklar, sinf lentasi, har bir so'z va rasm tekshiruvi."},
@@ -216,7 +217,7 @@
     "showClass": "Sinfga ko‘rsatish"
   },
   "shell": { "coinsUnknown": "Tangalar hozircha mavjud emas", "nav": "Asosiy menyu", "account": "Profil" },
-  "task": { "overdue": "muddat tugagan", "today": "muddat bugun", "left_one": "{{count}} kun qoldi", "left_few": "{{count}} kun qoldi", "left_many": "{{count}} kun qoldi", "left_other": "{{count}} kun qoldi", "draw": "Chizish", "noClass": "Sinfga qo‘shilganingdan keyin topshiriqlar shu yerda chiqadi: o‘qituvchidan sinf kodini kiritgin.", "empty": "Hozircha topshiriq yo‘q. Keyinroq qara: o‘qituvchi tez orada nimadir o‘ylab topadi!", "sentMark": "Topshirildi, o‘qituvchi ko‘radi", "heldMark": "O‘qituvchiga ko‘rish uchun yuborildi", "submit": "Topshiriqqa topshirish", "submitFor": "Topshiryapman:", "submitComment": "Rasm izohi (shart emas)", "submitDone": "Topshirildi! O‘qituvchi rasmingni ko‘radi.", "submitRejected": "O‘qituvchi bu rasmni qabul qilmadi. Boshqasini tanla.", "submitHeld": "O‘qituvchiga ko‘rish uchun yuborildi. Tekshirgach, u javob beradi.", "pick": "Qaysi topshiriqqa topshirish" },
+  "task": { "all": "Hammasi: {{count}}", "overdue": "muddat tugagan", "today": "muddat bugun", "left_one": "{{count}} kun qoldi", "left_few": "{{count}} kun qoldi", "left_many": "{{count}} kun qoldi", "left_other": "{{count}} kun qoldi", "draw": "Chizish", "noClass": "Sinfga qo‘shilganingdan keyin topshiriqlar shu yerda chiqadi: o‘qituvchidan sinf kodini kiritgin.", "empty": "Hozircha topshiriq yo‘q. Keyinroq qara: o‘qituvchi tez orada nimadir o‘ylab topadi!", "sentMark": "Topshirildi, o‘qituvchi ko‘radi", "heldMark": "O‘qituvchiga ko‘rish uchun yuborildi", "submit": "Topshiriqqa topshirish", "submitFor": "Topshiryapman:", "submitComment": "Rasm izohi (shart emas)", "submitDone": "Topshirildi! O‘qituvchi rasmingni ko‘radi.", "submitRejected": "O‘qituvchi bu rasmni qabul qilmadi. Boshqasini tanla.", "submitHeld": "O‘qituvchiga ko‘rish uchun yuborildi. Tekshirgach, u javob beradi.", "pick": "Qaysi topshiriqqa topshirish" },
   "panel": { "voiceStart": "Ovozda ayt", "voiceStop": "Yozishni to‘xtat", "voiceListening": "Tinglayapman…", "uploadTitle": "Sening rasming", "uploadHint": "PNG yoki JPG", "uploadSending": "Yuborilmoqda…", "uploadPick": "Suratni tanlash", "modePhoto": "Rasm surati", "modeDraw": "Shu yerda chiz", "drawColor": "Rang", "drawWidth": "Mo‘yqalam qalinligi", "drawUndo": "Bekor qilish", "drawClear": "Hammasini o‘chirish", "uploadOther": "Boshqasini tanlash", "uploadClose": "Yopish", "model": "Muse Image", "format": "1:1", "style": "Uslub", "allStyles": "Barcha uslublar", "styleFilter": "Uslub bo'yicha filtr", "noStyleMatch": "Bu uslubda hali rasm yo'q" },
   "templates": { "custom": "O‘z uslubim", "alive": "Jonlangan rasm", "story": "Ertak",
     "superhero": "Men superqahramonman",
@@ -303,10 +304,6 @@
     "modalFailed": "Ochib bo‘lmadi. Qayta urinib ko‘ring.",
     "retry": "Qayta urinish",
     "now": "hozirgina",
-    "childRejected": "Kattalar bitta rasmingni ko'rsatishga ruxsat bermadi.",
-    "childRejectedMany": "Kattalar rasmlaringni ko'rsatishga ruxsat bermadi: {{count}}.",
-    "childRejectedGo": "Boshqasini chizamizmi?",
-    "childRejectedGoMany": "Boshqalarini chizamizmi?",
     "types": { "share": "Hammaga ko‘rsatish", "story": "Ertak", "prompt": "Soʻrov", "image": "Rasm", "post": "Post", "comment": "Izoh", "nickname": "Taxallus", "assignment": "Topshiriq", "submission": "Topshirilgan ish", "upload": "Yuklash" },
     "where": { "class": "{{name}} sinfida", "classNoName": "Sinfda", "family": "Oila", "personal": "Shaxsiy" },
     "reasons": {

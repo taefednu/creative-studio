@@ -1,4 +1,5 @@
 {
+  "notes": {"title": "Notifications", "empty": "All quiet. News about your pictures will show up here.", "task": "Your teacher set a new task: {{title}}", "refused": "A grown-up didn't allow one of your pictures to be shown. Let's draw another one!", "approved": "A grown-up looked and allowed your picture!", "reaction": "Reactions on your picture: {{count}}", "comment": "New comments on your picture: {{count}}"},
   "home": {"hero": {"title": "Bring your drawing to life", "text": "Draw on paper and take a photo. Your hero comes alive, and AI writes a story about it.", "cta": "Bring it to life", "replay": "Watch again", "down": "See what kids are making"}},
   "footer": {"brand": "A safe creative studio for kids aged 5–12. AI checks everything a child sees.", "city": "Tashkent, Uzbekistan", "cta": "Start drawing", "sections": "Sections", "parents": "For parents", "teachers": "For teachers", "about": "About Mentorium", "contacts": "Contacts", "docs": "Documents", "privacy": "Privacy policy", "consent": "Data processing consent", "cookies": "Cookie policy", "copyright": "© {{year}} INTERNATIONAL CODING PLATFORM LLC. All rights reserved.", "models": "Powered by Meta models", "top": "Back to top"},
   "seo": {"title": "Mentorium Creative Studio: safe AI creativity for kids", "description": "A safe creative studio for kids aged 5–12: AI pictures and stories, a class feed, and every word and image checked."},
@@ -216,7 +217,7 @@
     "showClass": "Share with class"
   },
   "shell": { "coinsUnknown": "Coins are not available right now", "nav": "Main menu", "account": "Profile" },
-  "task": { "overdue": "deadline passed", "today": "due today", "left_one": "{{count}} day left", "left_few": "{{count}} days left", "left_many": "{{count}} days left", "left_other": "{{count}} days left", "draw": "Draw", "noClass": "Tasks show up once you join a class: enter the class code from your teacher.", "empty": "No tasks yet. Check back later: your teacher will think of something soon!", "sentMark": "Handed in, your teacher will see it", "heldMark": "Sent to your teacher to look at", "submit": "Hand in", "submitFor": "Handing in to:", "submitComment": "Caption (optional)", "submitDone": "Handed in! Your teacher will see your picture.", "submitRejected": "Your teacher did not accept this picture. Pick another one.", "submitHeld": "Sent to your teacher to look at. They will answer once they have.", "pick": "Which task to hand in to" },
+  "task": { "all": "All: {{count}}", "overdue": "deadline passed", "today": "due today", "left_one": "{{count}} day left", "left_few": "{{count}} days left", "left_many": "{{count}} days left", "left_other": "{{count}} days left", "draw": "Draw", "noClass": "Tasks show up once you join a class: enter the class code from your teacher.", "empty": "No tasks yet. Check back later: your teacher will think of something soon!", "sentMark": "Handed in, your teacher will see it", "heldMark": "Sent to your teacher to look at", "submit": "Hand in", "submitFor": "Handing in to:", "submitComment": "Caption (optional)", "submitDone": "Handed in! Your teacher will see your picture.", "submitRejected": "Your teacher did not accept this picture. Pick another one.", "submitHeld": "Sent to your teacher to look at. They will answer once they have.", "pick": "Which task to hand in to" },
   "panel": { "voiceStart": "Speak your idea", "voiceStop": "Stop recording", "voiceListening": "Listening…", "uploadTitle": "Your drawing", "uploadHint": "PNG or JPG", "uploadSending": "Sending…", "uploadPick": "Choose a photo", "modePhoto": "Photo of a drawing", "modeDraw": "Draw here", "drawColor": "Color", "drawWidth": "Brush size", "drawUndo": "Undo", "drawClear": "Clear all", "uploadOther": "Choose another", "uploadClose": "Close", "model": "Muse Image", "format": "1:1", "style": "Style", "allStyles": "All styles", "styleFilter": "Filter by style", "noStyleMatch": "No pictures in this style yet" },
   "templates": { "custom": "My style", "alive": "Living drawing", "story": "Story",
     "superhero": "I'm a superhero",
@@ -303,10 +304,6 @@
     "modalFailed": "Could not open this. Try again.",
     "retry": "Try again",
     "now": "just now",
-    "childRejected": "A grown-up didn't allow one of your pictures to be shown.",
-    "childRejectedMany": "A grown-up didn't allow some of your pictures to be shown: {{count}}.",
-    "childRejectedGo": "Let's draw another one!",
-    "childRejectedGoMany": "Let's draw new ones!",
     "types": { "share": "Show to everyone", "story": "Story", "prompt": "Prompt", "image": "Picture", "post": "Post", "comment": "Comment", "nickname": "Nickname", "assignment": "Assignment", "submission": "Submission", "upload": "Upload" },
     "where": { "class": "In class {{name}}", "classNoName": "In class", "family": "Family", "personal": "Personal" },
     "reasons": {

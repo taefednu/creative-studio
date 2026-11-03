@@ -36,9 +36,6 @@ export const visibleSent = (a: Pick<Assignment, 'submissions'>) => a.submissions
 /** Задание открыто, пока у ребёнка нет сдачи (принятой или ушедшей к учителю); отклонённую можно переделать. */
 export const isOpen = (a: Pick<Assignment, 'submissions'>) => visibleSent(a).length === 0
 
-/** Плитки заданий на «Создать»: только то, что ещё надо сделать, ближайшие по сроку (порядок даёт сервер). */
-export const taskTiles = (list: Assignment[] | null) => (list ?? []).filter(isOpen).slice(0, 2)
-
 /** Задание в строке «Создать»: заданный id не подменяем другим, без id — первое открытое. */
 export const shownTask = (list: Assignment[] | null | undefined, id: number | null): Assignment | null =>
   (id ? list?.find((x) => x.id === id && isOpen(x)) : list?.find(isOpen)) ?? null

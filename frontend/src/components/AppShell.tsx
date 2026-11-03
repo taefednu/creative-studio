@@ -10,6 +10,7 @@ import ErrorText, { errorKey } from './ErrorText'
 import { HEADER_CLS, NAV_CLS } from './headerStyles'
 import LangSwitch from './LangSwitch'
 import Logo from './Logo'
+import NotifBell from './NotifBell'
 import Avatar from './Avatar'
 import TabPill from './TabPill'
 
@@ -138,6 +139,7 @@ export default function AppShell() {
           <LangSwitch />
           {me && (
             <>
+              <NotifBell />
               <span
                 data-testid="coins"
                 title={me.coins === null ? t('shell.coinsUnknown') : t('child.coins')}

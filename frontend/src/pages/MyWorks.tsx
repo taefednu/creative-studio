@@ -18,34 +18,12 @@ import { filterWorks, galleryOrder, loadTemplates, artistProgress, BADGES, style
 import type { BadgeId, Work, WorkFilter } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
-// Прочитал, что взрослый отказал: больше не напоминаем, новый отказ покажем снова
-const REJECTED_SEEN = 'studio.rejectedSeen'
-const readSeenRejected = () => {
-  try {
-    return Number(localStorage.getItem(REJECTED_SEEN)) || 0
-  } catch {
-    return 0
-  }
-}
-
 const loadWorks = () => api<Work[]>('/api/works/mine')
-const loadRejected = () => api<{ id: number; item_type: string; text: string | null }[]>('/api/held/mine')
 const FILTERS: WorkFilter[] = ['all', 'shared', 'waiting']
 
 export default function MyWorks() {
   const { t } = useTranslation()
   const [works, reloadWorks] = useLoad(loadWorks)
-  const [rejected] = useLoad(loadRejected)
-  const [seenRejected, setSeenRejected] = useState(readSeenRejected)
-  const unseen = rejected?.filter((r) => r.id > seenRejected) ?? []
-  function dismissRejected(id: number) {
-    setSeenRejected(id)
-    try {
-      localStorage.setItem(REJECTED_SEEN, String(id))
-    } catch {
-      /* без памяти напоминание вернётся в следующий раз */
-    }
-  }
   const [tasks, reloadTasks] = useLoad(loadAssignments)
   const [filter, setFilter] = useState<WorkFilter>('all')
   const open = tasks?.filter(isOpen) ?? []
@@ -190,18 +168,6 @@ export default function MyWorks() {
             ),
           )}
         </section>
-      )}
-      {unseen.length > 0 && (
-        <p data-testid="rejected-note" className="mt-3 flex items-center gap-3 rounded-card bg-primary-soft px-4 py-3 font-bold text-heading">
-          <img src="/art/shield.webp" alt="" className="h-8 w-8 shrink-0 object-contain" />
-          <span className="min-w-0 flex-1">
-            {t(unseen.length > 1 ? 'review.childRejectedMany' : 'review.childRejected', { count: unseen.length })}{' '}
-            <Link to="/create" className="whitespace-nowrap text-primary underline">{t(unseen.length > 1 ? 'review.childRejectedGoMany' : 'review.childRejectedGo')}</Link>
-          </span>
-          <button type="button" data-testid="rejected-close" aria-label={t('mw.close')} onClick={() => dismissRejected(Math.max(...unseen.map((r) => r.id)))} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted">
-            <Icon name="close" />
-          </button>
-        </p>
       )}
       {works && works.length === 0 && (
         <div data-testid="works-empty" className="mt-6 flex flex-col items-center gap-3 rounded-card border border-border bg-surface p-8 text-center shadow-card">

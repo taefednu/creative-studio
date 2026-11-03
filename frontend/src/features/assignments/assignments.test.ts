@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { dueIso, isOpen, outcome, shownTask, submitTarget, visibleSent, notHanded, taskDescription, taskTitle, taskTiles } from './assignments'
+import { dueIso, isOpen, outcome, shownTask, submitTarget, visibleSent, notHanded, taskDescription, taskTitle } from './assignments'
 import type { Assignment } from './assignments'
 
 vi.stubEnv('TZ', 'Asia/Tashkent')
@@ -85,13 +85,5 @@ describe('текст задания', () => {
     expect(taskDescription(task, 'en')).toBe('Draw')
     expect(taskTitle(task, 'uz')).toBe('Кот')
     expect(taskTitle({ title: 'Кот', text_i18n: null }, 'en')).toBe('Кот')
-  })
-})
-
-describe('taskTiles', () => {
-  it('только несданные и не больше двух', () => {
-    const sent = a(1, [{ work_id: 9, status: 'accepted' }])
-    expect(taskTiles([sent, a(2), a(3), a(4)]).map((x) => x.id)).toEqual([2, 3])
-    expect(taskTiles(null)).toEqual([])
   })
 })

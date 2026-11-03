@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useLocation, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { ApiError, api } from '../api'
 import type { ShellContext } from '../components/AppShell'
 import StoryForm from '../components/StoryForm'
@@ -14,7 +14,7 @@ import Icon from '../components/Icon'
 import PublishBox from '../components/PublishBox'
 import SubmitBox from '../components/SubmitBox'
 import SupportCard from '../components/SupportCard'
-import { loadAssignments, shownTask, submitTarget, taskTiles, taskTitle } from '../features/assignments/assignments'
+import { isOpen, loadAssignments, shownTask, submitTarget, taskTitle } from '../features/assignments/assignments'
 import { dueLabel } from '../features/assignments/due'
 import type { Assignment } from '../features/assignments/assignments'
 import { BLURRED, POLLING, hintKey, loadTemplates } from '../features/works/works'
@@ -44,8 +44,7 @@ export default function Create() {
   // Заход из задания: заголовок экрана и есть задание. Без параметра экран как у всех, сдать можно первое открытое
   const assignmentId = paramTask ?? shownTask(tasks, null)?.id ?? null
   const task = paramTask ? shownTask(tasks, paramTask) : null
-  const taskDue = task && dueLabel(task.due_at)
-  const tiles = taskTiles(tasks)
+  const openTasks = tasks?.filter(isOpen) ?? []
   function pickTask(a: Assignment) {
     if (a.id === paramTask) return setParams({}, { replace: true })
     setParams({ assignment: String(a.id), ...(a.cover_template ? { template: a.cover_template } : {}) }, { replace: true })
@@ -146,20 +145,47 @@ export default function Create() {
 
   return (
     <div className="mx-auto flex -mb-7 h-[calc(100dvh-154px)] min-h-[520px] max-w-[1672px] flex-col lg:mb-0 lg:h-[calc(100dvh-104px)]">
-      {/* Строка под подпись задания занята всегда: при выборе задания плитки не прыгают */}
-      {tiles.length > 0 && (
-        <p data-testid="task-strip" className="h-5 text-center text-sm font-extrabold text-primary md:h-6 md:text-base">
-          {task && t('create.teacherTask')}
-          {taskDue && <span className="font-bold text-muted"> · {t(taskDue.key, { count: taskDue.count })}</span>}
-        </p>
-      )}
       <h1 data-testid="create-title" className="text-balance text-center text-[34px] font-black leading-[38px] tracking-tight text-heading md:text-[52px] md:leading-[56px]">
         {task ? <span data-testid="task-title" className="line-clamp-2">{taskTitle(task, i18n.language)}</span> : t('create.title')}
       </h1>
+      {/* Задание не стиль: своя цветная лента над сеткой. Сколько бы их ни было, листается вбок, сетка та же, что у семьи */}
+      {openTasks.length > 0 && (
+        <div data-testid="task-ribbon" className="mt-3 flex shrink-0 items-center gap-2 rounded-2xl bg-primary p-1.5 pl-2 md:mx-auto md:w-full md:max-w-[1180px]">
+          <img src="/art/robot-face.webp" alt="" className="h-9 w-9 shrink-0" />
+          <span className="hidden shrink-0 pr-1 text-sm font-extrabold text-primary-fg md:block">{t('create.teacherTask')}</span>
+          <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none]">
+            {openTasks.map((a) => {
+              const due = dueLabel(a.due_at)
+              const on = a.id === paramTask
+              return (
+                <button
+                  key={a.id}
+                  type="button"
+                  data-testid="task-pill"
+                  aria-pressed={on}
+                  onClick={() => pickTask(a)}
+                  className={`flex h-12 max-w-[260px] shrink-0 items-center gap-2 rounded-xl p-1 pr-3 text-left ${on ? 'bg-heading text-primary-fg' : 'bg-surface text-heading'}`}
+                >
+                  {a.cover_url && <img src={a.cover_url} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />}
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-extrabold leading-5">{taskTitle(a, i18n.language)}</span>
+                    {due && <span className={`block truncate text-xs font-bold leading-4 ${on ? 'text-primary-fg' : 'text-muted'}`}>{t(due.key, { count: due.count })}</span>}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          {openTasks.length > 1 && (
+            <Link to="/tasks" data-testid="task-all" className="shrink-0 whitespace-nowrap px-2 text-sm font-extrabold text-primary-fg underline">
+              {t('task.all', { count: openTasks.length })}
+            </Link>
+          )}
+        </div>
+      )}
       {/* Телефон: два ряда листаются вбок, вертикального скролла нет. От md: все плитки видны сразу */}
       <div
         data-testid="templates"
-        className={`-mx-4 mt-2 grid min-h-0 w-[calc(100%+32px)] flex-1 auto-cols-[38vw] snap-x grid-flow-col grid-rows-[auto_1fr_1fr] gap-2 overflow-x-auto scroll-px-4 px-4 py-2 [scrollbar-width:none] md:mx-auto md:mt-4 md:w-full md:grid-flow-row md:gap-x-4 md:gap-y-3 md:overflow-visible md:px-0 md:py-0 ${tiles.length ? 'md:grid-cols-6' : 'md:max-w-[1180px] md:grid-cols-5'}`}
+        className="-mx-4 mt-2 grid min-h-0 w-[calc(100%+32px)] flex-1 auto-cols-[38vw] snap-x grid-flow-col grid-rows-[auto_1fr_1fr] gap-2 overflow-x-auto scroll-px-4 px-4 py-2 [scrollbar-width:none] md:mx-auto md:mt-4 md:w-full md:grid-flow-row md:gap-x-4 md:gap-y-3 md:overflow-visible md:px-0 md:py-0 md:max-w-[1180px] md:grid-cols-5"
       >
         {templates && (
           <UploadPopup
@@ -199,37 +225,7 @@ export default function Create() {
             <span className={`${TILE_TEXT} ${tpl === CUSTOM.id ? 'text-primary' : 'text-heading'}`}>{t('templates.custom')}</span>
           </button>
         )}
-        {tiles.length > 0 && (
-          <h2 data-testid="tasks-heading" className="col-start-2 row-start-1 text-lg font-extrabold leading-6 text-primary md:text-xl">
-            {t('nav.tasks')}
-          </h2>
-        )}
-        {tiles.map((a, i) => {
-          const due = dueLabel(a.due_at)
-          const on = a.id === paramTask
-          return (
-            <button
-              key={a.id}
-              type="button"
-              data-testid="task-tile"
-              aria-pressed={on}
-              onClick={() => pickTask(a)}
-              className={`${TILE} col-start-2 bg-primary-soft ${tiles.length === 1 ? 'row-span-2 row-start-2' : i ? 'row-start-3' : 'row-start-2'} ${on ? 'border-primary' : 'border-transparent'}`}
-            >
-              <span className={TILE_IMG}>
-                {a.cover_url && <img src={a.cover_url} alt="" className="absolute inset-0 h-full w-full object-cover" />}
-                {due && <span className="absolute left-2 top-2 rounded-full bg-surface px-2.5 py-0.5 text-xs font-extrabold text-primary">{t(due.key, { count: due.count })}</span>}
-                {on && (
-                  <span className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-fg">
-                    <Icon name="check" />
-                  </span>
-                )}
-              </span>
-              <span className={`line-clamp-2 h-10 w-full shrink-0 px-1 text-center text-sm font-extrabold leading-5 ${on ? 'text-primary' : 'text-heading'}`}>{taskTitle(a, i18n.language)}</span>
-            </button>
-          )
-        })}
-        <h2 data-testid="style-heading" className={`col-span-4 row-start-1 text-lg font-extrabold leading-6 text-heading md:text-xl ${tiles.length ? 'col-start-3' : 'col-start-2'}`}>
+        <h2 data-testid="style-heading" className="col-span-4 col-start-2 row-start-1 text-lg font-extrabold leading-6 text-heading md:text-xl">
           {t('create.chooseStyle')}
         </h2>
         {templates?.map((x) => (

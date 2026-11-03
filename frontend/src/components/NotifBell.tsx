@@ -1,0 +1,102 @@
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link, useLocation } from 'react-router-dom'
+import { api } from '../api'
+import { taskTitle } from '../features/assignments/assignments'
+import type { TaskI18n } from '../features/assignments/assignments'
+import { agoText } from '../features/review/review'
+import { useLoad } from '../useLoad'
+
+type Note = {
+  kind: 'task' | 'refused' | 'approved' | 'reaction' | 'comment'
+  at: string
+  unread: boolean
+  link: string
+  count?: number
+  image_url?: string | null
+  title?: string
+  text_i18n?: TaskI18n
+}
+
+const loadNotes = () => api<{ items: Note[]; unread: number }>('/api/child/notifications')
+const ICON: Partial<Record<Note['kind'], string>> = { refused: '/art/shield.webp', approved: '/art/robot-happy.webp' }
+
+/** Колокольчик ребёнка: что нового о его работах и заданиях. Открыл — прочитано; новое событие зажжёт снова. */
+export default function NotifBell() {
+  const { t, i18n } = useTranslation()
+  const [data, reload] = useLoad(loadNotes)
+  const { pathname } = useLocation()
+  const [open, setOpen] = useState(false)
+  const [read, setRead] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+
+  useEffect(reload, [pathname, reload])
+  useEffect(() => {
+    if (!open) return
+    const away = (e: MouseEvent) => !box.current?.contains(e.target as Node) && setOpen(false)
+    const esc = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('mousedown', away)
+    document.addEventListener('keydown', esc)
+    return () => {
+      document.removeEventListener('mousedown', away)
+      document.removeEventListener('keydown', esc)
+    }
+  }, [open])
+
+  function toggle() {
+    if (!open && data?.unread) {
+      setRead(true)
+      void api('/api/child/notifications/read', 'POST').catch(() => {})
+    }
+    setOpen(!open)
+  }
+
+  // Отметки в открытом списке видны, пока он открыт; счётчик гаснет сразу
+  const unread = read ? 0 : (data?.unread ?? 0)
+  return (
+    <div ref={box} className="relative shrink-0">
+      <button
+        type="button"
+        data-testid="bell"
+        aria-label={t('notes.title')}
+        aria-expanded={open}
+        onClick={toggle}
+        className="relative flex h-9 w-9 items-center justify-center rounded-full bg-primary-soft text-primary lg:h-11 lg:w-11"
+      >
+        <svg viewBox="0 0 24 24" className="h-5 w-5 lg:h-6 lg:w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M6 9a6 6 0 0 1 12 0c0 6 2.500 7 2.500 7h-17S6 15 6 9zM10 20a2.200 2.200 0 0 0 4 0" />
+        </svg>
+        {unread > 0 && (
+          <span data-testid="bell-badge" className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-danger px-1 text-xs font-extrabold text-primary-fg">
+            {unread}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div data-testid="bell-list" className="modal-in fixed inset-x-2 top-[64px] z-40 max-h-[70dvh] overflow-y-auto rounded-3xl border border-border bg-surface p-2 shadow-pop md:absolute md:inset-x-auto md:right-0 md:top-full md:mt-2 md:w-[400px]">
+          <h2 className="px-3 pb-1 pt-2 text-lg font-black tracking-tight text-heading">{t('notes.title')}</h2>
+          {data?.items.length === 0 && (
+            <div data-testid="bell-empty" className="flex items-center gap-3 p-3">
+              <img src="/art/robot-happy.webp" alt="" className="h-14 w-14 shrink-0 object-contain" />
+              <p className="font-bold text-text">{t('notes.empty')}</p>
+            </div>
+          )}
+          {data?.items.map((n, i) => {
+            const picture = n.image_url ?? ICON[n.kind]
+            return (
+              <Link key={`${n.kind}-${n.at}-${i}`} to={n.link} data-testid={`note-${n.kind}`} onClick={() => setOpen(false)} className={`flex items-center gap-3 rounded-2xl p-2 hover:bg-primary-soft ${n.unread ? 'bg-primary-soft' : ''}`}>
+                {picture && <img src={picture} alt="" className={`h-12 w-12 shrink-0 rounded-xl ${n.image_url ? 'object-cover' : 'object-contain'}`} />}
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-extrabold leading-5 text-heading">
+                    {t(`notes.${n.kind}`, { count: n.count, title: n.title ? taskTitle({ title: n.title, text_i18n: n.text_i18n }, i18n.language) : '' })}
+                  </span>
+                  <span className="block text-xs font-bold text-muted">{agoText(n.at, t)}</span>
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}

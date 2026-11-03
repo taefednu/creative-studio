@@ -33,6 +33,7 @@ class Child(Base):
     age_group: Mapped[str] = mapped_column(String(5))  # "5-8" | "9-12"
     lang: Mapped[str] = mapped_column(String(2))  # ru | en | uz
     avatar: Mapped[str | None] = mapped_column(String(10), nullable=True)  # зверёк; пусто — зверёк по нику
+    notes_seen_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)  # колокольчик: всё до этого прочитано
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("parents.id"), nullable=True)
     picture_password_hash: Mapped[str | None] = mapped_column(String(300), nullable=True)
     platform_user_id: Mapped[str | None] = mapped_column(String(36), unique=True, nullable=True)
