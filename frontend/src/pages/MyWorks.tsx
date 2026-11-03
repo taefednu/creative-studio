@@ -10,7 +10,7 @@ import Icon from '../components/Icon'
 import NavIcon from '../components/NavIcon'
 import PublishBox from '../components/PublishBox'
 import SubmitBox from '../components/SubmitBox'
-import { isOpen, loadAssignments } from '../features/assignments/assignments'
+import { isOpen, loadAssignments, taskTitle } from '../features/assignments/assignments'
 import { loadMyStories } from '../features/story/story'
 import type { Story } from '../features/story/story'
 import type { Assignment } from '../features/assignments/assignments'
@@ -276,12 +276,12 @@ function Placeholder({ w }: { w: Work }) {
 }
 
 function WorkCard({ w, big, open, onSubmitted, onClosed }: { w: Work; big: boolean; open: Assignment[]; onSubmitted: () => void; onClosed: () => void }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [support, setSupport] = useState(false)
   const [form, setForm] = useState(false)
   const [modal, setModal] = useState(false)
   // выбранное задание запоминаем: после сдачи оно уходит из открытых, а итог на карточке остаётся
-  const [task, setTask] = useState<Pick<Assignment, 'id' | 'title'> | null>(null)
+  const [task, setTask] = useState<Pick<Assignment, 'id' | 'title' | 'text_i18n'> | null>(null)
   const [sentTo, setSentTo] = useState<number | null>(null)
   // задания, которого уже нет среди открытых, не держим (иначе 404 на сдаче); только что сданное оставляем ради итога
   const cur = task && (task.id === sentTo || open.some((x) => x.id === task.id)) ? task : open[0]
@@ -376,7 +376,7 @@ function WorkCard({ w, big, open, onSubmitted, onClosed }: { w: Work; big: boole
                         label={t('task.pick')}
                         value={String(cur.id)}
                         onChange={(v) => setTask(open.find((x) => x.id === Number(v)) ?? null)}
-                        options={open.map((x) => ({ value: String(x.id), label: x.title }))}
+                        options={open.map((x) => ({ value: String(x.id), label: taskTitle(x, i18n.language) }))}
                       />
                     )}
                     <SubmitBox key={cur.id} workId={w.id} assignment={cur} onSupport={() => setSupport(true)} onDone={() => {

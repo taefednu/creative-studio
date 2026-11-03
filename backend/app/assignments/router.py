@@ -23,6 +23,7 @@ from app.accounts.adults import AdultChild
 from app.accounts.deps import current_child, current_teacher
 from app.accounts.models import Child, Teacher
 from app.accounts.security import COOKIE
+from app.assignments import translate
 from app.assignments.models import Assignment, Submission
 from app.config import get_settings
 from app.db import get_session
@@ -131,6 +132,7 @@ def _teacher_view(db: Session, a: Assignment) -> dict:
         "due_at": _due(a),
         "status": a.status,
         "cover_url": _cover_url(a),
+        "text_i18n": a.text_i18n,
         "submissions": n or 0,
         "created_at": a.created_at.isoformat(),
     }
@@ -162,6 +164,7 @@ def create_assignment(class_id: int, body: NewAssignment, t: TeacherDep, db: Db)
         path.write_bytes(cover)
         a.cover_path = str(path)
     db.commit()
+    translate.spawn(a.id)
     return _teacher_view(db, a)
 
 
@@ -323,6 +326,7 @@ def child_assignments(c: ChildDep, db: Db):
             "due_at": _due(a),
             "cover_url": _cover_url(a),
             "cover_template": a.cover_template,
+            "text_i18n": a.text_i18n,
             "submissions": mine.get(a.id, []),
         }
         for a in rows

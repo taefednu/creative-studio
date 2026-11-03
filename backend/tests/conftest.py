@@ -90,3 +90,11 @@ def make_client(mode: str) -> tuple[MetaClient, FakeMeta, list[float]]:
 @pytest.fixture
 def fake_client():
     return make_client
+
+
+@pytest.fixture(autouse=True)
+def _no_background_translation(monkeypatch):
+    # Перевод задания идёт в фоне к настоящей модели: его тесты зовут run() сами
+    from app.assignments import translate
+
+    monkeypatch.setattr(translate, "spawn", lambda assignment_id: None)

@@ -71,6 +71,18 @@ def image_captions(img: dict) -> dict:
     return captions(img["idea"], img["idea_en"], img["idea_uz"])
 
 
+TASK_I18N = {
+    "hero": {
+        "en": {"title": "Draw the hero of today's fairy tale", "description": "Think of a hero from the fairy tale we read in class and draw them."},
+        "uz": {"title": "Bugungi ertak qahramonini chiz", "description": "Darsda o'qigan ertagimizdan qahramon o'ylab top va uni chiz."},
+    },
+    "season": {
+        "en": {"title": "Favourite season", "description": "Draw how you see your favourite season."},
+        "uz": {"title": "Sevimli fasl", "description": "Sevimli faslingni qanday ko'rishingni chiz."},
+    },
+}
+
+
 def signed_picture(im: Image.Image) -> tuple[Image.Image, tuple[int, int, int, int]]:
     """Рисунок с вымышленной подписью и её бокс: как настоящий случай размытия, без лиц. SAM не зовём."""
     out = im.copy()
@@ -272,10 +284,10 @@ def seed(images_dir: Path) -> dict:
         h.created_at = ago(hours=4 + 2 * teacher_items.index(h))
 
     # ---- задания ----
-    a1 = Assignment(class_id=room.id, teacher_id=teacher.id, title="Нарисуй героя сегодняшней сказки", cover_template="superhero",
+    a1 = Assignment(class_id=room.id, teacher_id=teacher.id, title="Нарисуй героя сегодняшней сказки", cover_template="superhero", text_i18n=TASK_I18N["hero"],
                     description="Придумай героя из сказки, которую мы читали на уроке, и нарисуй его.",
                     due_at=now + timedelta(days=2), created_at=ago(days=1))
-    a2 = Assignment(class_id=room.id, teacher_id=teacher.id, title="Любимое время года", cover_template="watercolor",
+    a2 = Assignment(class_id=room.id, teacher_id=teacher.id, title="Любимое время года", cover_template="watercolor", text_i18n=TASK_I18N["season"],
                     description="Нарисуй, как ты видишь своё любимое время года.", created_at=ago(hours=12))
     s.add_all([a1, a2])
     s.flush()

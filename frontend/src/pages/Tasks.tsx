@@ -3,7 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom'
 import ErrorText from '../components/ErrorText'
 import Icon from '../components/Icon'
 import type { ShellContext } from '../components/AppShell'
-import { isOpen, loadAssignments, visibleSent } from '../features/assignments/assignments'
+import { isOpen, loadAssignments, taskDescription, taskTitle, visibleSent } from '../features/assignments/assignments'
 import type { Assignment } from '../features/assignments/assignments'
 import { dueLabel } from '../features/assignments/due'
 import { useLoad } from '../useLoad'
@@ -54,7 +54,8 @@ export default function Tasks() {
 }
 
 function TaskCard({ a }: { a: Assignment }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const description = taskDescription(a, i18n.language)
   const due = dueLabel(a.due_at)
   const sent = visibleSent(a) // срочная сдача здесь как будто её нет: ни «на проверке», ни «отправили учителю»
   const done = sent.some((s) => s.status === 'accepted')
@@ -64,8 +65,8 @@ function TaskCard({ a }: { a: Assignment }) {
       <div className="aspect-[1.8] short:aspect-[2.4] overflow-hidden rounded-2xl bg-primary-soft">
         {img && <img data-testid="task-image" src={img} alt="" className="h-full w-full object-cover" />}
       </div>
-      <h2 className="mt-3 px-1 text-xl font-extrabold leading-7 text-heading big:text-[28px] big:leading-9">{a.title}</h2>
-      {a.description && <p className="mt-1 px-1 text-base leading-6 text-text big:text-[22px] big:leading-7">{a.description}</p>}
+      <h2 className="mt-3 px-1 text-xl font-extrabold leading-7 text-heading big:text-[28px] big:leading-9">{taskTitle(a, i18n.language)}</h2>
+      {description && <p className="mt-1 px-1 text-base leading-6 text-text big:text-[22px] big:leading-7">{description}</p>}
       {due && sent.length === 0 && (
         <p data-testid="task-left" className="mt-3 flex h-10 w-fit items-center gap-2 rounded-full bg-primary-soft px-4 text-sm font-extrabold text-primary big:h-[46px] big:text-xl">
           <Icon name="clock" className="h-5 w-5 big:h-7 big:w-7" />

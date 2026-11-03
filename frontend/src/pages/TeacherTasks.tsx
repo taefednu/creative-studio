@@ -8,7 +8,8 @@ import ChipSelect from '../components/ChipSelect'
 import ErrorText, { errorKey } from '../components/ErrorText'
 import { BigHeads } from '../components/FeedView'
 import Icon from '../components/Icon'
-import { dueIso, notHanded, showErrorCode, taskErrorCode } from '../features/assignments/assignments'
+import { dueIso, notHanded, showErrorCode, taskDescription, taskErrorCode, taskTitle } from '../features/assignments/assignments'
+import type { TaskI18n } from '../features/assignments/assignments'
 import { dateLabel, duePresets } from '../features/assignments/calendar'
 import { LANGS } from '../i18n'
 import { parseUtc } from '../features/review/review'
@@ -16,7 +17,7 @@ import { loadTemplates } from '../features/works/works'
 import { useLoad } from '../useLoad'
 
 type Room = { id: number; name: string }
-type Task = { id: number; title: string; description: string; due_at: string | null; cover_url: string | null; submissions: number }
+type Task = { id: number; title: string; description: string; due_at: string | null; cover_url: string | null; text_i18n?: TaskI18n; submissions: number }
 type Sub = { id: number; nick: string; status: 'accepted' | 'held'; shown_in_feed: boolean; image_url: string; comment: string | null }
 
 const loadRooms = () => api<Room[]>('/api/teacher/classes')
@@ -269,7 +270,7 @@ export default function TeacherTasks() {
 }
 
 function AssignmentRow({ a, subs, total, active, onClick }: { a: Task; subs: Sub[]; total: number; active: boolean; onClick: () => void }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const accepted = subs.filter((s) => s.status === 'accepted')
   const nicks = [...new Set(accepted.map((s) => s.nick))]
   const pct = total > 0 ? Math.min(100, Math.round((a.submissions / total) * 100)) : 0
@@ -285,7 +286,7 @@ function AssignmentRow({ a, subs, total, active, onClick }: { a: Task; subs: Sub
         {a.cover_url && <img data-testid="assignment-cover" src={a.cover_url} alt="" className="h-full w-full object-cover" />}
       </span>
       <span className="flex min-w-0 flex-col items-start gap-1.5">
-        <span className="text-lg font-extrabold leading-6 text-heading big:text-[26px] big:leading-8">{a.title}</span>
+        <span className="text-lg font-extrabold leading-6 text-heading big:text-[26px] big:leading-8">{taskTitle(a, i18n.language)}</span>
         <span className="flex h-8 items-center gap-2 rounded-full bg-primary-soft px-3 text-sm font-extrabold text-primary big:h-[38px] big:text-xl">
           <Icon name="calendar" className="h-4 w-4 big:h-5 big:w-5" />
           {a.due_at ? t('tt.dueOn', { date: dateLabel(parseUtc(a.due_at), t) }) : t('cab.tasks.noDue')}
@@ -317,7 +318,8 @@ function AssignmentRow({ a, subs, total, active, onClick }: { a: Task; subs: Sub
 
 /** Раскрытое задание: текст, кто не сдал, работы, завершить. */
 function Opened({ task, subs, nicks, onChanged, onClosed }: { task: Task; subs: Sub[]; nicks: string[]; onChanged: () => void; onClosed: () => void }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const description = taskDescription(task, i18n.language)
   const [sure, setSure] = useState(false)
   const [err, setErr] = useState<string | null>(null)
   const missing = notHanded(nicks, subs)
@@ -333,7 +335,7 @@ function Opened({ task, subs, nicks, onChanged, onClosed }: { task: Task; subs: 
 
   return (
     <section data-testid="submissions" className="mt-3 flex flex-col gap-4 px-1 pb-3">
-      {task.description && <p className="max-w-[70ch] text-text">{task.description}</p>}
+      {description && <p className="max-w-[70ch] text-text">{description}</p>}
       {missing.length > 0 && (
         <div data-testid="not-handed">
           <h3 className="text-sm font-extrabold text-muted">{t('tt.notHanded', { count: missing.length })}</h3>

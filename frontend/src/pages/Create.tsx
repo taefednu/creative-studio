@@ -14,8 +14,8 @@ import Icon from '../components/Icon'
 import PublishBox from '../components/PublishBox'
 import SubmitBox from '../components/SubmitBox'
 import SupportCard from '../components/SupportCard'
-import TeacherTask from '../components/TeacherTask'
-import { loadAssignments, shownTask, submitTarget } from '../features/assignments/assignments'
+import { loadAssignments, shownTask, submitTarget, taskTitle } from '../features/assignments/assignments'
+import { dueLabel } from '../features/assignments/due'
 import { BLURRED, POLLING, hintKey, loadTemplates } from '../features/works/works'
 import type { TemplateInfo, Work } from '../features/works/works'
 import { useSession } from '../features/auth/session'
@@ -28,7 +28,7 @@ const TILE_IMG = 'relative min-h-0 w-full flex-1 overflow-hidden rounded-xl md:r
 const TILE_TEXT = 'line-clamp-2 h-10 w-full shrink-0 px-1 text-center text-sm font-extrabold leading-5 md:line-clamp-1 md:h-auto md:text-base'
 
 export default function Create() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { reloadMe } = useOutletContext<ShellContext>()
   const [tplData] = useLoad(loadTemplates)
@@ -40,8 +40,10 @@ export default function Create() {
   const workParam = Number(params.get('work')) || null
   const paramTask = Number(params.get('assignment')) || null
   const [tasks] = useLoad(loadAssignments)
-  // без параметра работает то задание, которое строка учителя показывает ребёнку: «Сдать» относится к нему
+  // Заход из задания: заголовок экрана и есть задание. Без параметра экран как у всех, сдать можно первое открытое
   const assignmentId = paramTask ?? shownTask(tasks, null)?.id ?? null
+  const task = paramTask ? shownTask(tasks, paramTask) : null
+  const taskDue = task && dueLabel(task.due_at)
   const [loaded, setLoaded] = useState<Work | null>(null)
   const [retry, setRetry] = useState(0)
   const [loadErr, setLoadErr] = useState<string | null>(null)
@@ -137,12 +139,15 @@ export default function Create() {
 
   return (
     <div className="mx-auto flex -mb-7 h-[calc(100dvh-154px)] min-h-[520px] max-w-[1672px] flex-col lg:mb-0 lg:h-[calc(100dvh-104px)]">
+      {task && (
+        <p data-testid="task-strip" className="text-center text-sm font-extrabold text-primary md:text-base">
+          {t('create.teacherTask')}
+          {taskDue && <span className="font-bold text-muted"> · {t(taskDue.key, { count: taskDue.count })}</span>}
+        </p>
+      )}
       <h1 data-testid="create-title" className="text-balance text-center text-[34px] font-black leading-[38px] tracking-tight text-heading md:text-[52px] md:leading-[56px]">
-        {t('create.title')}
+        {task ? <span data-testid="task-title" className="line-clamp-2">{taskTitle(task, i18n.language)}</span> : t('create.title')}
       </h1>
-      <div data-testid="teacher-task-slot" className="mt-3 empty:hidden">
-        <TeacherTask assignmentId={assignmentId} />
-      </div>
       {/* Телефон: два ряда листаются вбок, вертикального скролла нет. От md: все плитки видны сразу */}
       <div
         data-testid="templates"

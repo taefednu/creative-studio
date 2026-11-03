@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy import select
 
 from app.assignments import router as assignments_router
+from app.assignments import translate
 
 from app import db
 from app.assignments.models import Assignment, Submission
@@ -386,3 +387,51 @@ def test_close_hides_task_keeps_work_only_own_teacher(w, fake):
     assert w.teacher.get(f"/api/teacher/classes/{w.room['id']}/assignments").json() == []
     assert submit(w.a, aid, w.work).status_code == 404
     assert len(subs()) == 1
+
+
+# ---------------- перевод задания ----------------
+
+
+GOOD = '{"title": "Draw a hero", "description": "Any hero"}'
+
+
+def test_translation_checked_and_reaches_children(w, fake, monkeypatch):
+    aid = aid_of(w)
+    fake.calls.clear()
+    monkeypatch.setattr(translate, "chat_translate", lambda t, d, lang: GOOD)
+    translate.run(aid)
+    assert sorted(c[2] for c in fake.calls) == ["en", "ru", "uz"] and all(c[1] == "assignment" for c in fake.calls)
+    [a] = w.a.get("/api/child/assignments").json()
+    assert a["text_i18n"]["en"]["title"] == "Draw a hero" and a["title"] == "Нарисуй героя сказки"
+
+
+@pytest.mark.parametrize("mode", BAD_MODES)
+def test_translation_not_allowed_never_reaches_children(w, fake, monkeypatch, mode):
+    aid = aid_of(w)
+    monkeypatch.setattr(translate, "chat_translate", lambda t, d, lang: GOOD)
+    set_mode(fake, mode)
+    translate.run(aid)
+    fake.exc = None
+    fake.d = D("allow")
+    [a] = w.a.get("/api/child/assignments").json()
+    assert a["text_i18n"] == {} and a["title"] == "Нарисуй героя сказки"
+
+
+@pytest.mark.parametrize("answer", ["junk", '{"title": ""}', '{"title": "x", "description": "y", "extra": 1}'])
+def test_translation_junk_keeps_original(w, fake, monkeypatch, answer):
+    aid = aid_of(w)
+    fake.calls.clear()
+    monkeypatch.setattr(translate, "chat_translate", lambda t, d, lang: answer)
+    translate.run(aid)
+    assert w.a.get("/api/child/assignments").json()[0]["text_i18n"] == {} and fake.calls == []
+
+
+def test_translation_model_failure_keeps_original(w, fake, monkeypatch):
+    aid = aid_of(w)
+
+    def boom(t, d, lang):
+        raise ModelTimeout("t")
+
+    monkeypatch.setattr(translate, "chat_translate", boom)
+    translate.run(aid)
+    assert w.a.get("/api/child/assignments").json()[0]["text_i18n"] == {}

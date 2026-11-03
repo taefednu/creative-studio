@@ -11,8 +11,16 @@ export type Assignment = {
   due_at: string | null
   cover_url: string | null
   cover_template: string | null
+  text_i18n?: TaskI18n
   submissions: Submitted[]
 }
+
+export type TaskI18n = Record<string, { title: string; description: string }> | null
+
+/** Текст задания на языке интерфейса; перевода нет — как написал учитель. */
+export const taskTitle = (a: { title: string; text_i18n?: TaskI18n }, lang: string) => a.text_i18n?.[lang]?.title ?? a.title
+export const taskDescription = (a: { description: string | null; text_i18n?: TaskI18n }, lang: string) =>
+  a.text_i18n?.[lang]?.description ?? a.description
 
 /** Кто из класса ещё не сдал: сдачей считается только принятая, задержанная ещё не дошла до учителя. */
 export const notHanded = (nicks: string[], subs: { nick: string; status: string }[]) => {

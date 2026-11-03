@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
-import { outcome, submitErrorCode } from '../features/assignments/assignments'
+import { outcome, submitErrorCode, taskTitle } from '../features/assignments/assignments'
 import type { Assignment, SubmitResult } from '../features/assignments/assignments'
 import ErrorText, { errorKey } from './ErrorText'
 
 type Props = {
   workId: number
-  assignment: Pick<Assignment, 'id' | 'title'>
+  assignment: Pick<Assignment, 'id' | 'title' | 'text_i18n'>
   /** Срочный ответ сервера: родитель заменяет экран тёплым ответом, здесь ничего больше не рисуем. */
   onSupport: () => void
   /** Сдано (принято или у учителя на проверке): список заданий пора перечитать. */
@@ -20,7 +20,7 @@ type Props = {
 
 /** «Сдать в задание»: необязательная подпись и одна кнопка; повторный клик не шлёт второй запрос. */
 export default function SubmitBox({ workId, assignment, onSupport, onDone, big, main }: Props) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [comment, setComment] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -66,7 +66,7 @@ export default function SubmitBox({ workId, assignment, onSupport, onDone, big, 
     return (
       <div data-testid="submit-box" className="flex flex-col gap-1.5">
         <p className="line-clamp-2 text-sm font-bold text-muted">
-          {t('task.submitFor')} <span data-testid="submit-title" className="font-extrabold text-heading">{assignment.title}</span>
+          {t('task.submitFor')} <span data-testid="submit-title" className="font-extrabold text-heading">{taskTitle(assignment, i18n.language)}</span>
         </p>
         <ErrorText code={err} />
         <button type="button" data-testid="submit-task" disabled={busy} onClick={() => void send()} className="btn-press h-14 rounded-2xl bg-primary px-4 text-lg font-extrabold text-primary-fg disabled:opacity-60">
@@ -78,7 +78,7 @@ export default function SubmitBox({ workId, assignment, onSupport, onDone, big, 
   return (
     <div data-testid="submit-box" className={`${wrap} flex flex-col gap-2 rounded-2xl border border-border bg-bg p-3`}>
       <p className="text-sm font-extrabold uppercase text-primary">
-        {t('task.submitFor')} <span data-testid="submit-title" className="normal-case text-heading">{assignment.title}</span>
+        {t('task.submitFor')} <span data-testid="submit-title" className="normal-case text-heading">{taskTitle(assignment, i18n.language)}</span>
       </p>
       <input
         data-testid="submit-comment"
