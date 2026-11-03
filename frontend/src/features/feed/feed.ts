@@ -111,6 +111,12 @@ export function createdLabel(iso: string, now: Date = new Date()): 'today' | 'ye
   return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`
 }
 
+/** Время создания по часам браузера: две работы одного дня различаются им. */
+export function createdTime(iso: string): string {
+  const d = parseUtc(iso)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+}
+
 /** Работа сделана по шаблону из каталога, а не ремиксом или загрузкой: только на такой есть /create?template=. */
 export const isStyle = (id: string | null): id is string => !!id && id !== 'remix' && id !== 'upload'
 

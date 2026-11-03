@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { byStyle, captionOf, cardRatio, childKinds, createdLabel, drawSameKind, toColumns } from './feed'
+import { byStyle, captionOf, cardRatio, childKinds, createdLabel, createdTime, drawSameKind, toColumns } from './feed'
 import type { Post } from './feed'
 
 const post = (id: number, template_id: string | null) => ({ id, template_id }) as Post
@@ -47,6 +47,10 @@ describe('feed', () => {
     expect(createdLabel(at(new Date(2026, 10, 1, 9, 0)), now)).toBe('today')
     expect(createdLabel(at(new Date(2026, 9, 31, 20, 0)), now)).toBe('yesterday')
     expect(createdLabel(at(new Date(2026, 9, 5, 12, 0)), now)).toBe('05.10.2026')
+  })
+  it('createdTime: наивное UTC показывается по местным часам, с нулями', () => {
+    const at = new Date(2026, 10, 1, 9, 5).toISOString().replace('Z', '')
+    expect(createdTime(at)).toBe('09:05')
   })
   it('drawSameKind: ремикс, переключатель автору, иначе ссылка на стиль', () => {
     const k = (can_remix: boolean, is_author: boolean, template_id: string | null) => drawSameKind({ can_remix, is_author, template_id })

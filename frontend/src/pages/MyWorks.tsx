@@ -14,6 +14,7 @@ import { isOpen, loadAssignments, taskTitle } from '../features/assignments/assi
 import { loadMyStories } from '../features/story/story'
 import type { Story } from '../features/story/story'
 import type { Assignment } from '../features/assignments/assignments'
+import { createdLabel, createdTime } from '../features/feed/feed'
 import { filterWorks, galleryOrder, loadTemplates, artistProgress, BADGES, styleAlbum, withoutHeroSources, withStories } from '../features/works/works'
 import type { BadgeId, Work, WorkFilter } from '../features/works/works'
 import { useLoad } from '../useLoad'
@@ -193,6 +194,7 @@ export default function MyWorks() {
               key={x.work.id}
               w={x.work}
               big={!!x.work.image_url && i % 7 === 0}
+              cover={tplData?.templates.find((tpl) => tpl.id === x.work.template_id)?.image_url}
               open={open}
               onSubmitted={reloadTasks}
               onClosed={reloadWorks}
@@ -230,15 +232,29 @@ function StoryCard({ story, big }: { story: Story; big: boolean }) {
 }
 
 /** Плитка без картинки: робот или текст по статусу. 🔴 support — только тёплый текст, без робота и подсказок. */
-function Placeholder({ w }: { w: Work }) {
+function Placeholder({ w, cover }: { w: Work; cover?: string }) {
   const { t } = useTranslation()
-  const robot = (src: string) => <img src={src} alt="" className="absolute inset-2 h-[calc(100%-1rem)] w-[calc(100%-1rem)] object-contain" />
   const area = 'relative flex aspect-square items-center justify-center overflow-hidden rounded-[22px] bg-primary-soft p-2 text-center font-extrabold text-heading'
-  if (w.status === 'held') return <div className={area}>{robot('/art/shield.webp')}</div>
+  if (w.status === 'held') {
+    // 🔴 Работа ещё не проверена: ни картинки, ни текста ребёнка. Узнаётся по стилю и времени.
+    const day = w.created_at ? createdLabel(w.created_at) : ''
+    const when = w.created_at ? `${day === 'today' || day === 'yesterday' ? t(`feed.${day}`) : day}, ${createdTime(w.created_at)}` : ''
+    return (
+      <div data-testid="work-held" className="relative flex aspect-square flex-col items-center gap-1 overflow-hidden rounded-[22px] bg-primary-soft p-2 text-center">
+        {cover && <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30 blur-[2px]" />}
+        <p className="relative text-xs font-extrabold leading-4 text-heading md:text-sm">{t('mw.showAdult')}</p>
+        <img src="/art/shield.webp" alt="" className="relative min-h-0 flex-1 object-contain" />
+        <p className="relative w-full rounded-xl bg-surface px-2 py-1 shadow-card">
+          <span className="block truncate text-xs font-extrabold leading-4 text-heading md:text-sm">{w.template_id === 'upload' ? t('story.yourDrawing') : t(`templates.${w.template_id}`)}</span>
+          <span className="block truncate text-xs font-semibold leading-4 text-muted">{when}</span>
+        </p>
+      </div>
+    )
+  }
   return <div className={`${area} text-lg`}>{t(`myWorks.status.${w.status}`)}</div>
 }
 
-function WorkCard({ w, big, open, onSubmitted, onClosed }: { w: Work; big: boolean; open: Assignment[]; onSubmitted: () => void; onClosed: () => void }) {
+function WorkCard({ w, big, cover, open, onSubmitted, onClosed }: { w: Work; big: boolean; cover?: string; open: Assignment[]; onSubmitted: () => void; onClosed: () => void }) {
   const { t, i18n } = useTranslation()
   const [support, setSupport] = useState(false)
   const [form, setForm] = useState(false)
@@ -268,8 +284,6 @@ function WorkCard({ w, big, open, onSubmitted, onClosed }: { w: Work; big: boole
   }
   const style = t(`templates.${w.template_id}`)
   const chips = [...new Map((w.shared ?? []).map((s) => [`${s.audience}-${s.status}`, s])).values()]
-  // подпись под плиткой без картинки: призыв вместо стиля; support и прочее — стиль, как у остальных
-  const cta = !w.image_url && w.status === 'held' ? t('mw.showAdult') : null
   return (
     <div data-testid="work-card" className={`feed-card group relative ${big ? 'col-span-2 row-span-2' : ''}`}>
       {w.status === 'ready' && w.image_url ? (
@@ -287,12 +301,7 @@ function WorkCard({ w, big, open, onSubmitted, onClosed }: { w: Work; big: boole
           <Placeholder w={w} />
         </Link>
       ) : (
-        <Placeholder w={w} />
-      )}
-      {cta && (
-        <div className="pointer-events-none absolute inset-x-2 bottom-2 rounded-xl bg-surface px-2 py-1 text-center text-xs font-extrabold leading-4 text-heading shadow-card">
-          {w.status === 'held' ? cta : <Link to="/create" className="pointer-events-auto underline decoration-primary">{cta}</Link>}
-        </div>
+        <Placeholder w={w} cover={cover} />
       )}
       <div className="pointer-events-none absolute left-2 top-2 flex flex-col items-start gap-1">
         {chips.map((s) => (
