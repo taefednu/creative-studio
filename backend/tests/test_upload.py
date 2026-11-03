@@ -64,6 +64,7 @@ class FakeCheck:
 def sam(monkeypatch):
     f = FakeSam()
     monkeypatch.setattr(pipeline, "sam_call", f)
+    monkeypatch.setattr(pipeline, "only_drawn_faces", lambda data: False)
     return f
 
 
@@ -249,6 +250,29 @@ def test_found_is_blurred_and_original_never_served(w, sam, chk, monkeypatch):
 def test_all_four_entities_reasons(w, sam, chk):
     wid = good(w, sam, chk, found=[c for _, c in ENTITIES])
     assert work(wid).reason_codes == [f"blurred_{c}" for _, c in ENTITIES]
+
+
+def test_drawn_face_stays_sharp_and_goes_to_nobody(w, sam, chk, monkeypatch):
+    monkeypatch.setattr(pipeline, "only_drawn_faces", lambda data: True)
+    wid = good(w, sam, chk)
+    wk = work(wid)
+    assert wk.status == "ready" and wk.reason_codes in (None, [])
+    assert items() == []
+    assert Path(wk.file_path).read_bytes() == pipeline.to_webp(Image.open(pipeline.original_path(wid)))
+
+
+def test_drawn_face_does_not_spare_the_written_name(w, sam, chk, monkeypatch):
+    monkeypatch.setattr(pipeline, "only_drawn_faces", lambda data: True)
+    wid = good(w, sam, chk, found=("face", "written_word"))
+    assert work(wid).reason_codes == ["blurred_written_word"]
+    assert items()[0].reason_codes == ["blurred_written_word"]
+
+
+def test_real_face_question_only_when_sam_found_a_face(w, sam, chk, monkeypatch):
+    asked = []
+    monkeypatch.setattr(pipeline, "only_drawn_faces", lambda data: asked.append(1) or True)
+    good(w, sam, chk, found=("written_word",))
+    assert asked == []
 
 
 BAD_SAM = {

@@ -10,6 +10,7 @@ os.environ.setdefault("SESSION_SECRET", "test-secret-0123456789abcdef-0123456789
 
 from app.meta.client import MetaClient
 from app.safety import CATEGORIES, check_image, check_text
+from app.safety.check import only_drawn_faces
 from app.safety.evals_adapter import predict
 from app.safety.prompts import text_messages
 
@@ -439,3 +440,22 @@ def test_adapter_model_error_is_error(monkeypatch):
         ad, "check_text", lambda t, k, lang: Decision(action="hold", model_error=True)
     )
     assert predict("t", "comment", "ru") == {"action": "error"}
+
+
+@pytest.mark.parametrize(
+    "answer, drawn",
+    [
+        ({"real_face": False}, True),
+        ({"real_face": True}, False),
+        ({"real_face": "false"}, False),
+        ({"real_face": False, "extra": 1}, False),
+        ({}, False),
+    ],
+)
+def test_only_explicit_answer_spares_a_face(answer, drawn):
+    assert only_drawn_faces(b"\xff\xd8jpg", client=client_for(Script(answer))) is drawn
+
+
+def test_model_failure_keeps_the_face_blurred(fake_client, fake_mode):
+    c, _, _ = fake_client(fake_mode)
+    assert only_drawn_faces(b"\xff\xd8jpg", client=c) is False

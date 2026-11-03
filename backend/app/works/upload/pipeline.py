@@ -46,6 +46,12 @@ def check_image(data: bytes, kind: str, lang: str):
     return f(data, kind, lang)  # type: ignore[arg-type]
 
 
+def only_drawn_faces(data: bytes) -> bool:
+    from app.safety.check import only_drawn_faces as f
+
+    return f(data)
+
+
 def sam_call(data: bytes, phrase: str, timeout: float) -> str:
     global _client_cache
     if _client_cache is None:
@@ -178,6 +184,9 @@ def _run(db: Session, work: Work, skip_check: bool) -> None:
         _hold(db, work, ["sam_failed"])
         return
 
+    # Рожица на рисунке не личные данные, а размытие лишает героя сходства. Лицо на фото размывается всегда
+    if found["face"] and only_drawn_faces(jpeg):
+        found["face"] = []
     boxes = [b for bs in found.values() for b in bs]
     out = blur(im, boxes, s.BLUR_PAD) if boxes else im
     path = upload_path(work.id)

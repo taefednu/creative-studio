@@ -87,3 +87,20 @@ SCHEMA = {
         "additionalProperties": False,
     },
 }
+
+
+class RealFace(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    real_face: StrictBool
+
+
+REAL_FACE_SCHEMA = {
+    "name": "real_face",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {"real_face": {"type": "boolean"}},
+        "required": ["real_face"],
+        "additionalProperties": False,
+    },
+}
