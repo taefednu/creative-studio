@@ -353,43 +353,195 @@ body {
   }
 }
 
-/* Первый экран: заголовок проявляется на появлении героя, стрелка прыгает и зовёт вниз */
+/* Первый экран: заголовок проявляется по словам на появлении героя, стрелка зовёт вниз */
 .film-in {
   animation: film-in 0.5s var(--ease-out) both;
 }
 @keyframes film-in {
   from {
     opacity: 0;
-    transform: translateY(14px);
-  }
-}
-button.film-in {
-  animation-name: film-in-center;
-}
-button.film-in[data-testid='home-film-replay'] {
-  animation-name: film-in;
-}
-@keyframes film-in-center {
-  from {
-    opacity: 0;
     translate: 0 14px;
   }
 }
+.film-word {
+  animation: film-word 0.55s var(--ease-out) both;
+}
+@keyframes film-word {
+  from {
+    opacity: 0;
+    translate: 0 45%;
+    filter: blur(8px);
+  }
+}
+.film-down {
+  animation-name: film-down-in;
+  animation-timing-function: var(--ease-pop);
+}
+@keyframes film-down-in {
+  from {
+    opacity: 0;
+    scale: 0.8;
+  }
+}
 .film-arrow {
+  position: relative;
   animation: film-arrow 1s var(--ease-in-out) infinite;
 }
+.film-arrow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 3px solid var(--color-primary);
+  animation: film-ring 1.6s var(--ease-out) infinite;
+}
 @keyframes film-arrow {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
   50% {
-    transform: translateY(14px);
+    translate: 0 14px;
+  }
+}
+@keyframes film-ring {
+  from {
+    opacity: 0.8;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 1.7;
+  }
+}
+/* Кнопка с твёрдым низом вдавливается на его высоту */
+.btn-press {
+  transition: translate 0.1s var(--ease-out), box-shadow 0.1s var(--ease-out), filter 0.15s;
+}
+.btn-press:active {
+  scale: 1;
+  translate: 0 5px;
+  box-shadow: none;
+}
+.nav-in {
+  animation: nav-in 0.2s var(--ease-out);
+}
+@keyframes nav-in {
+  from {
+    opacity: 0;
+    translate: 0 -6px;
+  }
+}
+.promo {
+  transition: translate 0.2s var(--ease-out);
+}
+.promo-art {
+  transition: scale 0.25s var(--ease-out), rotate 0.25s var(--ease-out);
+}
+.footer-robot {
+  animation: robot-float 3.2s var(--ease-in-out) infinite alternate;
+}
+@keyframes robot-float {
+  to {
+    translate: 0 -10px;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .home-sheet .feed-card {
+    transition: translate 0.2s var(--ease-out);
+  }
+  .home-sheet .feed-card:hover,
+  .promo:hover {
+    translate: 0 -4px;
+  }
+  .promo:hover .promo-art {
+    scale: 1.06;
+    rotate: 3deg;
+  }
+}
+.film-dim {
+  opacity: 0;
+}
+
+/* Движение от прокрутки: без поддержки в браузере всё просто стоит на месте и видно */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .film-sink,
+    .film-dim,
+    .film-leave {
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root);
+      animation-range: 0 100dvh;
+    }
+    .film-sink {
+      animation-name: film-sink;
+    }
+    .film-dim {
+      animation-name: film-dim;
+    }
+    .film-leave {
+      animation-name: film-leave;
+    }
+    .home-sheet .feed-card {
+      animation: sheet-card linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+    .promo {
+      animation: sheet-card linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 50%;
+    }
+    .promo-art {
+      animation: promo-art linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 45%;
+    }
+    .footer-mark {
+      animation: footer-mark linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 50%;
+    }
+  }
+}
+@keyframes film-sink {
+  to {
+    scale: 1.08;
+  }
+}
+@keyframes film-dim {
+  to {
+    opacity: 0.6;
+  }
+}
+@keyframes film-leave {
+  to {
+    opacity: 0;
+    translate: 0 -70px;
+  }
+}
+@keyframes sheet-card {
+  from {
+    opacity: 0;
+    translate: 0 28px;
+    scale: 0.97;
+  }
+}
+@keyframes promo-art {
+  from {
+    translate: 0 36px;
+    rotate: -8deg;
+  }
+}
+@keyframes footer-mark {
+  from {
+    translate: 0 30%;
   }
 }
 @media (prefers-reduced-motion: reduce) {
   .film-in,
-  .film-arrow {
+  .film-word,
+  .film-arrow,
+  .film-arrow::after,
+  .nav-in,
+  .footer-robot {
     animation: none;
   }
 }

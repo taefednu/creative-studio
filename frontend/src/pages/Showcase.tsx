@@ -37,7 +37,7 @@ export default function Showcase() {
         className={`fixed inset-x-0 top-0 z-30 flex h-[60px] items-center gap-1.5 border-b px-2 transition-colors duration-200 s380:gap-2 s380:px-4 lg:h-[72px] lg:gap-8 lg:px-8 ${overFilm ? 'border-transparent' : 'border-border bg-bg'}`}
       >
         <Logo onFilm={overFilm} />
-        <nav aria-label={t('shell.nav')} data-testid="guest-nav" className={`${NAV_CLS} ${overFilm ? 'lg:hidden' : ''}`}>
+        <nav aria-label={t('shell.nav')} data-testid="guest-nav" className={`${NAV_CLS} ${overFilm ? 'lg:hidden' : 'nav-in'}`}>
           <TabPill to="/" end icon="feed" testid="tab-feed" label={t('nav.feed')} />
           <TabPill to="/create" icon="create" testid="tab-create" label={t('nav.create')} />
         </nav>
@@ -55,7 +55,7 @@ export default function Showcase() {
         </div>
       </header>
       <HomeFilm feedId="home-feed" />
-      <div id="home-feed" data-testid="home-sheet" className="relative scroll-mt-0 rounded-t-[32px] bg-bg pt-[76px] shadow-pop lg:pt-[88px]">
+      <div id="home-feed" data-testid="home-sheet" className="home-sheet relative scroll-mt-0 rounded-t-[32px] bg-bg pt-[76px] shadow-pop lg:pt-[88px]">
         <main className="px-4 pb-5 md:px-8 md:pb-0">
           <FeedView
             kinds={['best']}

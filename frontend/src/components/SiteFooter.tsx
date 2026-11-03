@@ -8,7 +8,7 @@ const DOCS = [
   { key: 'cookies', href: 'https://mentorium.uz/cookies/' },
 ] as const
 
-const linkCls = 'text-[15px] text-footer-text hover:text-primary-fg'
+const linkCls = 'text-[15px] text-footer-text transition-colors duration-150 hover:text-primary-fg'
 
 function Col({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -25,10 +25,10 @@ function Promo({ testid, tint, art, title, text, cta, href, to }: { testid: stri
       <span className="block max-w-[70%] text-xl font-black leading-tight text-heading lg:text-[32px]">{title}</span>
       <span className="mt-2 block max-w-[62%] text-sm font-semibold leading-snug text-text lg:text-lg">{text}</span>
       <span className="mt-auto block pt-3 text-base font-extrabold text-primary">{cta} →</span>
-      <img src={art} alt="" className="pointer-events-none absolute bottom-2 right-3 h-[92px] w-auto lg:bottom-auto lg:top-1/2 lg:h-[168px] lg:-translate-y-1/2" />
+      <img src={art} alt="" className="promo-art pointer-events-none absolute bottom-2 right-3 h-[92px] w-auto lg:bottom-auto lg:top-1/2 lg:h-[168px] lg:-translate-y-1/2" />
     </>
   )
-  const cls = `relative flex min-h-[176px] flex-col overflow-hidden rounded-card p-5 lg:min-h-[248px] lg:p-8 ${tint}`
+  const cls = `promo relative flex min-h-[176px] flex-col overflow-hidden rounded-card p-5 lg:min-h-[248px] lg:p-8 ${tint}`
   return href ? (
     <a href={href} target="_blank" rel="noopener noreferrer" data-testid={testid} className={cls}>{body}</a>
   ) : (
@@ -93,8 +93,8 @@ export default function SiteFooter({ guest }: { guest?: boolean }) {
         </div>
       </div>
       <div aria-hidden="true" className="relative mx-4 mt-8 pb-[84px] md:mx-8 lg:pb-6">
-        <img src="/art/logo-on-dark.webp" alt="" className="w-full opacity-[0.07]" />
-        <img src="/art/robot-wave.webp" alt="" className="absolute bottom-6 right-0 hidden h-[156px] w-auto lg:block" />
+        <img src="/art/logo-on-dark.webp" alt="" className="footer-mark w-full opacity-[0.07]" />
+        <img src="/art/robot-wave.webp" alt="" className="footer-robot absolute bottom-6 right-0 hidden h-[156px] w-auto lg:block" />
       </div>
     </footer>
     </>

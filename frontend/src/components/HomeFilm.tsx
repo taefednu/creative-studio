@@ -52,7 +52,7 @@ export default function HomeFilm({ feedId }: { feedId: string }) {
   const shown = phase !== 'film'
   return (
     <section data-testid="home-film" className="sticky top-0 flex h-dvh flex-col overflow-hidden bg-bg lg:block">
-      <div className="relative h-[54dvh] shrink-0 overflow-hidden lg:absolute lg:inset-0 lg:h-full">
+      <div className="film-sink relative h-[54dvh] shrink-0 overflow-hidden lg:absolute lg:inset-0 lg:h-full">
         {still ? (
           <img src="/film/hero-last.webp" alt="" className="h-full w-full object-cover" />
         ) : (
@@ -83,15 +83,22 @@ export default function HomeFilm({ feedId }: { feedId: string }) {
           </button>
         )}
       </div>
-      <div className="relative flex min-h-0 flex-1 flex-col items-start px-4 pb-[160px] pt-4 lg:absolute lg:inset-y-0 lg:left-0 lg:w-[34%] lg:justify-center lg:p-0 lg:pl-8">
-        <div className={shown ? 'film-in' : 'opacity-0'}>
-          <h1 className="text-[36px] font-black leading-[1.02] tracking-tight text-heading lg:text-[64px] lg:text-primary-fg">{t('home.hero.title')}</h1>
-          <p className="mt-2 max-w-[28em] text-[15px] font-semibold leading-snug text-text lg:mt-4 lg:text-xl lg:text-primary-fg">{t('home.hero.text')}</p>
+      <div className="film-dim pointer-events-none absolute inset-0 hidden bg-scrim lg:block" />
+      <div className="film-leave relative flex min-h-0 flex-1 flex-col items-start px-4 pb-[160px] pt-4 lg:absolute lg:inset-y-0 lg:left-0 lg:w-[34%] lg:justify-center lg:p-0 lg:pl-8">
+        <div>
+          <h1 className="text-[36px] font-black leading-[1.02] tracking-tight text-heading lg:text-[64px] lg:text-primary-fg">
+            {t('home.hero.title').split(' ').map((word, i) => (
+              <span key={i}>
+                <span style={{ animationDelay: `${i * 70}ms` }} className={`inline-block ${shown ? 'film-word' : 'opacity-0'}`}>{word}</span>{' '}
+              </span>
+            ))}
+          </h1>
+          <p className={`mt-2 max-w-[28em] text-[15px] font-semibold leading-snug text-text lg:mt-4 lg:text-xl lg:text-primary-fg ${shown ? 'film-in [animation-delay:220ms]' : 'opacity-0'}`}>{t('home.hero.text')}</p>
           <Link
             to="/login"
             data-testid="home-hero-cta"
             tabIndex={shown ? 0 : -1}
-            className="mt-3 inline-flex h-12 items-center rounded-[14px] bg-primary px-6 text-base font-extrabold text-primary-fg shadow-press lg:mt-7 lg:h-[60px] lg:px-8 lg:text-xl"
+            className={`btn-press mt-3 inline-flex h-12 items-center rounded-[14px] bg-primary px-6 text-base font-extrabold text-primary-fg shadow-press lg:mt-7 lg:h-[60px] lg:px-8 lg:text-xl ${shown ? 'film-in [animation-delay:320ms]' : 'opacity-0'}`}
           >
             {t('home.hero.cta')}
           </Link>
@@ -103,7 +110,7 @@ export default function HomeFilm({ feedId }: { feedId: string }) {
           data-testid="home-film-down"
           aria-label={t('home.hero.down')}
           onClick={() => document.getElementById(feedId)?.scrollIntoView({ behavior: 'smooth' })}
-          className="film-in absolute bottom-[96px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 lg:bottom-7"
+          className="film-down film-in absolute bottom-[96px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 lg:bottom-7"
         >
           <span className="hidden rounded-full bg-surface px-4 py-1.5 text-base font-extrabold text-heading shadow-pop lg:block">{t('home.hero.down')}</span>
           <span className="film-arrow flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-fg shadow-press lg:h-[76px] lg:w-[76px]">
