@@ -131,16 +131,24 @@ def _session_account(db: Session, studio_session: str | None):
     return s[0], acc
 
 
+def _can_link() -> bool:
+    # На демо-стенде аккаунты общие: привязанный профиль и его монеты достались бы следующему посетителю
+    s = get_settings()
+    return bool(s.PLATFORM_API_URL) and not s.DEMO_LOGIN
+
+
 @router.get("/auth/platform-link")
 def platform_link_state(db: Db, studio_session: Annotated[str | None, Cookie(alias=COOKIE)] = None) -> dict:
     """enabled=false — платформа не настроена: кнопку не показываем, иначе она всегда даёт ошибку."""
     _, acc = _session_account(db, studio_session)
-    return {"enabled": bool(get_settings().PLATFORM_API_URL), "linked": acc.platform_user_id is not None}
+    return {"enabled": _can_link(), "linked": acc.platform_user_id is not None}
 
 
 @router.post("/auth/platform-link")
 async def platform_link(request: Request, db: Db, studio_session: Annotated[str | None, Cookie(alias=COOKIE)] = None):
     role, acc = _session_account(db, studio_session)  # до логина: без своей сессии на платформу не ходим
+    if get_settings().DEMO_LOGIN:
+        raise HTTPException(403, "platform_demo")
     login, password, _ = await _credentials(request)
     return await run_in_threadpool(_link, db, role, acc, login, password)
 

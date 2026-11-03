@@ -831,3 +831,15 @@ def test_link_never_echoes_password(api, plat, caplog):
     _, c = studio_child(parent_client())
     r = link(c, password="wrong-secret-pass")
     assert "wrong-secret-pass" not in r.text and "wrong-secret-pass" not in caplog.text
+
+
+def test_link_closed_on_demo_stand_shared_accounts(api, plat, monkeypatch):
+    _, c = studio_child(parent_client())
+    monkeypatch.setenv("DEMO_LOGIN", "true")
+    get_settings.cache_clear()
+    assert c.get("/api/auth/platform-link").json()["enabled"] is False
+    r = link(c)
+    assert r.status_code == 403 and plat.logins == []
+    with db.new_session() as s:
+        assert s.scalar(select(Child.platform_user_id).where(Child.nick == "HomeKid")) is None
+
