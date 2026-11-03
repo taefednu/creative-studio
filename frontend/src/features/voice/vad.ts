@@ -4,9 +4,9 @@ export const SPEECH_MS = 150 // столько подряд громко: это
 export const SILENCE_STOP_MS = 1500 // столько тишины после голоса: фраза закончилась
 export const NO_SPEECH_MS = 8000 // столько без голоса с начала: ничего не сказали
 
-export type GateStep = 'wait' | 'stop' | 'silent'
+export type GateStep = 'wait' | 'stop'
 
-/** rms — громкость текущего отрезка, dtMs — его длина. stop: фраза сказана; silent: так и не заговорили. */
+/** rms — громкость текущего отрезка, dtMs — его длина. stop: фраза сказана или за NO_SPEECH_MS никто не заговорил. */
 export function createGate() {
   let floor = Infinity
   let elapsed = 0
@@ -15,14 +15,15 @@ export function createGate() {
   let heard = false
   return function step(rms: number, dtMs: number): GateStep {
     elapsed += dtMs
-    floor = Math.min(floor, rms)
+    // Шум комнаты: быстро вниз, медленно вверх. Один нулевой отрезок на старте не должен навсегда занизить порог
+    floor = rms < floor ? rms : floor + (rms - floor) * 0.005
     // Порог от шума комнаты: в шумном классе тишина не считается голосом и запись всё равно заканчивается
     const speaking = rms > Math.max(LEVEL_MIN, floor * 3)
     loud = speaking ? loud + dtMs : 0
     quiet = speaking ? 0 : quiet + dtMs
     if (loud >= SPEECH_MS) heard = true
     if (heard) return quiet >= SILENCE_STOP_MS ? 'stop' : 'wait'
-    return elapsed >= NO_SPEECH_MS ? 'silent' : 'wait'
+    return elapsed >= NO_SPEECH_MS ? 'stop' : 'wait'
   }
 }
 

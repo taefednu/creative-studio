@@ -91,7 +91,7 @@ export default function VoiceButton({ guest, onText, onError, className }: Props
   }
 
   /** Громкость каждые TICK_MS: двигает палочки и решает, не пора ли заканчивать. */
-  function watch(stream: MediaStream, r: MediaRecorder, onSilent: () => void) {
+  function watch(stream: MediaStream, r: MediaRecorder) {
     const ctx = new AudioContext()
     audio.current = ctx
     void ctx.resume()
@@ -111,9 +111,8 @@ export default function VoiceButton({ guest, onText, onError, className }: Props
           if (el) el.style.transform = `scaleY(${Math.min(1, 0.2 + rms * 5 * k).toFixed(2)})`
         })
       }
-      const step = gate(rms, TICK_MS)
-      if (step === 'silent') onSilent()
-      if ((step === 'stop' || Date.now() - t0 >= VOICE_MAX_SECONDS * 1000) && r.state !== 'inactive') {
+      // Так и не заговорили — тоже стоп: тишину отсечёт recordingToWav, а тихий голос в шумном классе дойдёт до модели
+      if ((gate(rms, TICK_MS) === 'stop' || Date.now() - t0 >= VOICE_MAX_SECONDS * 1000) && r.state !== 'inactive') {
         closeMeter()
         r.stop()
       }
@@ -138,7 +137,6 @@ export default function VoiceButton({ guest, onText, onError, className }: Props
       }
       if (!alive.current) return stream.getTracks().forEach((x) => x.stop())
       const chunks: Blob[] = []
-      let silent = false
       try {
         const r = new MediaRecorder(stream)
         mr.current = r
@@ -148,22 +146,13 @@ export default function VoiceButton({ guest, onText, onError, className }: Props
           closeMeter()
           stream.getTracks().forEach((x) => x.stop())
           if (mr.current === r) mr.current = null
-          if (silent) {
-            setState('idle')
-            return onError('no_speech')
-          }
           setState('busy')
           void transcribe(chunks, r.mimeType)
         }
         r.start()
-        watch(stream, r, () => {
-          silent = true
-          closeMeter()
-          if (r.state !== 'inactive') r.stop()
-        })
+        watch(stream, r)
       } catch {
-        closeMeter()
-        mr.current = null
+        release() // без onstop: иначе поверх этой ошибки придёт другая
         stream.getTracks().forEach((x) => x.stop()) // микрофон не держим
         setState('idle')
         return onError('voice_unsupported')

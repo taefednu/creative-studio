@@ -18,17 +18,24 @@ describe('createGate', () => {
   it('так и не заговорил: говорим об этом, а не ждём 30 секунд', () => {
     const g = createGate()
     expect(run(g, 0.001, NO_SPEECH_MS - 100)).toBe('wait')
-    expect(run(g, 0.001, 200)).toBe('silent')
+    expect(run(g, 0.001, 200)).toBe('stop')
   })
   it('стук по столу не считается голосом', () => {
     const g = createGate()
     run(g, 0.001, 300)
     g(0.5, 50)
-    expect(run(g, 0.001, NO_SPEECH_MS)).toBe('silent')
+    expect(run(g, 0.001, NO_SPEECH_MS)).toBe('stop')
   })
   it('шумный класс: шум — не голос, тишиной считается всё на уровне шума', () => {
     const g = createGate()
     run(g, 0.03, 500)
+    run(g, 0.2, 800)
+    expect(run(g, 0.03, SILENCE_STOP_MS + 100)).toBe('stop')
+  })
+  it('один нулевой отрезок на старте не делает шум голосом', () => {
+    const g = createGate()
+    g(0, 50)
+    run(g, 0.03, 2000)
     run(g, 0.2, 800)
     expect(run(g, 0.03, SILENCE_STOP_MS + 100)).toBe('stop')
   })
