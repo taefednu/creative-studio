@@ -3,9 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Полоса только когда есть что прокручивать. Под шапкой место под неё держим всегда: контент не прыгает между вкладками */
 @media (min-width: 1024px) {
-  html {
-    overflow-y: scroll; /* полоса есть всегда: контент не прыгает между экранами и нет пустой щели справа от шапки */
+  html:has([data-testid='shell-header'], [data-testid='cabinet-header']) {
+    overflow-y: auto; /* без явного значения запас места не работает */
+    scrollbar-gutter: stable;
   }
 }
 
