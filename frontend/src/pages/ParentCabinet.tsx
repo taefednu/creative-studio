@@ -357,7 +357,7 @@ export default function ParentCabinet() {
 
   const link = 'text-base font-extrabold text-primary underline decoration-2 underline-offset-4'
   return (
-    <div className="min-h-screen bg-bg pb-24 lg:pb-6">
+    <div className="min-h-screen bg-bg pb-24 lg:pb-0">
       <CabinetHeader role="parent" />
       <main className="overflow-x-clip px-4 py-4 md:px-8">
         <ReviewQueue urgentOnly />

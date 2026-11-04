@@ -166,7 +166,7 @@ export default function TeacherClasses() {
   }
 
   return (
-    <div className="min-h-screen bg-bg pb-24 lg:pb-6">
+    <div className="min-h-screen bg-bg pb-24 lg:pb-0">
       <CabinetHeader role="teacher" />
       <main className="px-4 py-4 md:px-8">
         <ReviewQueue urgentOnly />
@@ -267,7 +267,7 @@ export function TeacherClass() {
   if (rooms && !room) return <Navigate to="/teacher/classes" replace />
 
   return (
-    <div className="min-h-screen bg-bg pb-24 lg:pb-6">
+    <div className="min-h-screen bg-bg pb-24 lg:pb-0">
       <CabinetHeader role="teacher" />
       <main className="px-4 py-4 md:px-8">
         <ReviewQueue urgentOnly />
@@ -299,7 +299,8 @@ export function TeacherClass() {
                   </div>
                 </div>
               </aside>
-              <div className="flex min-w-0 flex-col lg:order-1 lg:col-span-4 xl:col-span-5">
+              {/* Экран класса влезает в окно целиком: карточка решения ниже лишь настолько, чтобы задания остались видны */}
+              <div className="flex min-w-0 flex-col [--review-max:max(260px,calc(100dvh-426px))] lg:order-1 lg:col-span-4 xl:col-span-5">
                 {waiting && <ReviewQueue stackOf={(x) => forClass([x], room.id).length > 0} withWho title={t('review.okTitle')} />}
                 {/* Только когда точно пусто: очередь загрузилась и в классе нет ничего, срочного тоже */}
                 {queue && inRoom.length === 0 && (

@@ -18,7 +18,7 @@ export default function ParentPlans() {
   const [tpl] = useLoad(loadTemplates)
   const price = tpl?.price
   return (
-    <div className="min-h-screen bg-bg pb-24 lg:pb-6">
+    <div className="min-h-screen bg-bg pb-24 lg:pb-0">
       <CabinetHeader role="parent" />
       <main className="flex flex-col gap-3 px-4 py-4 md:px-8">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">

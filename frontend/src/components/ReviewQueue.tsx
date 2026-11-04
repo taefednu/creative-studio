@@ -181,7 +181,7 @@ function ReviewCard({ it, kind, where, busy, withWho = false, onOpen, onZoom, on
   return (
     <article data-testid="review-item" className="grid gap-2 md:gap-3 lg:grid-cols-4 xl:grid-cols-5">
       {reading !== null && createPortal(<StoryReview id={reading} onClose={() => setReading(null)} />, document.body)}
-      <div className="relative flex bg-primary-soft h-[34dvh] min-h-[220px] overflow-hidden rounded-[22px] border border-border shadow-card lg:col-span-2 lg:aspect-square lg:h-auto xl:col-span-3 xl:aspect-[3/2]">
+      <div className="relative flex bg-primary-soft h-[34dvh] min-h-[220px] overflow-hidden rounded-[22px] border border-border shadow-card lg:col-span-2 lg:aspect-square lg:h-auto xl:col-span-3 xl:aspect-[3/2] lg:max-h-[var(--review-max,none)]">
         {it.original_url && blurred ? (
           <CompareSlider original={it.original_url} blurred={blurred} onZoom={onZoom} />
         ) : it.original_url ? (

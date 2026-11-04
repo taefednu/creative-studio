@@ -40,7 +40,7 @@ function TeacherFeed() {
 /** Главный экран учителя: та же лента, что у детей. Срочное видно над ней всегда, остальное ждёт по счётчику на вкладке. */
 export default function AdultFeed() {
   return (
-    <div className="min-h-screen bg-bg pb-24 lg:pb-6">
+    <div className="min-h-screen bg-bg pb-24 lg:pb-0">
       <CabinetHeader role="teacher" />
       <main className="px-4 pb-5 pt-1.5 md:px-8 lg:pt-4">
         <ReviewQueue urgentOnly />
