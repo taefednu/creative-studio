@@ -300,3 +300,13 @@ def test_share_state_remembers_where_work_is_shown(world):
     assert kid.post("/api/posts", json={"work_id": wid, "audience": "family"}).status_code in (200, 201)
     assert kid.get(f"/api/works/{wid}/share").json()["posts"] == [{"audience": "family", "status": "published"}]
     assert TestClient(app).get(f"/api/works/{wid}/share").status_code == 401
+
+
+def test_home_and_sitemap_give_absolute_urls_of_the_request_host(world):
+    headers = {"host": "studio.example.test", "x-forwarded-proto": "https"}
+    home = TestClient(app).get("/", headers=headers).text
+    assert '<meta property="og:url" content="https://studio.example.test/" />' in home
+    assert '<meta property="og:image" content="https://studio.example.test/og-image.jpg" />' in home
+    site = TestClient(app).get("/sitemap.xml", headers=headers)
+    assert site.headers["content-type"].startswith("application/xml")
+    assert "<loc>https://studio.example.test/</loc>" in site.text

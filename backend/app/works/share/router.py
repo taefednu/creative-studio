@@ -34,6 +34,7 @@ Db = Annotated[Session, Depends(get_session)]
 SHAREABLE = ("image", "alive")
 # Ссылку выключил взрослый: включить обратно может только он, ребёнок и второй взрослый нет
 ADULT_OFF = {"parent": "off_parent", "teacher": "off_teach"}
+HOME_OG_TEXT = "A safe creative studio for kids 5–12: AI pictures and stories, a class feed, and every word and image checked."
 OG = {
     "ru": ("Смотри, что я создал!", "Картинка проверена ИИ. Создай свою в Mentorium Creative Studio."),
     "en": ("Look what I made!", "Checked by AI. Make your own in Mentorium Creative Studio."),
@@ -300,6 +301,41 @@ def _page(request: Request, static_dir: str | None, tags: str) -> str:
     return html.replace("</head>", f"{tags}</head>", 1)
 
 
+def _base(request: Request) -> str:
+    return f"{request.headers.get('x-forwarded-proto', request.url.scheme)}://{request.headers.get('host', request.url.netloc)}"
+
+
+@router.get("/", include_in_schema=False)
+def home_page(request: Request):
+    """Главная: превью в мессенджерах и поисковиках требует абсолютных адресов, домен берём из запроса."""
+    import os
+
+    base = _base(request)
+    image = f"{base}/og-image.jpg"
+    tags = (
+        '<meta property="og:type" content="website" />'
+        '<meta property="og:site_name" content="Mentorium Creative Studio" />'
+        '<meta property="og:title" content="Mentorium Creative Studio" />'
+        f'<meta property="og:description" content="{escape(HOME_OG_TEXT)}" />'
+        f'<meta property="og:url" content="{escape(base + "/")}" />'
+        f'<meta property="og:image" content="{escape(image)}" />'
+        '<meta name="twitter:card" content="summary_large_image" />'
+        f'<meta name="twitter:image" content="{escape(image)}" />'
+    )
+    return HTMLResponse(_page(request, os.environ.get("STATIC_DIR"), tags))
+
+
+@router.get("/sitemap.xml", include_in_schema=False)
+def sitemap(request: Request):
+    # Только главная: остальное за входом (robots.txt), работы детей помечены noindex
+    return Response(
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f"<url><loc>{escape(_base(request))}/</loc></url></urlset>",
+        media_type="application/xml",
+    )
+
+
 @router.get("/s/{token}", include_in_schema=False)
 def share_page(token: str, request: Request, db: Db):
     """Страница для людей и для ботов мессенджеров: те читают теги, браузер дальше рисует приложение."""
@@ -307,7 +343,7 @@ def share_page(token: str, request: Request, db: Db):
 
     static_dir = os.environ.get("STATIC_DIR")
     live = _live_work(db, token)
-    base = f"{request.headers.get('x-forwarded-proto', request.url.scheme)}://{request.headers.get('host', request.url.netloc)}"
+    base = _base(request)
     robots = '<meta name="robots" content="noindex" />'
     if live is None:
         return HTMLResponse(_page(request, static_dir, robots), status_code=404, headers={"X-Robots-Tag": "noindex"})
