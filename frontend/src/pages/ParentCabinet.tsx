@@ -14,7 +14,9 @@ import PictureGrid from '../components/PictureGrid'
 import QrBox from '../components/QrBox'
 import OpenLinks from '../components/OpenLinks'
 import ParentNotes from '../components/ParentNotes'
+import { Skeleton } from '../components/FeedImage'
 import LoadFailed from '../components/LoadFailed'
+import { CabinetSkeleton } from '../components/Skeletons'
 import ReviewQueue from '../components/ReviewQueue'
 import WeekChart from '../components/WeekChart'
 import { ANIMALS } from '../features/avatar/animal'
@@ -268,7 +270,13 @@ function KidWorks({ kid }: { kid: Kid }) {
     document.addEventListener('keydown', esc)
     return () => document.removeEventListener('keydown', esc)
   }, [zoom])
-  if (!list) return null
+  if (!list) {
+    return (
+      <div aria-hidden="true" className="skel-in grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3 lg:grid-cols-6 xl:grid-cols-7">
+        {Array.from({ length: 7 }, (_, i) => <Skeleton key={i} className="block aspect-square rounded-[22px]" />)}
+      </div>
+    )
+  }
   const works = withoutHeroSources(list as unknown as Work[]) as unknown as KidWork[]
   if (!works.length) {
     return (
@@ -362,6 +370,7 @@ export default function ParentCabinet() {
       <main className="overflow-x-clip px-4 py-4 md:px-8">
         <ReviewQueue urgentOnly />
         {kidsFailed && !kids && <LoadFailed onRetry={load} />}
+        {!kidsFailed && !sel && kids?.length !== 0 && <CabinetSkeleton />}
         {kids && kids.length === 0 && (
           <section data-testid="kids" className="flex flex-col items-start gap-4">
             <h1 data-testid="page-title" className="text-[32px] font-black leading-9 tracking-tight text-heading lg:text-5xl lg:leading-[56px]">{t('cab.myKids')}</h1>
@@ -370,7 +379,7 @@ export default function ParentCabinet() {
           </section>
         )}
         {sel && (
-          <section data-testid="kids" className="grid gap-6 lg:grid-cols-6 lg:gap-x-3 xl:grid-cols-7">
+          <section data-testid="kids" className="stagger grid gap-6 lg:grid-cols-6 lg:gap-x-3 xl:grid-cols-7">
             <aside data-testid="kid-panel" className="flex min-w-0 flex-col gap-4 lg:order-2 lg:col-span-2 lg:gap-3">
               <h1 data-testid="page-title" style={vt('kid-name')} className="kid-swap break-words text-[28px] font-black leading-9 tracking-tight text-heading lg:text-4xl lg:leading-[44px]">{sel.nick}</h1>
               <KidHero
@@ -400,6 +409,7 @@ export default function ParentCabinet() {
               </div>
             </aside>
             <div className="flex min-w-0 flex-col lg:order-1 lg:col-span-4 xl:col-span-5">
+              {!queue && !queueFailed && <Skeleton className="skel-in block h-[30dvh] min-h-[220px] rounded-[22px]" />}
               {waiting && (
                 <div style={vt('kid-right')} className="kid-swap">
                   <ReviewQueue stackOf={(x) => x.nick === sel.nick} title={t('review.okTitle')} />
@@ -408,7 +418,7 @@ export default function ParentCabinet() {
               {/* Только когда точно пусто: очередь загрузилась и по ребёнку нет ничего, срочного тоже */}
               {queue && !counts[sel.nick] && (
                 <div data-testid="kid-clear" style={vt('kid-right')} className="kid-swap flex flex-1 items-center gap-3 rounded-[28px] bg-success-soft p-3 pr-5 md:gap-5 md:p-4 md:pr-8 lg:gap-8 lg:p-8">
-                  <img src="/art/robot-happy.webp" alt="" className="h-20 w-20 shrink-0 object-contain md:h-28 md:w-28 lg:h-52 lg:w-52" />
+                  <img src="/art/robot-happy.webp" alt="" className="float-idle h-20 w-20 shrink-0 object-contain md:h-28 md:w-28 lg:h-52 lg:w-52" />
                   <div className="min-w-0">
                     <h2 className="text-[28px] font-black leading-8 tracking-tight text-heading md:text-4xl md:leading-[44px]">{t('cab.kid.clearTitle')}</h2>
                     <p className="mt-1 text-base font-semibold leading-6 text-text lg:text-lg">{t('cab.kid.clearText', { nick: sel.nick, interpolation: { escapeValue: false } })}</p>

@@ -70,8 +70,8 @@ export default function CreatePanel({ templates, price, tpl, onTpl, floating, gu
       data-testid="create-panel"
       className={
         floating
-          ? 'sticky bottom-[80px] z-20 -mx-2 mb-4 mt-3 w-[calc(100%+16px)] max-w-[835px] rounded-[28px] border border-border bg-surface p-2 shadow-card md:mx-auto md:mb-6 md:w-full md:p-[11px] lg:bottom-6 xl:w-[calc((100%-60px)/6*4+36px)] xl:max-w-none'
-          : 'mx-auto mt-2 w-full max-w-[960px] shrink-0 rounded-[28px] border border-border bg-surface p-2 shadow-pop md:mt-4 md:p-[11px]'
+          ? 'panel-up sticky bottom-[80px] z-20 -mx-2 mb-4 mt-3 w-[calc(100%+16px)] max-w-[835px] rounded-[28px] border border-border bg-surface p-2 shadow-card md:mx-auto md:mb-6 md:w-full md:p-[11px] lg:bottom-6 xl:w-[calc((100%-60px)/6*4+36px)] xl:max-w-none'
+          : 'panel-up mx-auto mt-2 w-full max-w-[960px] shrink-0 rounded-[28px] border border-border bg-surface p-2 shadow-pop md:mt-4 md:p-[11px]'
       }
     >
       {err && (

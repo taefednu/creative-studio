@@ -1,3 +1,4 @@
+import { TasksSkeleton } from '../components/Skeletons'
 import { useTranslation } from 'react-i18next'
 import { Link, useOutletContext } from 'react-router-dom'
 import ErrorText from '../components/ErrorText'
@@ -13,7 +14,7 @@ export default function Tasks() {
   const { t } = useTranslation()
   const { cls, ready } = useOutletContext<ShellContext>()
   const [list, reload, failed] = useLoad(loadAssignments)
-  if (!ready) return null
+  if (!ready) return <TasksSkeleton />
   // Что ещё надо сделать, сверху; сданное ниже
   const sorted = [...(list ?? [])].sort((x, y) => Number(isOpen(y)) - Number(isOpen(x)))
   return (
@@ -39,6 +40,7 @@ export default function Tasks() {
           {t('task.empty')}
         </p>
       )}
+      {cls && !list && !failed && <TasksSkeleton />}
       <div data-testid="tasks-grid" className="stagger mt-4 grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {cls && sorted.map((a) => <TaskCard key={a.id} a={a} />)}
       </div>

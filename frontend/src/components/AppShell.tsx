@@ -12,6 +12,7 @@ import LangSwitch from './LangSwitch'
 import Logo from './Logo'
 import NotifBell from './NotifBell'
 import ProfileWindow from './ProfileWindow'
+import { HeaderSkeleton } from './Skeletons'
 import Avatar from './Avatar'
 import TabPill from './TabPill'
 
@@ -139,6 +140,7 @@ export default function AppShell() {
         </nav>
         <div className="ml-auto flex shrink-0 items-center gap-1.5 s380:gap-2 lg:justify-self-end big:gap-4">
           <LangSwitch />
+          {!me && <HeaderSkeleton />}
           {me && (
             <>
               <NotifBell />

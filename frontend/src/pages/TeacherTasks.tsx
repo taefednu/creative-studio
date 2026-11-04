@@ -1,3 +1,4 @@
+import { Skeleton } from '../components/FeedImage'
 import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -209,6 +210,7 @@ export default function ClassTasks({ classId, nicks }: { classId: number; nicks:
                 </p>
               )}
               <div className="stagger flex flex-col gap-3">
+                {!items && !failed && <Skeleton className="skel-in block h-[92px] rounded-2xl" />}
                 {items?.map((a) => (
                   <div key={a.id}>
                     <AssignmentRow a={a} subs={tasks?.subs[a.id] ?? []} total={total} active={open === a.id} onClick={() => setOpen(open === a.id ? null : a.id)} />
@@ -253,7 +255,7 @@ function AssignmentRow({ a, subs, total, active, onClick }: { a: Task; subs: Sub
         </span>
         {total > 0 && (
           <span className="h-2.5 overflow-hidden rounded-full bg-primary-soft" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={a.submissions}>
-            <span className="block h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+            <span className="bar-grow block h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
           </span>
         )}
       </span>

@@ -1,3 +1,4 @@
+import { Skeleton } from '../components/FeedImage'
 import LoadFailed from '../components/LoadFailed'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -186,7 +187,7 @@ export default function Create() {
       {/* Телефон: два ряда листаются вбок, вертикального скролла нет. От md: все плитки видны сразу */}
       <div
         data-testid="templates"
-        className="-mx-4 mt-2 grid min-h-0 w-[calc(100%+32px)] flex-1 auto-cols-[38vw] snap-x grid-flow-col grid-rows-[auto_1fr_1fr] gap-2 overflow-x-auto scroll-px-4 px-4 py-2 [scrollbar-width:none] md:mx-auto md:mt-4 md:w-full md:grid-flow-row md:gap-x-4 md:gap-y-3 md:overflow-visible md:px-0 md:py-0 md:max-w-[1180px] md:grid-cols-5"
+        className="stagger -mx-4 mt-2 grid min-h-0 w-[calc(100%+32px)] flex-1 auto-cols-[38vw] snap-x grid-flow-col grid-rows-[auto_1fr_1fr] gap-2 overflow-x-auto scroll-px-4 px-4 py-2 [scrollbar-width:none] md:mx-auto md:mt-4 md:w-full md:grid-flow-row md:gap-x-4 md:gap-y-3 md:overflow-visible md:px-0 md:py-0 md:max-w-[1180px] md:grid-cols-5"
       >
         {templates && (
           <UploadPopup
@@ -225,6 +226,13 @@ export default function Create() {
             </span>
             <span className={`${TILE_TEXT} ${tpl === CUSTOM.id ? 'text-primary' : 'text-heading'}`}>{t('templates.custom')}</span>
           </button>
+        )}
+        {!templates && !tplFailed && (
+          <>
+            <Skeleton className="skel-in col-start-1 row-span-2 row-start-1 mr-2 block min-h-0 snap-start rounded-2xl md:mr-6 md:rounded-3xl" />
+            <Skeleton className="skel-in col-start-1 row-start-3 mr-2 block min-h-0 snap-start rounded-2xl md:mr-6 md:rounded-3xl" />
+            {Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="skel-in block min-h-0 snap-start rounded-2xl md:rounded-3xl" />)}
+          </>
         )}
         {tplFailed && !templates && <div className="col-span-full row-start-2"><LoadFailed onRetry={reloadTemplates} /></div>}
         <h2 data-testid="style-heading" className="col-span-4 col-start-2 row-start-1 text-lg font-extrabold leading-6 text-heading md:text-xl">

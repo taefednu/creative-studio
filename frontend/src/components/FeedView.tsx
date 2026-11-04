@@ -201,7 +201,7 @@ export default function FeedView({ kinds, classId, title, classes, nick, child, 
       )}
       <div data-testid="feed-grid" className="mt-2 flex items-start gap-2 lg:gap-3">
         {toColumns(slots, count).map((col, c) => (
-        <div key={c} className="flex min-w-0 flex-1 flex-col gap-2 lg:gap-3">
+        <div key={c} className="stagger flex min-w-0 flex-1 flex-col gap-2 lg:gap-3">
         {col.map((p, row) =>
           typeof p === 'number' ? (
             <Skeleton key={`g${p}`} data-testid="feed-ghost" className="block rounded-card" style={{ aspectRatio: cardRatio(p + 1) }} />

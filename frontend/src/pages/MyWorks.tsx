@@ -6,6 +6,7 @@ import type { ShellContext } from '../components/AppShell'
 import Avatar from '../components/Avatar'
 import LoadFailed from '../components/LoadFailed'
 import ProfileWindow from '../components/ProfileWindow'
+import { WorksSkeleton } from '../components/Skeletons'
 import ChipSelect from '../components/ChipSelect'
 import Icon from '../components/Icon'
 import NavIcon from '../components/NavIcon'
@@ -44,11 +45,12 @@ export default function MyWorks() {
   const path = artistProgress(works ?? [], stories?.filter((x) => x.status === 'ready').length ?? 0, stylesDone, album.length)
   return (
     <div>
-      {!works?.length && (
+      {!works && !worksFailed && <WorksSkeleton />}
+      {(worksFailed || works?.length === 0) && (
         <h1 data-testid="works-title" className="text-3xl font-black leading-10 tracking-tight text-heading md:text-5xl md:leading-[56px]">{t('myWorks.title')}</h1>
       )}
       {!!works?.length && (
-        <div data-testid="artist-path" className="relative">
+        <div data-testid="artist-path" className="stagger relative">
           <section className="relative flex min-h-[132px] items-center overflow-hidden rounded-[28px] bg-primary-soft p-4 pr-[132px] shadow-card md:h-[230px] md:items-start md:p-6">
             <img src="/art/level-banner.webp" alt="" className="absolute inset-y-0 right-0 h-full w-auto max-w-none [mask-image:linear-gradient(to_right,transparent,black_30%)]" />
             <div className="relative flex min-w-0 flex-1 items-center gap-3 md:items-start md:gap-6">
@@ -66,7 +68,7 @@ export default function MyWorks() {
                 <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-surface md:mt-2 md:h-3.5">
                   <div
                     data-testid="artist-bar"
-                    className="h-full rounded-full bg-primary"
+                    className="bar-grow h-full rounded-full bg-primary"
                     style={{ width: `${path.next ? Math.round(((path.pictures - path.from) / (path.next.need - path.from)) * 100) : 100}%` }}
                   />
                 </div>
@@ -76,7 +78,7 @@ export default function MyWorks() {
               </div>
             </div>
           </section>
-          <div className="mt-2 flex justify-between gap-1 md:absolute md:bottom-4 md:left-[206px] md:mt-0 md:justify-start md:gap-2">
+          <div className="stagger-pop mt-2 flex justify-between gap-1 md:absolute md:bottom-4 md:left-[206px] md:mt-0 md:justify-start md:gap-2">
             {BADGES.map((id) => (
               <button
                 key={id}
@@ -156,7 +158,7 @@ export default function MyWorks() {
       )}
       {works && works.length === 0 && (
         <div data-testid="works-empty" className="mt-6 flex flex-col items-center gap-3 rounded-card border border-border bg-surface p-8 text-center shadow-card">
-          <img src="/art/robot-wave.webp" alt="" className="h-36 w-36 object-contain" />
+          <img src="/art/robot-wave.webp" alt="" className="float-idle h-36 w-36 object-contain" />
           <p className="text-lg font-extrabold text-heading">{t('myWorks.empty')}</p>
           <Link to="/create" className="flex h-12 items-center gap-2 rounded-full bg-primary px-8 text-base font-extrabold uppercase text-primary-fg">
             <Icon name="wand" className="h-6 w-6" />

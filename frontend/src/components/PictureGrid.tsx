@@ -43,7 +43,7 @@ export default function PictureGrid({ value, onChange, compact = false }: Props)
           </svg>
         </button>
       </div>
-      <div ref={grid} data-testid="pic-grid" className={`grid gap-2 ${compact ? 'grid-cols-4' : 'grid-cols-4 sm:grid-cols-6'}`}>
+      <div ref={grid} data-testid="pic-grid" className={`stagger-pop grid gap-2 ${compact ? 'grid-cols-4' : 'grid-cols-4 sm:grid-cols-6'}`}>
         {order.map((id) => (
           <button
             key={id}

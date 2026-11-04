@@ -1,3 +1,4 @@
+import { Skeleton } from './FeedImage'
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
@@ -88,6 +89,7 @@ export default function ReviewQueue({
   const kind = (it: ReviewItem) => t(`review.types.${it.item_type}`)
 
   if (urgentOnly && !items?.length && !open) return null
+  if (stackOf && all === null) return <Skeleton className="skel-in block h-[30dvh] min-h-[220px] rounded-[22px]" />
   if (stackOf && !pile.length) return null
 
   return (

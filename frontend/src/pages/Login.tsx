@@ -327,7 +327,7 @@ export default function Login() {
         <div className="relative h-[132px] shrink-0 overflow-hidden lg:hidden">
           <img src="/art/login-art.webp" alt="" className="h-full w-full object-cover object-[50%_34%]" />
         </div>
-        <main className="mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center px-4 pb-6 pt-4 lg:px-0 lg:pb-4 lg:pt-0">
+        <main className="stagger mx-auto flex w-full max-w-[520px] flex-1 flex-col justify-center px-4 pb-6 pt-4 lg:px-0 lg:pb-4 lg:pt-0">
           <div className="mb-3 empty:hidden">
             <DemoButtons />
           </div>

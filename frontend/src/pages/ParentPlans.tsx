@@ -1,3 +1,4 @@
+import { PlansSkeleton } from '../components/Skeletons'
 import LoadFailed from '../components/LoadFailed'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api'
@@ -30,8 +31,9 @@ export default function ParentPlans() {
           </p>
         </div>
         {failed && !data && <LoadFailed onRetry={reload} />}
+        {!failed && !data && <PlansSkeleton />}
         {data && data.packs.length === 0 && <p className="text-muted">{t('cab.plans.empty')}</p>}
-        <div data-testid="plans" className="stagger mx-auto w-full max-w-[720px] divide-y divide-border rounded-card border border-border bg-surface px-4 shadow-card">
+        <div data-testid="plans" className="empty:hidden stagger mx-auto w-full max-w-[720px] divide-y divide-border rounded-card border border-border bg-surface px-4 shadow-card">
           {data?.packs.map((p, i) => (
             <div key={p.id} data-testid="plan-card" className="flex items-center gap-4 py-3">
               <img src={`/art/coins-${COINS[Math.min(i, 2)]}.webp`} alt="" className="h-16 w-16 shrink-0 object-contain" />

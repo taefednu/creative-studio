@@ -9,7 +9,9 @@ import ErrorText, { errorKey } from '../components/ErrorText'
 import Icon from '../components/Icon'
 import OpenLinks from '../components/OpenLinks'
 import QrBox from '../components/QrBox'
+import { Skeleton } from '../components/FeedImage'
 import LoadFailed from '../components/LoadFailed'
+import { CabinetSkeleton, RoomsSkeleton } from '../components/Skeletons'
 import ReviewQueue from '../components/ReviewQueue'
 import ClassTasks from './TeacherTasks'
 import { sampleFor } from '../features/assignments/calendar'
@@ -186,6 +188,7 @@ export default function TeacherClasses() {
           </button>
         </div>
         {roomsFailed && !rooms && <LoadFailed onRetry={load} />}
+        {!roomsFailed && !rooms && <RoomsSkeleton />}
         {rooms && rooms.length === 0 && <p data-testid="rooms-empty" className="mt-4 text-lg font-bold text-text">{t('teacher.noClasses')}</p>}
         <section data-testid="rooms" className="stagger mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {rooms?.map((r) => (
@@ -272,6 +275,7 @@ export function TeacherClass() {
       <main className="px-4 py-4 md:px-8">
         <ReviewQueue urgentOnly />
         {roomsFailed && !rooms && <LoadFailed onRetry={reloadRooms} />}
+        {!roomsFailed && !rooms && <div className="mt-4"><CabinetSkeleton /></div>}
         {room && (
           <>
             <div className="flex min-w-0 items-center gap-2">
@@ -290,6 +294,7 @@ export function TeacherClass() {
                   <ErrorText code={qrErr} />
                   {kids?.length === 0 && <p className="text-sm font-bold text-text">{t('cl.noKids')}</p>}
                   <div data-testid="room-kids" className="stagger -mx-1 flex gap-1 overflow-x-auto p-1 [scrollbar-width:none] lg:grid lg:max-h-[252px] lg:grid-cols-4 lg:gap-x-1 lg:gap-y-2 lg:overflow-y-auto lg:overflow-x-hidden lg:[scrollbar-width:thin] xl:grid-cols-5">
+                    {!kids && Array.from({ length: 5 }, (_, i) => <Skeleton key={i} className="skel-in mx-2 block h-14 w-14 shrink-0 rounded-full" />)}
                     {kids?.map((k) => (
                       <button key={k.id} type="button" data-testid={`kid-qr-${k.nick}`} title={`${k.nick}: ${t('parent.qrButton')}`} onClick={() => void showQr(k)} className="flex w-[72px] shrink-0 flex-col items-center gap-1 transition-transform duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.97] motion-reduce:transition-none lg:w-full">
                         <Avatar nick={k.nick} className="h-14 w-14" />
@@ -301,11 +306,12 @@ export function TeacherClass() {
               </aside>
               {/* Экран класса влезает в окно целиком: карточка решения ниже лишь настолько, чтобы задания остались видны */}
               <div className="flex min-w-0 flex-col [--review-max:max(260px,calc(100dvh-426px))] lg:order-1 lg:col-span-4 xl:col-span-5">
+                {!queue && <Skeleton className="skel-in block h-[30dvh] min-h-[220px] rounded-[22px]" />}
                 {waiting && <ReviewQueue stackOf={(x) => forClass([x], room.id).length > 0} withWho title={t('review.okTitle')} />}
                 {/* Только когда точно пусто: очередь загрузилась и в классе нет ничего, срочного тоже */}
                 {queue && inRoom.length === 0 && (
                   <div data-testid="room-clear" className="flex flex-1 items-center gap-3 rounded-[28px] bg-success-soft p-3 pr-5 md:gap-5 md:p-4 md:pr-8 lg:gap-8 lg:p-8">
-                    <img src="/art/robot-happy.webp" alt="" className="h-20 w-20 shrink-0 object-contain md:h-28 md:w-28 lg:h-44 lg:w-44" />
+                    <img src="/art/robot-happy.webp" alt="" className="float-idle h-20 w-20 shrink-0 object-contain md:h-28 md:w-28 lg:h-44 lg:w-44" />
                     <div className="min-w-0">
                       <h2 className="text-[28px] font-black leading-8 tracking-tight text-heading md:text-4xl md:leading-[44px]">{t('cab.kid.clearTitle')}</h2>
                       <p className="mt-1 text-base font-semibold leading-6 text-text lg:text-lg">{t('cl.clearText', { name: room.name, interpolation: { escapeValue: false } })}</p>

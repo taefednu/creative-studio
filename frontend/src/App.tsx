@@ -47,7 +47,7 @@ function ChildArea() {
   return <AppShell />
 }
 
-/** Смена вкладки: содержимое проявляется. Только прозрачность: transform на main сдвинул бы закреплённую панель создания. */
+/** Смена вкладки: содержимое поднимается и проявляется. Панель создания закреплена через sticky, сдвиг main ей не мешает. */
 function usePageFade() {
   const { pathname } = useLocation()
   const was = useRef(pathname)
@@ -55,7 +55,9 @@ function usePageFade() {
     if (was.current === pathname) return
     was.current = pathname
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    document.querySelector('main')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' })
+    for (const el of document.querySelector('main')?.children ?? []) {
+      el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: 'cubic-bezier(0.23, 1, 0.32, 1)' })
+    }
   }, [pathname])
 }
 
