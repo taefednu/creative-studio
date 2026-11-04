@@ -112,8 +112,10 @@ const post = (p, url, data) => p.request.post(BASE + url, { data })
     ok('размытая работа ждёт учителя, а не выложена сразу', true)
     await b.goto(BASE + '/')
     await T(b, 'feed-class').click()
-    await T(b, 'feed-empty').waitFor({ timeout: 15000 })
-    ok('одноклассник пост с размытым до решения учителя не видит', (await T(b, 'post-card').count()) === 0)
+    // В ленте класса может лежать только работа из голосового шага: размытой там быть не должно
+    const voiceDrawn = !process.env.E2E_SKIP_VOICE_DRAW
+    await (voiceDrawn ? T(b, 'post-card').first() : T(b, 'feed-empty')).waitFor({ timeout: 15000 })
+    ok('одноклассник пост с размытым до решения учителя не видит', (await T(b, 'post-card').count()) === (voiceDrawn ? 1 : 0))
     await adult.goto(BASE + '/teacher/classes')
     await T(adult, `room-Stars ${tag}`).click()
     await T(adult, 'review-stack').waitFor({ timeout: 30000 })
