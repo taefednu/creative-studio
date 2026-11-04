@@ -7,6 +7,7 @@
 import io
 import logging
 import threading
+from datetime import UTC, datetime
 from pathlib import Path
 
 from PIL import Image
@@ -47,8 +48,29 @@ def check_image(data: bytes, kind: str, lang: str):
     return f(data, kind, lang)  # type: ignore[arg-type]
 
 
+_demo_day, _demo_used = "", 0
+_demo_lock = threading.Lock()
+
+
+def _spend_demo_image() -> None:
+    """Сбой, как при отказе модели: работа failed, монета возвращается."""
+    global _demo_day, _demo_used
+    s = get_settings()
+    if not s.DEMO_LOGIN:
+        return
+    # ponytail: счётчик в памяти одного процесса, перезапуск обнуляет; хватит для стенда с одним процессом
+    with _demo_lock:
+        today = datetime.now(UTC).date().isoformat()
+        if today != _demo_day:
+            _demo_day, _demo_used = today, 0
+        if _demo_used >= s.DEMO_IMAGE_DAILY_LIMIT:
+            raise RuntimeError("demo daily image limit")
+        _demo_used += 1
+
+
 def generate_image(prompt: str, user: str, timeout: float) -> bytes:
     global _client_cache
+    _spend_demo_image()
     if _client_cache is None:
         from app.meta.client import client_from_settings
 
@@ -58,6 +80,7 @@ def generate_image(prompt: str, user: str, timeout: float) -> bytes:
 
 def edit_image(source: bytes, prompt: str, user: str, timeout: float) -> bytes:
     global _client_cache
+    _spend_demo_image()
     if _client_cache is None:
         from app.meta.client import client_from_settings
 

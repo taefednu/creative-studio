@@ -58,3 +58,37 @@ def test_on_logs_in_and_tops_up(seeded):
     assert me["class"] is None and me["has_parent"] is True  # домашний: родитель без класса
     assert c.post("/api/demo/login", json={"role": "admin"}).status_code == 422
     assert TestClient(app).post("/api/demo/login", json={"role": "teacher"}).status_code == 200
+
+
+def test_demo_stand_stops_spending_on_images_at_daily_limit(monkeypatch):
+    from app.works.image import pipeline
+
+    class Client:
+        calls = 0
+
+        def generate_image(self, *_):
+            Client.calls += 1
+            return b"img"
+
+        edit_image = generate_image
+
+    monkeypatch.setattr(pipeline, "_client_cache", Client())
+    monkeypatch.setattr(pipeline, "_demo_day", "")
+    monkeypatch.setattr(pipeline, "_demo_used", 0)
+    monkeypatch.setenv("DEMO_IMAGE_DAILY_LIMIT", "2")
+    monkeypatch.setenv("DEMO_LOGIN", "true")
+    get_settings.cache_clear()
+    pipeline.generate_image("p", "u", 1)
+    pipeline.edit_image(b"s", "p", "u", 1)
+    with pytest.raises(RuntimeError):
+        pipeline.generate_image("p", "u", 1)
+    with pytest.raises(RuntimeError):
+        pipeline.edit_image(b"s", "p", "u", 1)
+    assert Client.calls == 2
+
+    # Обычный стенд потолка не знает: там монеты настоящие
+    monkeypatch.setenv("DEMO_LOGIN", "false")
+    get_settings.cache_clear()
+    pipeline.generate_image("p", "u", 1)
+    assert Client.calls == 3
+    get_settings.cache_clear()
